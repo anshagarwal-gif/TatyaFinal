@@ -38,6 +38,7 @@ export const translations = {
   'Booking scheduled for': 'बुकिंग नियोजित',
   'Delivery time has slightly increased due to heavy rains.': 'जोरदार पावसामुळे वितरण वेळ किंचित वाढली आहे.',
   'Change Slot': 'स्लॉट बदला',
+  'Change Location': 'स्थान बदला',
   'Total Quantity': 'एकूण प्रमाण',
   'Item Total': 'वस्तू एकूण',
   'Delivery Fee (₹35 Saved)': 'वितरण शुल्क (₹35 वाचले)',

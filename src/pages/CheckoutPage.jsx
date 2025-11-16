@@ -97,7 +97,20 @@ function CheckoutPage() {
                 : translate('Delivery time has slightly increased due to heavy rains.', isMarathi)
               }
             </div>
-            <button className="change-slot-button">{translate('Change Slot', isMarathi)}</button>
+            <div className="delivery-buttons">
+              <button 
+                className="change-slot-button"
+                onClick={() => navigate('/booking')}
+              >
+                {translate('Change Slot', isMarathi)}
+              </button>
+              <button 
+                className="change-location-button"
+                onClick={() => navigate('/location')}
+              >
+                {translate('Change Location', isMarathi)}
+              </button>
+            </div>
           </div>
           <div className="delivery-illustration">
             <div className="delivery-person">🚚</div>

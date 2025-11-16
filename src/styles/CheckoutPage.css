@@ -114,7 +114,14 @@
   line-height: 1.4;
 }
 
-.change-slot-button {
+.delivery-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.change-slot-button,
+.change-location-button {
   background: white;
   color: #000;
   border: 1px solid #333;
@@ -124,9 +131,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  flex: 1;
+  min-width: 120px;
 }
 
-.change-slot-button:hover {
+.change-slot-button:hover,
+.change-location-button:hover {
   background: #f5f5f5;
   transform: scale(1.05);
 }
@@ -416,10 +426,17 @@
     line-height: 1.5;
   }
 
-  .change-slot-button {
+  .delivery-buttons {
+    gap: 16px;
+  }
+
+  .change-slot-button,
+  .change-location-button {
     padding: 12px 24px;
     font-size: 15px;
     border-radius: 12px;
+    flex: 0 1 auto;
+    min-width: 140px;
   }
 
   .delivery-person {

@@ -11,7 +11,6 @@ function BookingPage() {
   const [confirmedLocation, setConfirmedLocation] = useState(null)
   const [locationAddress, setLocationAddress] = useState('')
   const [loadingAddress, setLoadingAddress] = useState(false)
-  const [currentSlide, setCurrentSlide] = useState(0)
   const [isMarathi, setIsMarathi] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
@@ -43,14 +42,6 @@ function BookingPage() {
     }
   ]
 
-  // Auto-slideshow for service cards
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % serviceCards.length)
-    }, 3000) // Change slide every 3 seconds
-
-    return () => clearInterval(interval)
-  }, [serviceCards.length])
 
   // Fetch location from navigation state or localStorage
   useEffect(() => {
@@ -198,60 +189,19 @@ function BookingPage() {
 
       {/* White Section - Slideshow and Rest of Content */}
       <div className="booking-content-white">
-        {/* Service Details Cards - Auto Slideshow */}
+        {/* Service Details Cards */}
         <div className="service-cards-container">
-          <div 
-            className="service-cards-slider"
-            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-          >
-            {serviceCards.map((card, index) => {
-              const iconText = card.icon === '🛢️' ? 'Tank ICON' : card.icon === '⏱️' ? 'Clock ICON' : 'Temp ICON'
-              return (
-                <div key={index} className="service-card">
-                  <div className="service-icon-text">{card.icon} </div>
-            <div className="service-value">{translate(card.value, isMarathi)}</div>
+          {serviceCards.map((card, index) => {
+            const iconText = card.icon === '🛢️' ? 'Tank ICON' : card.icon === '⏱️' ? 'Clock ICON' : 'Temp ICON'
+            return (
+              <div key={index} className="service-card">
+                <div className="service-icon-text">{card.icon} </div>
+                <div className="service-value">{translate(card.value, isMarathi)}</div>
                 <div className="service-desc">{translate(card.desc, isMarathi)}</div>
-                </div>
-              )
-            })}
-          </div>
-          {/* Slide Indicators */}
-          <div className="slide-indicators">
-            {serviceCards.map((_, index) => (
-              <button
-                key={index}
-                className={`indicator ${index === currentSlide ? 'active' : ''}`}
-                onClick={() => setCurrentSlide(index)}
-              />
-            ))}
-          </div>
+              </div>
+            )
+          })}
         </div>
-        {/* Location Information */}
-        {confirmedLocation && (
-          <div className="location-card-booking">
-            <div className="location-header">
-              <div className="location-icon-wrapper">
-                <span className="location-icon">📍</span>
-              </div>
-              <button className="change-location-btn" onClick={handleChangeLocation}>
-                {translate('Change', isMarathi)}
-              </button>
-            </div>
-            <div className="location-info">
-              <div className="location-title">{translate('Service Location', isMarathi)}</div>
-              <div className="location-address">
-                {loadingAddress ? (
-                  <span className="loading-address">{translate('Loading address...', isMarathi)}</span>
-                ) : (
-                  locationAddress || `${confirmedLocation[0].toFixed(6)}, ${confirmedLocation[1].toFixed(6)}`
-                )}
-              </div>
-              <div className="location-coordinates">
-                {translate('Lat:', isMarathi)} {confirmedLocation[0].toFixed(6)}, {translate('Lng:', isMarathi)} {confirmedLocation[1].toFixed(6)}
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Pilot Information */}
         <div className="pilot-card">

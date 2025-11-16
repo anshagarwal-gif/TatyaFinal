@@ -236,25 +236,18 @@
   transform: scale(1.05);
 }
 
-/* Service Cards - Auto Slideshow */
+/* Service Cards */
 .service-cards-container {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  margin-bottom: 24px;
-  background: white;
-  border-radius: 16px;
-  padding: 20px 0;
-}
-
-.service-cards-slider {
   display: flex;
-  transition: transform 0.5s ease-in-out;
+  gap: 12px;
   width: 100%;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
 }
 
 .service-card {
-  min-width: 100%;
+  flex: 1;
+  min-width: calc(33.333% - 8px);
   background: white;
   border-radius: 16px;
   padding: 20px;
@@ -264,6 +257,7 @@
   align-items: center;
   gap: 8px;
   box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .service-icon-text {
@@ -285,40 +279,6 @@
   font-size: 13px;
   color: #666;
   line-height: 1.4;
-}
-
-/* Slide Indicators */
-.slide-indicators {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 0 20px;
-}
-
-.indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: none;
-  background: #ddd;
-  cursor: pointer;
-  transition: all 0.3s;
-  padding: 0;
-}
-
-.indicator.active {
-  background: #4caf50;
-  width: 24px;
-  border-radius: 4px;
-}
-
-.indicator:hover {
-  background: #bbb;
-}
-
-.indicator.active:hover {
-  background: #45a049;
 }
 
 /* Location Card on Booking Page */
@@ -850,12 +810,12 @@
 
   .service-cards-container {
     margin-bottom: 35px;
-    border-radius: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    gap: 20px;
   }
 
   .service-card {
     padding: 30px;
+    min-width: calc(33.333% - 14px);
   }
 
   .service-icon-text {
@@ -1061,5 +1021,16 @@
     width: 36px;
     height: 36px;
     font-size: 20px;
+  }
+
+  .service-card {
+    min-width: 100%;
+  }
+}
+
+/* Tablet and smaller screens */
+@media (max-width: 767px) and (min-width: 481px) {
+  .service-card {
+    min-width: calc(50% - 6px);
   }
 }
