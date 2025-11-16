@@ -1,0 +1,386 @@
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import '../styles/BookingPage.css'
+import droneImage from '../assets/Drone.jpg'
+import { translate } from '../utils/translations'
+
+function BookingPage() {
+  const [quantity, setQuantity] = useState(1)
+  const [selectedUnit, setSelectedUnit] = useState('Acre')
+  const [selectedDate, setSelectedDate] = useState('')
+  const [confirmedLocation, setConfirmedLocation] = useState(null)
+  const [locationAddress, setLocationAddress] = useState('')
+  const [loadingAddress, setLoadingAddress] = useState(false)
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [isMarathi, setIsMarathi] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+
+
+  // Price calculation
+  const pricePerUnit = 400
+  const totalPrice = quantity * pricePerUnit
+
+  // Get minimum date (today)
+  const today = new Date().toISOString().split('T')[0]
+
+  // Service cards data
+  const serviceCards = [
+    {
+      icon: '🛢️',
+      value: '10L Tank',
+      desc: 'Sufficient for 1 Acre'
+    },
+    {
+      icon: '⏱️',
+      value: '5Min/ Acre',
+      desc: 'Time'
+    },
+    {
+      icon: '🌡️',
+      value: 'Cool Season',
+      desc: 'Temp Control'
+    }
+  ]
+
+  // Auto-slideshow for service cards
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % serviceCards.length)
+    }, 3000) // Change slide every 3 seconds
+
+    return () => clearInterval(interval)
+  }, [serviceCards.length])
+
+  // Fetch location from navigation state or localStorage
+  useEffect(() => {
+    // First try to get from navigation state
+    const locationFromState = location.state?.location || location.state?.coordinates
+    
+    if (locationFromState) {
+      setConfirmedLocation(locationFromState)
+      // Store in localStorage as backup
+      localStorage.setItem('confirmedLocation', JSON.stringify({
+        coordinates: locationFromState,
+        timestamp: new Date().toISOString()
+      }))
+      fetchLocationAddress(locationFromState)
+    } else {
+      // Try to get from localStorage
+      const storedLocation = localStorage.getItem('confirmedLocation')
+      if (storedLocation) {
+        try {
+          const locationData = JSON.parse(storedLocation)
+          setConfirmedLocation(locationData.coordinates)
+          fetchLocationAddress(locationData.coordinates)
+        } catch (err) {
+          console.error('Error parsing stored location:', err)
+        }
+      } else {
+        // No location found, redirect to location page
+        alert('Please select a location first')
+        navigate('/location')
+      }
+    }
+  }, [location.state, navigate])
+
+  // Fetch address from coordinates using reverse geocoding
+  const fetchLocationAddress = async (coordinates) => {
+    setLoadingAddress(true)
+    try {
+      const [lat, lng] = coordinates
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'User-Agent': 'Tatya Agricultural App'
+          }
+        }
+      )
+      const data = await response.json()
+      if (data.display_name) {
+        setLocationAddress(data.display_name)
+      } else {
+        setLocationAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+      }
+    } catch (err) {
+      console.error('Error fetching address:', err)
+      if (coordinates) {
+        const [lat, lng] = coordinates
+        setLocationAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+      }
+    } finally {
+      setLoadingAddress(false)
+    }
+  }
+
+  const handleBookNow = () => {
+    if (!selectedDate) {
+      alert('Please select a date for booking')
+      return
+    }
+    if (!confirmedLocation) {
+      alert('Location is missing. Please go back and select a location.')
+      navigate('/location')
+      return
+    }
+    navigate('/checkout', {
+      state: {
+        location: confirmedLocation,
+        quantity,
+        unit: selectedUnit,
+        date: selectedDate,
+        totalPrice,
+        pricePerUnit
+      }
+    })
+  }
+
+  const handleChangeLocation = () => {
+    navigate('/location')
+  }
+
+  return (
+    <div className="booking-page">
+      {/* Language Toggle Button */}
+      <button 
+        className="language-toggle"
+        onClick={() => setIsMarathi(!isMarathi)}
+        title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
+      >
+        {isMarathi ? 'EN' : 'मराठी'}
+      </button>
+
+      {/* Back Button */}
+      <button 
+        className="back-button-top"
+        onClick={() => navigate(-1)}
+        title="Go back"
+      >
+        ←
+      </button>
+
+      {/* Drone Image */}
+      <div className="drone-image-section">
+      
+        <div className="drone-image-container">
+          <img 
+            src={droneImage} 
+            alt="Agricultural Drone" 
+            className="drone-image"
+            onError={(e) => {
+              // Fallback if image doesn't load
+              e.target.style.display = 'none'
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Drone Information Card - Black Section */}
+      <div className="drone-info-header-black">
+        <div className="info-header">
+          <div className="drone-name-section">
+            <h2 className="drone-name">{translate('Drone Name', isMarathi)}</h2>
+            <div className="rating">
+              <span className="rating-value">4.3</span>
+              <span className="star-icon">⭐</span>
+            </div>
+          </div>
+          <div className="price-section">
+            <div className="price">400/-</div>
+            <div className="price-unit">
+              <span className="unit-label">{translate('Guntha /', isMarathi)}</span>
+              <button className="unit-button active">{translate('Acre', isMarathi)}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* White Section - Slideshow and Rest of Content */}
+      <div className="booking-content-white">
+        {/* Service Details Cards - Auto Slideshow */}
+        <div className="service-cards-container">
+          <div 
+            className="service-cards-slider"
+            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+          >
+            {serviceCards.map((card, index) => {
+              const iconText = card.icon === '🛢️' ? 'Tank ICON' : card.icon === '⏱️' ? 'Clock ICON' : 'Temp ICON'
+              return (
+                <div key={index} className="service-card">
+                  <div className="service-icon-text">{card.icon} </div>
+            <div className="service-value">{translate(card.value, isMarathi)}</div>
+                <div className="service-desc">{translate(card.desc, isMarathi)}</div>
+                </div>
+              )
+            })}
+          </div>
+          {/* Slide Indicators */}
+          <div className="slide-indicators">
+            {serviceCards.map((_, index) => (
+              <button
+                key={index}
+                className={`indicator ${index === currentSlide ? 'active' : ''}`}
+                onClick={() => setCurrentSlide(index)}
+              />
+            ))}
+          </div>
+        </div>
+        {/* Location Information */}
+        {confirmedLocation && (
+          <div className="location-card-booking">
+            <div className="location-header">
+              <div className="location-icon-wrapper">
+                <span className="location-icon">📍</span>
+              </div>
+              <button className="change-location-btn" onClick={handleChangeLocation}>
+                {translate('Change', isMarathi)}
+              </button>
+            </div>
+            <div className="location-info">
+              <div className="location-title">{translate('Service Location', isMarathi)}</div>
+              <div className="location-address">
+                {loadingAddress ? (
+                  <span className="loading-address">{translate('Loading address...', isMarathi)}</span>
+                ) : (
+                  locationAddress || `${confirmedLocation[0].toFixed(6)}, ${confirmedLocation[1].toFixed(6)}`
+                )}
+              </div>
+              <div className="location-coordinates">
+                {translate('Lat:', isMarathi)} {confirmedLocation[0].toFixed(6)}, {translate('Lng:', isMarathi)} {confirmedLocation[1].toFixed(6)}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pilot Information */}
+        <div className="pilot-card">
+          <div className="pilot-avatar">
+            <div className="avatar-placeholder">👨</div>
+          </div>
+          <div className="pilot-info">
+            <div className="pilot-name">{translate('Pilot Name', isMarathi)}</div>
+            <div className="pilot-details">
+              {translate('Location and other details regarding the pilot', isMarathi)}
+            </div>
+          </div>
+        </div>
+
+        {/* Give us details Section */}
+        <div className="details-section">
+          <h3 className="section-title">
+            <span className="title-icon">📋</span>
+            {translate('Booking Details', isMarathi)}
+          </h3>
+          
+          <div className="quantity-selector">
+            <label className="quantity-label">
+              <span className="label-icon">📏</span>
+              {translate('Quantity', isMarathi)} ({translate(selectedUnit, isMarathi)})
+            </label>
+            <div className="quantity-controls">
+              <button 
+                className="quantity-btn minus"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={quantity <= 1}
+              >
+                −
+              </button>
+              <div className="quantity-display">
+                <span className="quantity-value">{quantity}</span>
+                <span className="quantity-unit">{selectedUnit}</span>
+              </div>
+              <button 
+                className="quantity-btn plus"
+                onClick={() => setQuantity(quantity + 1)}
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="unit-selector">
+            <label className="unit-label-text">{translate('Select Unit Type', isMarathi)}</label>
+            <div className="unit-buttons">
+              <button 
+                className={`unit-select-btn ${selectedUnit === 'Acre' ? 'active' : ''}`}
+                onClick={() => setSelectedUnit('Acre')}
+              >
+                <span className="unit-icon">🌾</span>
+                <span>{translate('Acre', isMarathi)}</span>
+              </button>
+              <button 
+                className={`unit-select-btn ${selectedUnit === 'Hour' ? 'active' : ''}`}
+                onClick={() => setSelectedUnit('Hour')}
+              >
+                <span className="unit-icon">⏰</span>
+                <span>{translate('Hour', isMarathi)}</span>
+              </button>
+              <button 
+                className={`unit-select-btn ${selectedUnit === 'Day' ? 'active' : ''}`}
+                onClick={() => setSelectedUnit('Day')}
+              >
+                <span className="unit-icon">📅</span>
+                <span>{translate('Day', isMarathi)}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Select Date Section */}
+        <div className="date-section">
+          <label className="date-label">
+            <span className="label-icon">📅</span>
+            {translate('Select Booking Date', isMarathi)}
+          </label>
+          <div className="date-picker">
+            <input 
+              type="date" 
+              className="date-input" 
+              min={today}
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+            {selectedDate && (
+              <div className="date-selected">
+                <span className="date-icon">✓</span>
+                {translate('Selected:', isMarathi)} {new Date(selectedDate).toLocaleDateString(isMarathi ? 'mr-IN' : 'en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Price Summary */}
+        <div className="price-summary">
+          <div className="summary-row">
+            <span className="summary-label">{translate('Price per', isMarathi)} {translate(selectedUnit, isMarathi)}</span>
+            <span className="summary-value">₹{pricePerUnit}</span>
+          </div>
+          <div className="summary-row">
+            <span className="summary-label">{translate('Quantity', isMarathi)}</span>
+            <span className="summary-value">{quantity} {translate(selectedUnit, isMarathi)}{quantity > 1 ? (isMarathi ? '' : 's') : ''}</span>
+          </div>
+          <div className="summary-divider"></div>
+          <div className="summary-row total">
+            <span className="summary-label">{translate('Total Amount', isMarathi)}</span>
+            <span className="summary-value total-price">₹{totalPrice.toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Book Now Button */}
+      <button 
+        className={`book-now-button ${!selectedDate ? 'disabled' : ''}`}
+        onClick={handleBookNow}
+        disabled={!selectedDate}
+      >
+        <span className="button-icon">✈️</span>
+        <span>{translate('Book Now', isMarathi)} - ₹{totalPrice.toLocaleString('en-IN')}</span>
+      </button>
+    </div>
+  )
+}
+
+export default BookingPage
+
+
