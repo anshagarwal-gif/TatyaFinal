@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/LoginPage.css'
 import { translate } from '../utils/translations'
@@ -14,13 +14,18 @@ function LoginPage() {
   const otpInputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)]
   const navigate = useNavigate()
 
+  useEffect(() => {
+    if (showOTP) {
+      const focusTimer = setTimeout(() => {
+        otpInputRefs[0].current?.focus()
+      }, 50)
+      return () => clearTimeout(focusTimer)
+    }
+  }, [showOTP])
+
   const handleGetOTP = () => {
     if (phoneNumber.length >= 10) {
       setShowOTP(true)
-      // Focus first OTP input after animation
-      setTimeout(() => {
-        otpInputRefs[0].current?.focus()
-      }, 500)
     }
   }
 
@@ -82,7 +87,6 @@ function LoginPage() {
     // Resend OTP logic here
     setTimeout(() => {
       setShowOTP(true)
-      otpInputRefs[0].current?.focus()
     }, 300)
   }
 
@@ -136,6 +140,9 @@ function LoginPage() {
                 <span className="country-code">+91</span>
                 <input
                   type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="tel-national"
                   className="phone-input"
                   placeholder={translate('Enter your phone number', isMarathi)}
                   value={phoneNumber}
@@ -168,7 +175,10 @@ function LoginPage() {
                 <input
                   key={index}
                   ref={otpInputRefs[index]}
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete={index === 0 ? 'one-time-code' : 'off'}
                   className="otp-input"
                   maxLength="1"
                   value={digit}
