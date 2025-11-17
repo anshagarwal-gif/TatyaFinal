@@ -135,11 +135,16 @@ function BookingPage() {
     <div className="booking-page">
       {/* Language Toggle Button */}
       <button 
-        className="language-toggle"
+        type="button"
+        className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
         onClick={() => setIsMarathi(!isMarathi)}
         title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
+        aria-pressed={isMarathi}
+        aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
       >
-        {isMarathi ? 'EN' : 'मराठी'}
+        <span className="language-thumb" aria-hidden="true"></span>
+        <span className="language-label english">English</span>
+        <span className="language-label marathi">मराठी</span>
       </button>
 
       {/* Back Button */}
@@ -189,114 +194,116 @@ function BookingPage() {
 
       {/* White Section - Slideshow and Rest of Content */}
       <div className="booking-content-white">
-        {/* Service Details Cards */}
-        <div className="service-cards-container">
-          {serviceCards.map((card, index) => {
-            const iconText = card.icon === '🛢️' ? 'Tank ICON' : card.icon === '⏱️' ? 'Clock ICON' : 'Temp ICON'
-            return (
-              <div key={index} className="service-card">
-                <div className="service-icon-text">{card.icon} </div>
-                <div className="service-value">{translate(card.value, isMarathi)}</div>
-                <div className="service-desc">{translate(card.desc, isMarathi)}</div>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Pilot Information */}
-        <div className="pilot-card">
-          <div className="pilot-avatar">
-            <div className="avatar-placeholder">👨</div>
+        <div className="booking-dark-section">
+          {/* Service Details Cards */}
+          <div className="service-cards-container">
+            {serviceCards.map((card, index) => {
+              const iconText = card.icon === '🛢️' ? 'Tank ICON' : card.icon === '⏱️' ? 'Clock ICON' : 'Temp ICON'
+              return (
+                <div key={index} className="service-card">
+                  <div className="service-icon-text">{card.icon} </div>
+                  <div className="service-value">{translate(card.value, isMarathi)}</div>
+                  <div className="service-desc">{translate(card.desc, isMarathi)}</div>
+                </div>
+              )
+            })}
           </div>
-          <div className="pilot-info">
-            <div className="pilot-name">{translate('Pilot Name', isMarathi)}</div>
-            <div className="pilot-details">
-              {translate('Location and other details regarding the pilot', isMarathi)}
+
+          {/* Pilot Information */}
+          <div className="pilot-card">
+            <div className="pilot-avatar">
+              <div className="avatar-placeholder">👨</div>
+            </div>
+            <div className="pilot-info">
+              <div className="pilot-name">{translate('Pilot Name', isMarathi)}</div>
+              <div className="pilot-details">
+                {translate('Location and other details regarding the pilot', isMarathi)}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Give us details Section */}
-        <div className="details-section">
-          <h3 className="section-title">
-            <span className="title-icon">📋</span>
-            {translate('Booking Details', isMarathi)}
-          </h3>
-          
-          <div className="quantity-selector">
-            <label className="quantity-label">
-              <span className="label-icon">📏</span>
-              {translate('Quantity', isMarathi)} ({translate(selectedUnit, isMarathi)})
+          {/* Give us details Section */}
+          <div className="details-section">
+            <h3 className="section-title">
+              <span className="title-icon">📋</span>
+              {translate('Booking Details', isMarathi)}
+            </h3>
+            
+            <div className="quantity-selector">
+              <label className="quantity-label">
+                <span className="label-icon">📏</span>
+                {translate('Quantity', isMarathi)} ({translate(selectedUnit, isMarathi)})
+              </label>
+              <div className="quantity-controls">
+                <button 
+                  className="quantity-btn minus"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                >
+                  −
+                </button>
+                <div className="quantity-display">
+                  <span className="quantity-value">{quantity}</span>
+                  <span className="quantity-unit">{selectedUnit}</span>
+                </div>
+                <button 
+                  className="quantity-btn plus"
+                  onClick={() => setQuantity(quantity + 1)}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div className="unit-selector">
+              <label className="unit-label-text">{translate('Select Unit Type', isMarathi)}</label>
+              <div className="unit-buttons">
+                <button 
+                  className={`unit-select-btn ${selectedUnit === 'Acre' ? 'active' : ''}`}
+                  onClick={() => setSelectedUnit('Acre')}
+                >
+                  <span className="unit-icon">🌾</span>
+                  <span>{translate('Acre', isMarathi)}</span>
+                </button>
+                <button 
+                  className={`unit-select-btn ${selectedUnit === 'Hour' ? 'active' : ''}`}
+                  onClick={() => setSelectedUnit('Hour')}
+                >
+                  <span className="unit-icon">⏰</span>
+                  <span>{translate('Hour', isMarathi)}</span>
+                </button>
+                <button 
+                  className={`unit-select-btn ${selectedUnit === 'Day' ? 'active' : ''}`}
+                  onClick={() => setSelectedUnit('Day')}
+                >
+                  <span className="unit-icon">📅</span>
+                  <span>{translate('Day', isMarathi)}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Select Date Section */}
+          <div className="date-section">
+            <label className="date-label">
+              <span className="label-icon">📅</span>
+              {translate('Select Booking Date', isMarathi)}
             </label>
-            <div className="quantity-controls">
-              <button 
-                className="quantity-btn minus"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                disabled={quantity <= 1}
-              >
-                −
-              </button>
-              <div className="quantity-display">
-                <span className="quantity-value">{quantity}</span>
-                <span className="quantity-unit">{selectedUnit}</span>
-              </div>
-              <button 
-                className="quantity-btn plus"
-                onClick={() => setQuantity(quantity + 1)}
-              >
-                +
-              </button>
+            <div className="date-picker">
+              <input 
+                type="date" 
+                className="date-input" 
+                min={today}
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+              />
+              {selectedDate && (
+                <div className="date-selected">
+                  <span className="date-icon">✓</span>
+                  {translate('Selected:', isMarathi)} {new Date(selectedDate).toLocaleDateString(isMarathi ? 'mr-IN' : 'en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                </div>
+              )}
             </div>
-          </div>
-
-          <div className="unit-selector">
-            <label className="unit-label-text">{translate('Select Unit Type', isMarathi)}</label>
-            <div className="unit-buttons">
-              <button 
-                className={`unit-select-btn ${selectedUnit === 'Acre' ? 'active' : ''}`}
-                onClick={() => setSelectedUnit('Acre')}
-              >
-                <span className="unit-icon">🌾</span>
-                <span>{translate('Acre', isMarathi)}</span>
-              </button>
-              <button 
-                className={`unit-select-btn ${selectedUnit === 'Hour' ? 'active' : ''}`}
-                onClick={() => setSelectedUnit('Hour')}
-              >
-                <span className="unit-icon">⏰</span>
-                <span>{translate('Hour', isMarathi)}</span>
-              </button>
-              <button 
-                className={`unit-select-btn ${selectedUnit === 'Day' ? 'active' : ''}`}
-                onClick={() => setSelectedUnit('Day')}
-              >
-                <span className="unit-icon">📅</span>
-                <span>{translate('Day', isMarathi)}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Select Date Section */}
-        <div className="date-section">
-          <label className="date-label">
-            <span className="label-icon">📅</span>
-            {translate('Select Booking Date', isMarathi)}
-          </label>
-          <div className="date-picker">
-            <input 
-              type="date" 
-              className="date-input" 
-              min={today}
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-            />
-            {selectedDate && (
-              <div className="date-selected">
-                <span className="date-icon">✓</span>
-                {translate('Selected:', isMarathi)} {new Date(selectedDate).toLocaleDateString(isMarathi ? 'mr-IN' : 'en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
-              </div>
-            )}
           </div>
         </div>
 

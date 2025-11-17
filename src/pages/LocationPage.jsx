@@ -350,11 +350,16 @@ function LocationPage() {
     <div className="location-page">
       {/* Language Toggle Button */}
       <button 
-        className="language-toggle"
+        type="button"
+        className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
         onClick={() => setIsMarathi(!isMarathi)}
         title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
+        aria-pressed={isMarathi}
+        aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
       >
-        {isMarathi ? 'EN' : 'मराठी'}
+        <span className="language-thumb" aria-hidden="true"></span>
+        <span className="language-label english">English</span>
+        <span className="language-label marathi">मराठी</span>
       </button>
 
       {/* Back Button */}
