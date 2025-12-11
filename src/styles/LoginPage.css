@@ -1,0 +1,585 @@
+.login-page {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Language Toggle Button */
+.language-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px;
+  width: 170px;
+  height: 48px;
+  background: linear-gradient(135deg, #0f5d26, #24a74b);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border-radius: 999px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 0 0 18px rgba(36, 167, 75, 0.45);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.language-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4), 0 0 22px rgba(36, 167, 75, 0.5);
+}
+
+.language-toggle:active {
+  transform: translateY(0);
+}
+
+.language-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 8px);
+  height: calc(100% - 8px);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #34d46e, #0f8f3c);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.25s ease;
+}
+
+.language-toggle.marathi-active .language-thumb {
+  transform: translateX(calc(100% + 8px));
+}
+
+.language-toggle.english-active .language-thumb {
+  transform: translateX(0);
+}
+
+.language-label {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.3px;
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.2s ease;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.45);
+}
+
+.language-toggle.english-active .language-label.english,
+.language-toggle.marathi-active .language-label.marathi {
+  opacity: 1;
+}
+
+/* Full Page Background Image */
+.login-background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Use your own image by placing it in public folder and updating this path */
+  /* Example: background-image: url('/drone-sunset.jpg'); */
+  background-image: url('../assets/login.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+
+}
+
+/* Alternative: Use a gradient overlay to create sunset effect if image doesn't load */
+.login-background-image::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 107, 53, 0.3) 0%,
+    rgba(255, 140, 66, 0.2) 20%,
+    rgba(255, 169, 77, 0.2) 40%,
+    rgba(255, 184, 77, 0.1) 60%,
+    rgba(255, 200, 87, 0.1) 80%,
+    rgba(255, 217, 61, 0.05) 100%
+  );
+  z-index: 1;
+}
+
+.login-background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  z-index: 1;
+}
+
+/* Logo and Branding Section */
+.login-logo-section {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px 40px;
+  margin-bottom: auto;
+}
+
+.logo-container {
+  margin-bottom: 24px;
+}
+
+.tatya-logo {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.branding-text {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.branding-text-image {
+  width: auto;
+  max-width: 180px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  mix-blend-mode: darken;
+  filter: contrast(1.2) brightness(0.95);
+  background: transparent;
+}
+
+/* Login Panel */
+.login-panel {
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: 30px 30px 0 0;
+  padding: 40px 24px 50px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3);
+  margin-top: auto;
+}
+
+.login-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #000;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-size: 15px;
+  color: #000;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.phone-input-container {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 14px;
+  padding: 0 18px;
+  height: 60px;
+  border: 2px solid transparent;
+  transition: all 0.3s;
+}
+
+.phone-input-container:focus-within {
+  background: #fff;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.country-code {
+  font-size: 17px;
+  color: #000;
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.phone-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 17px;
+  color: #000;
+  outline: none;
+  padding: 0;
+  font-weight: 500;
+}
+
+.phone-input::placeholder {
+  color: #999;
+}
+
+.get-otp-button {
+  width: 100%;
+  height: 60px;
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 12px;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.get-otp-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+}
+
+.get-otp-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.get-otp-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+/* OTP Container */
+.otp-container {
+  animation: slideUpFadeIn 0.5s ease-out;
+}
+
+@keyframes slideUpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.otp-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.otp-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #000;
+  margin-bottom: 12px;
+}
+
+.otp-subtitle {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.otp-phone {
+  font-weight: 600;
+  color: #000;
+}
+
+.otp-input-group {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.otp-input {
+  width: 60px;
+  height: 60px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #000;
+  background: #f5f5f5;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.otp-input:focus {
+  border-color: #4caf50;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  transform: scale(1.05);
+}
+
+.otp-input:disabled {
+  background: #f0f0f0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.otp-verifying {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  color: #4caf50;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.verifying-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(76, 175, 80, 0.2);
+  border-top-color: #4caf50;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.otp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resend-otp-button,
+.change-number-button {
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.resend-otp-button {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.resend-otp-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+}
+
+.change-number-button {
+  background: transparent;
+  color: #666;
+  border: 2px solid #e0e0e0;
+}
+
+.change-number-button:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+.resend-otp-button:disabled,
+.change-number-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Desktop View */
+@media (min-width: 768px) {
+  .login-page {
+    width: 100%;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    background: #f5f5f5;
+    padding: 0;
+  }
+
+  .login-background-image {
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  .login-background-overlay {
+    border-radius: 30px;
+  }
+
+  .login-logo-section {
+    padding: 40px 20px 30px;
+    margin-bottom: 20px;
+  }
+
+  .tatya-logo {
+    width: 140px;
+    height: auto;
+  }
+
+  .branding-text-image {
+    max-width: 350px;
+  }
+
+  .login-panel {
+    max-width: 550px;
+    margin: 0;
+    border-radius: 30px;
+    padding: 60px 60px 70px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.98);
+  }
+
+  .login-title {
+    font-size: 40px;
+    margin-bottom: 45px;
+  }
+
+  .form-group {
+    margin-bottom: 28px;
+  }
+
+  .form-label {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .phone-input-container {
+    height: 68px;
+    padding: 0 22px;
+    border-radius: 16px;
+  }
+
+  .country-code {
+    font-size: 18px;
+    margin-right: 12px;
+  }
+
+  .phone-input {
+    font-size: 19px;
+  }
+
+  .get-otp-button {
+    height: 68px;
+    font-size: 20px;
+    border-radius: 16px;
+    margin-top: 16px;
+  }
+
+  .otp-container {
+    padding-top: 10px;
+  }
+
+  .otp-header {
+    margin-bottom: 36px;
+  }
+
+  .otp-title {
+    font-size: 30px;
+    margin-bottom: 16px;
+  }
+
+  .otp-subtitle {
+    font-size: 15px;
+  }
+
+  .otp-input-group {
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .otp-input {
+    width: 75px;
+    height: 75px;
+    font-size: 32px;
+    border-radius: 16px;
+  }
+
+  .otp-actions {
+    gap: 14px;
+  }
+
+  .resend-otp-button,
+  .change-number-button {
+    height: 54px;
+    font-size: 16px;
+    border-radius: 14px;
+  }
+
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .login-panel {
+    padding: 32px 20px 40px;
+  }
+
+  .login-title {
+    font-size: 28px;
+    margin-bottom: 28px;
+  }
+
+  .phone-input-container {
+    height: 56px;
+    padding: 0 16px;
+  }
+
+  .phone-input {
+    font-size: 16px;
+  }
+
+  .get-otp-button {
+    height: 56px;
+    font-size: 16px;
+  }
+
+  .otp-input {
+    width: 55px;
+    height: 55px;
+    font-size: 22px;
+  }
+
+  .otp-title {
+    font-size: 22px;
+  }
+
+  .otp-input-group {
+    gap: 10px;
+  }
+
+}
