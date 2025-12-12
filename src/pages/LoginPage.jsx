@@ -11,6 +11,9 @@ function LoginPage() {
   const [otp, setOtp] = useState(['', '', '', ''])
   const [isVerifying, setIsVerifying] = useState(false)
   const [isMarathi, setIsMarathi] = useState(false)
+  const [showSplash, setShowSplash] = useState(true)
+  const [splashAnimationComplete, setSplashAnimationComplete] = useState(false)
+  const [isVendorLogin, setIsVendorLogin] = useState(false)
   const otpInputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)]
   const navigate = useNavigate()
 
@@ -22,6 +25,22 @@ function LoginPage() {
       return () => clearTimeout(focusTimer)
     }
   }, [showOTP])
+
+  // Splash screen animation effect
+  useEffect(() => {
+    const splashTimer = setTimeout(() => {
+      setSplashAnimationComplete(true)
+    }, 2000) // Logo animation duration
+
+    const hideTimer = setTimeout(() => {
+      setShowSplash(false)
+    }, 2500) // Total splash duration
+
+    return () => {
+      clearTimeout(splashTimer)
+      clearTimeout(hideTimer)
+    }
+  }, [])
 
   const handleGetOTP = () => {
     if (phoneNumber.length >= 10) {
@@ -76,8 +95,12 @@ function LoginPage() {
     // Simulate OTP verification (replace with actual API call)
     setTimeout(() => {
       setIsVerifying(false)
-      // Navigate to next page after successful verification
-      navigate('/location')
+      // Navigate based on login type
+      if (isVendorLogin) {
+        navigate('/vendor-dashboard')
+      } else {
+        navigate('/location')
+      }
     }, 1000)
   }
 
@@ -91,20 +114,35 @@ function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      {/* Language Toggle Button */}
-      <button 
-        type="button"
-        className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
-        onClick={() => setIsMarathi(!isMarathi)}
-        title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-        aria-pressed={isMarathi}
-        aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-      >
-        <span className="language-thumb" aria-hidden="true"></span>
-        <span className="language-label english">English</span>
-        <span className="language-label marathi">मराठी</span>
-      </button>
+    <>
+      {/* Splash Screen */}
+      {showSplash && (
+        <div className="splash-screen">
+          <div className={`splash-logo ${splashAnimationComplete ? 'animate-complete' : ''}`}>
+            <img 
+              src={tatyaLogo} 
+              alt="Tatya Logo" 
+              className="splash-logo-image"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Main Login Page */}
+      <div className={`login-page ${showSplash ? 'hidden' : 'visible'}`}>
+        {/* Language Toggle Button */}
+        <button 
+          type="button"
+          className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
+          onClick={() => setIsMarathi(!isMarathi)}
+          title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
+          aria-pressed={isMarathi}
+          aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
+        >
+          <span className="language-thumb" aria-hidden="true"></span>
+          <span className="language-label english">English</span>
+          <span className="language-label marathi">मराठी</span>
+        </button>
 
       {/* Full Page Background Image */}
       <div className="login-background-image"></div>
@@ -130,7 +168,27 @@ function LoginPage() {
 
       {/* Login Form Panel - OTP Section Only */}
       <div className="login-panel">
-        <h1 className="login-title">{translate('Login', isMarathi)}</h1>
+        <h1 className="login-title">
+          {isVendorLogin ? translate('Vendor Login', isMarathi) : translate('Login', isMarathi)}
+        </h1>
+        
+        {/* Login Type Toggle */}
+        {!showOTP && (
+          <div className="login-type-toggle">
+            <button 
+              className={`login-type-btn ${!isVendorLogin ? 'active' : ''}`}
+              onClick={() => setIsVendorLogin(false)}
+            >
+              {translate('Customer', isMarathi)}
+            </button>
+            <button 
+              className={`login-type-btn ${isVendorLogin ? 'active' : ''}`}
+              onClick={() => setIsVendorLogin(true)}
+            >
+              {translate('Vendor', isMarathi)}
+            </button>
+          </div>
+        )}
         
         {!showOTP ? (
           <>
@@ -159,6 +217,15 @@ function LoginPage() {
             >
               {translate('Get OTP', isMarathi)}
             </button>
+
+            {isVendorLogin && (
+              <button 
+                className="vendor-register-button"
+                onClick={() => navigate('/vendor-onboarding')}
+              >
+                {translate('New Vendor? Register Here', isMarathi)}
+              </button>
+            )}
           </>
         ) : (
           <div className="otp-container">
@@ -218,8 +285,9 @@ function LoginPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
