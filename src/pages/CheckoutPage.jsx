@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import '../styles/CheckoutPage.css'
 import { translate } from '../utils/translations'
+import { createBooking } from '../services/api'
 
 function CheckoutPage() {
   const [selectedInstruction, setSelectedInstruction] = useState('call')
   const [isMarathi, setIsMarathi] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -63,6 +66,55 @@ function CheckoutPage() {
   const gstRate = 0.18
   const gstAmount = itemTotal * gstRate
   const totalPayable = itemTotal + gstAmount
+
+  const handleProceedToPayment = async () => {
+    if (!bookingData.location || !bookingData.date) {
+      setErrorMessage(translate('Please complete all booking details', isMarathi))
+      return
+    }
+
+    setIsProcessing(true)
+    setErrorMessage('')
+
+    try {
+      // Get user phone from localStorage (set during login)
+      const userPhone = localStorage.getItem('userPhone') || '1234567890' // Fallback for testing
+      
+      // Prepare booking data according to backend API
+      const bookingPayload = {
+        customerId: 1, // TODO: Get from user session/context
+        vendorId: 1, // TODO: Get from selected drone/vendor
+        droneId: 1, // TODO: Get from selected drone
+        serviceType: bookingData.unit === 'Acre' ? 'ACRE' : bookingData.unit === 'Hour' ? 'HOUR' : 'DAY',
+        quantity: bookingData.quantity,
+        bookingDate: bookingData.date,
+        locationLatitude: bookingData.location[0],
+        locationLongitude: bookingData.location[1],
+        totalAmount: totalPayable,
+        instructions: selectedInstruction === 'call' 
+          ? 'Call me 1 hour before arrival' 
+          : 'No contact - go directly to location'
+      }
+
+      const response = await createBooking(bookingPayload)
+      
+      if (response.success) {
+        // Store booking ID for reference
+        localStorage.setItem('lastBookingId', response.data?.id || '')
+        // Navigate to success page or payment page
+        alert(translate('Booking created successfully!', isMarathi))
+        // TODO: Navigate to payment page or booking confirmation
+        // navigate('/booking-success', { state: { booking: response.data } })
+      } else {
+        setErrorMessage(response.message || translate('Failed to create booking', isMarathi))
+      }
+    } catch (error) {
+      console.error('Error creating booking:', error)
+      setErrorMessage(error.message || translate('Failed to create booking. Please try again.', isMarathi))
+    } finally {
+      setIsProcessing(false)
+    }
+  }
 
   return (
     <div className="checkout-page">
@@ -210,9 +262,29 @@ function CheckoutPage() {
       </div>
 
       {/* Continue to Pay Button */}
-      <button className="pay-button">
-        {translate('Proceed to Payment', isMarathi)} ₹{Math.round(totalPayable).toLocaleString('en-IN')}
+      <button 
+        className="pay-button"
+        onClick={handleProceedToPayment}
+        disabled={isProcessing}
+      >
+        {isProcessing 
+          ? translate('Processing...', isMarathi) 
+          : `${translate('Proceed to Payment', isMarathi)} ₹${Math.round(totalPayable).toLocaleString('en-IN')}`
+        }
       </button>
+      
+      {errorMessage && (
+        <div style={{ 
+          color: 'red', 
+          marginTop: '10px', 
+          padding: '10px', 
+          textAlign: 'center',
+          backgroundColor: '#ffebee',
+          borderRadius: '4px'
+        }}>
+          {errorMessage}
+        </div>
+      )}
     </div>
   )
 }
