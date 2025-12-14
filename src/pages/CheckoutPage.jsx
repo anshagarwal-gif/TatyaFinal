@@ -16,9 +16,7 @@ function CheckoutPage() {
     date: '',
     totalPrice: 400,
     pricePerUnit: 400,
-    location: null,
-    booking: null,
-    drone: null
+    location: null
   })
 
   useEffect(() => {
@@ -31,9 +29,7 @@ function CheckoutPage() {
         date: stateData.date || '',
         totalPrice: stateData.totalPrice || 400,
         pricePerUnit: stateData.pricePerUnit || 400,
-        location: stateData.location || null,
-        booking: stateData.booking || null,
-        drone: stateData.drone || null
+        location: stateData.location || null
       })
       // Also save to localStorage for persistence
       localStorage.setItem('bookingData', JSON.stringify({
@@ -42,9 +38,7 @@ function CheckoutPage() {
         date: stateData.date || '',
         totalPrice: stateData.totalPrice || 400,
         pricePerUnit: stateData.pricePerUnit || 400,
-        location: stateData.location || null,
-        booking: stateData.booking || null,
-        drone: stateData.drone || null
+        location: stateData.location || null
       }))
     } else {
       // Fallback to localStorage
@@ -59,23 +53,6 @@ function CheckoutPage() {
       }
     }
   }, [location.state])
-
-  const handleChangeSlot = () => {
-    // Navigate to booking page with booking ID for update
-    // Pass all original booking data to preserve drone, specification, quantity, unit
-    navigate('/booking', {
-      state: {
-        bookingId: bookingData.booking?.bookingId || location.state?.booking?.bookingId || null,
-        existingBooking: bookingData.booking || location.state?.booking,
-        drone: bookingData.drone || location.state?.drone,
-        specification: location.state?.specification,
-        location: bookingData.location || location.state?.location,
-        quantity: bookingData.quantity || location.state?.quantity,
-        unit: bookingData.unit || location.state?.unit,
-        isChangeSlotMode: true // Flag to indicate only date can be changed
-      }
-    })
-  }
 
   // Calculate prices
   const pricePerUnit = bookingData.pricePerUnit || 400
@@ -128,7 +105,7 @@ function CheckoutPage() {
             <div className="delivery-buttons">
               <button 
                 className="change-slot-button"
-                onClick={handleChangeSlot}
+                onClick={() => navigate('/booking')}
               >
                 {translate('Change Slot', isMarathi)}
               </button>

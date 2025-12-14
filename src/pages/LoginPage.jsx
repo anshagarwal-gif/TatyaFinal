@@ -4,17 +4,16 @@ import '../styles/LoginPage.css'
 import { translate } from '../utils/translations'
 import tatyaLogo from '../assets/tatyalogo.png'
 import textImage from '../assets/text.jpg'
-import { generateOtp, verifyOtp } from '../services/api'
 
 function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [showOTP, setShowOTP] = useState(false)
   const [otp, setOtp] = useState(['', '', '', ''])
   const [isVerifying, setIsVerifying] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
   const [isMarathi, setIsMarathi] = useState(false)
-  const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
+  const [showSplash, setShowSplash] = useState(true)
+  const [splashAnimationComplete, setSplashAnimationComplete] = useState(false)
+  const [isVendorLogin, setIsVendorLogin] = useState(false)
   const otpInputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)]
   const navigate = useNavigate()
 
@@ -27,32 +26,25 @@ function LoginPage() {
     }
   }, [showOTP])
 
-  const handleGetOTP = async () => {
-    if (phoneNumber.length < 10) {
-      setError(translate('Please enter a valid 10-digit phone number', isMarathi))
-      return
+  // Splash screen animation effect
+  useEffect(() => {
+    const splashTimer = setTimeout(() => {
+      setSplashAnimationComplete(true)
+    }, 2000) // Logo animation duration
+
+    const hideTimer = setTimeout(() => {
+      setShowSplash(false)
+    }, 2500) // Total splash duration
+
+    return () => {
+      clearTimeout(splashTimer)
+      clearTimeout(hideTimer)
     }
+  }, [])
 
-    setIsGenerating(true)
-    setError('')
-    setSuccessMessage('')
-
-    try {
-      const response = await generateOtp(phoneNumber)
-      
-      if (response.success) {
-        setSuccessMessage(translate('OTP sent successfully!', isMarathi))
-        setShowOTP(true)
-        // Clear success message after 3 seconds
-        setTimeout(() => setSuccessMessage(''), 3000)
-      } else {
-        setError(response.message || translate('Failed to generate OTP. Please try again.', isMarathi))
-      }
-    } catch (error) {
-      console.error('Error generating OTP:', error)
-      setError(error.message || translate('Failed to generate OTP. Please check your connection and try again.', isMarathi))
-    } finally {
-      setIsGenerating(false)
+  const handleGetOTP = () => {
+    if (phoneNumber.length >= 10) {
+      setShowOTP(true)
     }
   }
 
@@ -100,74 +92,57 @@ function LoginPage() {
     if (otpValue.length !== 4) return
 
     setIsVerifying(true)
-    setError('')
-    setSuccessMessage('')
-
-    try {
-      const response = await verifyOtp(phoneNumber, otpValue)
-      
-      if (response.success) {
-        setSuccessMessage(translate('OTP verified successfully!', isMarathi))
-        // Navigate to next page after successful verification
-        setTimeout(() => {
-          navigate('/location')
-        }, 500)
-      } else {
-        setError(response.message || translate('Invalid or expired OTP. Please try again.', isMarathi))
-        // Clear OTP inputs on error
-        setOtp(['', '', '', ''])
-        otpInputRefs[0].current?.focus()
-      }
-    } catch (error) {
-      console.error('Error verifying OTP:', error)
-      setError(error.message || translate('Failed to verify OTP. Please try again.', isMarathi))
-      // Clear OTP inputs on error
-      setOtp(['', '', '', ''])
-      otpInputRefs[0].current?.focus()
-    } finally {
+    // Simulate OTP verification (replace with actual API call)
+    setTimeout(() => {
       setIsVerifying(false)
-    }
+      // Navigate based on login type
+      if (isVendorLogin) {
+        navigate('/vendor-dashboard')
+      } else {
+        navigate('/location')
+      }
+    }, 1000)
   }
 
-  const handleResendOTP = async () => {
+  const handleResendOTP = () => {
     setOtp(['', '', '', ''])
-    setError('')
-    setSuccessMessage('')
-    setIsGenerating(true)
-
-    try {
-      const response = await generateOtp(phoneNumber)
-      
-      if (response.success) {
-        setSuccessMessage(translate('OTP resent successfully!', isMarathi))
-        // Clear success message after 3 seconds
-        setTimeout(() => setSuccessMessage(''), 3000)
-      } else {
-        setError(response.message || translate('Failed to resend OTP. Please try again.', isMarathi))
-      }
-    } catch (error) {
-      console.error('Error resending OTP:', error)
-      setError(error.message || translate('Failed to resend OTP. Please try again.', isMarathi))
-    } finally {
-      setIsGenerating(false)
-    }
+    setShowOTP(false)
+    // Resend OTP logic here
+    setTimeout(() => {
+      setShowOTP(true)
+    }, 300)
   }
 
   return (
-    <div className="login-page">
-      {/* Language Toggle Button */}
-      <button 
-        type="button"
-        className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
-        onClick={() => setIsMarathi(!isMarathi)}
-        title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-        aria-pressed={isMarathi}
-        aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-      >
-        <span className="language-thumb" aria-hidden="true"></span>
-        <span className="language-label english">English</span>
-        <span className="language-label marathi">मराठी</span>
-      </button>
+    <>
+      {/* Splash Screen */}
+      {showSplash && (
+        <div className="splash-screen">
+          <div className={`splash-logo ${splashAnimationComplete ? 'animate-complete' : ''}`}>
+            <img 
+              src={tatyaLogo} 
+              alt="Tatya Logo" 
+              className="splash-logo-image"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Main Login Page */}
+      <div className={`login-page ${showSplash ? 'hidden' : 'visible'}`}>
+        {/* Language Toggle Button */}
+        <button 
+          type="button"
+          className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
+          onClick={() => setIsMarathi(!isMarathi)}
+          title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
+          aria-pressed={isMarathi}
+          aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
+        >
+          <span className="language-thumb" aria-hidden="true"></span>
+          <span className="language-label english">English</span>
+          <span className="language-label marathi">मराठी</span>
+        </button>
 
       {/* Full Page Background Image */}
       <div className="login-background-image"></div>
@@ -193,7 +168,27 @@ function LoginPage() {
 
       {/* Login Form Panel - OTP Section Only */}
       <div className="login-panel">
-        <h1 className="login-title">{translate('Login', isMarathi)}</h1>
+        <h1 className="login-title">
+          {isVendorLogin ? translate('Vendor Login', isMarathi) : translate('Login', isMarathi)}
+        </h1>
+        
+        {/* Login Type Toggle */}
+        {!showOTP && (
+          <div className="login-type-toggle">
+            <button 
+              className={`login-type-btn ${!isVendorLogin ? 'active' : ''}`}
+              onClick={() => setIsVendorLogin(false)}
+            >
+              {translate('Customer', isMarathi)}
+            </button>
+            <button 
+              className={`login-type-btn ${isVendorLogin ? 'active' : ''}`}
+              onClick={() => setIsVendorLogin(true)}
+            >
+              {translate('Vendor', isMarathi)}
+            </button>
+          </div>
+        )}
         
         {!showOTP ? (
           <>
@@ -215,33 +210,22 @@ function LoginPage() {
               </div>
             </div>
 
-            {error && !showOTP && (
-              <div className="error-message" style={{ 
-                color: '#ff4444', 
-                fontSize: '14px', 
-                marginTop: '10px',
-                textAlign: 'center'
-              }}>
-                {error}
-              </div>
-            )}
-            {successMessage && !showOTP && (
-              <div className="success-message" style={{ 
-                color: '#4caf50', 
-                fontSize: '14px', 
-                marginTop: '10px',
-                textAlign: 'center'
-              }}>
-                {successMessage}
-              </div>
-            )}
             <button 
               className="get-otp-button"
               onClick={handleGetOTP}
-              disabled={phoneNumber.length < 10 || isGenerating}
+              disabled={phoneNumber.length < 10}
             >
-              {isGenerating ? translate('Sending...', isMarathi) : translate('Get OTP', isMarathi)}
+              {translate('Get OTP', isMarathi)}
             </button>
+
+            {isVendorLogin && (
+              <button 
+                className="vendor-register-button"
+                onClick={() => navigate('/vendor-onboarding')}
+              >
+                {translate('New Vendor? Register Here', isMarathi)}
+              </button>
+            )}
           </>
         ) : (
           <div className="otp-container">
@@ -253,26 +237,6 @@ function LoginPage() {
               </p>
             </div>
 
-            {error && (
-              <div className="error-message" style={{ 
-                color: '#ff4444', 
-                fontSize: '14px', 
-                marginBottom: '15px',
-                textAlign: 'center'
-              }}>
-                {error}
-              </div>
-            )}
-            {successMessage && (
-              <div className="success-message" style={{ 
-                color: '#4caf50', 
-                fontSize: '14px', 
-                marginBottom: '15px',
-                textAlign: 'center'
-              }}>
-                {successMessage}
-              </div>
-            )}
             <div className="otp-input-group">
               {otp.map((digit, index) => (
                 <input
@@ -288,7 +252,7 @@ function LoginPage() {
                   onChange={(e) => handleOTPChange(index, e.target.value)}
                   onKeyDown={(e) => handleOTPKeyDown(index, e)}
                   onPaste={index === 0 ? handlePaste : undefined}
-                  disabled={isVerifying || isGenerating}
+                  disabled={isVerifying}
                 />
               ))}
             </div>
@@ -304,27 +268,26 @@ function LoginPage() {
               <button 
                 className="resend-otp-button"
                 onClick={handleResendOTP}
-                disabled={isVerifying || isGenerating}
+                disabled={isVerifying}
               >
-                {isGenerating ? translate('Sending...', isMarathi) : translate('Resend OTP', isMarathi)}
+                {translate('Resend OTP', isMarathi)}
               </button>
               <button 
                 className="change-number-button"
                 onClick={() => {
                   setShowOTP(false)
                   setOtp(['', '', '', ''])
-                  setError('')
-                  setSuccessMessage('')
                 }}
-                disabled={isVerifying || isGenerating}
+                disabled={isVerifying}
               >
                 {translate('Change Number', isMarathi)}
               </button>
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
