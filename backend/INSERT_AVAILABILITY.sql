@@ -157,3 +157,5 @@ VALUES
 -- 5. Each drone gets 3 time slots per day for 14 days (42 slots total per drone)
 -- 6. To add more days, increase the INTERVAL values or add more INSERT statements
 
+
+

@@ -93,3 +93,5 @@ That's it! The code is already ready - just add credentials.
 
 **You don't need any SMS account!** The application works perfectly in logging mode. Just check your console for OTP codes. This is the default and recommended mode for development! 🚀
 
+
+

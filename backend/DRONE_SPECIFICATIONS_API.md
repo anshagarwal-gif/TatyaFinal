@@ -177,3 +177,5 @@ Default specifications are automatically initialized when the application starts
 - Drone-specific specifications override global ones
 - Use `isAvailable` flag to enable/disable options
 
+
+

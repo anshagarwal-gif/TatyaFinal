@@ -145,3 +145,5 @@ curl -X POST http://localhost:8080/api/otp/verify \
   -d '{"phoneNumber":"1234567890","otpCode":"1234"}'
 ```
 
+
+

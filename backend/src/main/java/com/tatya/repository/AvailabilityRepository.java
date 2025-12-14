@@ -37,3 +37,5 @@ public interface AvailabilityRepository extends JpaRepository<Availability, Long
         @Param("date") LocalDate date);
 }
 
+
+

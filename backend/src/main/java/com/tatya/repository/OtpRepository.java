@@ -26,3 +26,5 @@ public interface OtpRepository extends JpaRepository<Otp, Long> {
     void deleteExpiredOtps(@Param("now") LocalDateTime now);
 }
 
+
+

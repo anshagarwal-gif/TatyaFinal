@@ -19,3 +19,5 @@ public interface DroneSpecificationRepository extends JpaRepository<DroneSpecifi
     List<DroneSpecification> findByDrone_DroneIdAndIsAvailableTrue(Long droneId);
 }
 
+
+

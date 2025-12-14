@@ -41,3 +41,5 @@ public class Otp {
         createdAt = LocalDateTime.now();
     }
 }
+
+
