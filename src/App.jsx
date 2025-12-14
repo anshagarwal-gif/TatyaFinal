@@ -4,6 +4,7 @@ import LocationPage from './pages/LocationPage'
 import BookingPage from './pages/BookingPage'
 import CheckoutPage from './pages/CheckoutPage'
 import VendorOnboardingPage from './pages/VendorOnboardingPage'
+import VendorOnboardingFormPage from './pages/VendorOnboardingFormPage'
 import VendorPayoutsPage from './pages/VendorPayoutsPage'
 import VendorAvailabilityPage from './pages/VendorAvailabilityPage'
 import VendorLocationPage from './pages/VendorLocationPage'
@@ -22,6 +23,7 @@ function App() {
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/vendor-onboarding" element={<VendorOnboardingPage />} />
+        <Route path="/vendor-onboarding-form" element={<VendorOnboardingFormPage />} />
         <Route path="/vendor-equipment" element={<VendorEquipmentPage />} />
         <Route path="/vendor-availability" element={<VendorAvailabilityPage />} />
         <Route path="/vendor-location" element={<VendorLocationPage />} />

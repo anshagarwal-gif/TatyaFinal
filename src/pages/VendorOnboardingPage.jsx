@@ -26,7 +26,7 @@ function VendorOnboardingPage() {
           {/* Start Onboarding Button */}
           <button 
             className="start-onboarding-button"
-            onClick={() => navigate('/vendor-payouts')}
+            onClick={() => navigate('/vendor-onboarding-form')}
           >
             Start Onboarding
           </button>

@@ -99,6 +99,17 @@ export const translations = {
   'Book Now': 'आता बुक करा',
   'Lat:': 'अक्षांश:',
   'Lng:': 'रेखांश:',
+  
+  // Vendor Onboarding Form
+  'Verify & Continue': 'सत्यापित करा आणि पुढे जा',
+  'New to Tatya?': 'टाट्यामध्ये नवीन?',
+  'Sign Up here.': 'येथे साइन अप करा.',
+  'Create My Tatya Account': 'माझे टाट्या खाते तयार करा',
+  'Full Name': 'पूर्ण नाव',
+  'Select': 'निवडा',
+  'Send OTP': 'OTP पाठवा',
+  'By continuing, you agree to Tatya\'s': 'पुढे जाऊन, आपण टाट्याच्या',
+  'Terms & Privacy Policy.': 'अटी आणि गोपनीयता धोरणाशी सहमत आहात.',
 }
 
 // Translation function
