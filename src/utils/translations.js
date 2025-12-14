@@ -18,6 +18,16 @@ export const translations = {
   'Verifying...': 'सत्यापन करत आहे...',
   'Resend OTP': 'OTP पुन्हा पाठवा',
   'Change Number': 'नंबर बदला',
+  'Sending...': 'पाठवत आहे...',
+  'OTP sent successfully!': 'OTP यशस्वीरित्या पाठवला!',
+  'OTP resent successfully!': 'OTP यशस्वीरित्या पुन्हा पाठवला!',
+  'OTP verified successfully!': 'OTP यशस्वीरित्या सत्यापित केला!',
+  'Please enter a valid 10-digit phone number': 'कृपया वैध 10-अंकी फोन नंबर प्रविष्ट करा',
+  'Failed to generate OTP. Please try again.': 'OTP व्युत्पन्न करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.',
+  'Failed to generate OTP. Please check your connection and try again.': 'OTP व्युत्पन्न करण्यात अयशस्वी. कृपया आपले कनेक्शन तपासा आणि पुन्हा प्रयत्न करा.',
+  'Invalid or expired OTP. Please try again.': 'अवैध किंवा कालबाह्य OTP. कृपया पुन्हा प्रयत्न करा.',
+  'Failed to verify OTP. Please try again.': 'OTP सत्यापित करण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.',
+  'Failed to resend OTP. Please try again.': 'OTP पुन्हा पाठवण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा.',
   
   // Location Page
   'Search location': 'स्थान शोधा',
@@ -110,6 +120,21 @@ export const translations = {
   'Send OTP': 'OTP पाठवा',
   'By continuing, you agree to Tatya\'s': 'पुढे जाऊन, आपण टाट्याच्या',
   'Terms & Privacy Policy.': 'अटी आणि गोपनीयता धोरणाशी सहमत आहात.',
+  'Select Drone': 'ड्रोन निवडा',
+  'Select Specification Option': 'विनिर्देश पर्याय निवडा',
+  'Service Area': 'सेवा क्षेत्र',
+  'Years Experience': 'वर्षांचा अनुभव',
+  'Loading available dates...': 'उपलब्ध तारखा लोड होत आहेत...',
+  'No available dates found for this drone': 'या ड्रोनसाठी कोणतीही उपलब्ध तारीख सापडली नाही',
+  'Available dates:': 'उपलब्ध तारखा:',
+  'Select a date': 'तारीख निवडा',
+  'Selected Drone': 'निवडलेला ड्रोन',
+  'Drone cannot be changed in Change Slot mode': 'स्लॉट बदलण्याच्या मोडमध्ये ड्रोन बदलता येत नाही',
+  'Selected Specification': 'निवडलेले विनिर्देश',
+  'Specification cannot be changed in Change Slot mode': 'स्लॉट बदलण्याच्या मोडमध्ये विनिर्देश बदलता येत नाही',
+  'Cannot be changed': 'बदलता येत नाही',
+  'Change Booking Date': 'बुकिंग तारीख बदला',
+  'Only date can be changed': 'केवळ तारीख बदलता येते',
 }
 
 // Translation function
