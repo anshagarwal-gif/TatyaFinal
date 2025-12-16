@@ -1,5 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import {
+  FiMapPin,
+  FiChevronLeft,
+  FiCalendar,
+  FiCheckCircle,
+  FiArrowRightCircle,
+  FiUser,
+  FiClipboard,
+  FiMaximize2,
+  FiDroplet,
+  FiClock,
+  FiThermometer,
+  FiStar
+} from 'react-icons/fi'
 import '../styles/BookingPage.css'
 import droneImage from '../assets/Drone.jpg'
 import { translate } from '../utils/translations'
@@ -26,17 +40,17 @@ function BookingPage() {
   // Service cards data
   const serviceCards = [
     {
-      icon: '🛢️',
+      icon: <FiDroplet />,
       value: '10L Tank',
       desc: 'Sufficient for 1 Acre'
     },
     {
-      icon: '⏱️',
+      icon: <FiClock />,
       value: '5Min/ Acre',
       desc: 'Time'
     },
     {
-      icon: '🌡️',
+      icon: <FiThermometer />,
       value: 'Cool Season',
       desc: 'Temp Control'
     }
@@ -146,19 +160,17 @@ function BookingPage() {
         <span className="language-label english">English</span>
         <span className="language-label marathi">मराठी</span>
       </button>
-
       {/* Back Button */}
       <button 
         className="back-button-top"
         onClick={() => navigate(-1)}
         title="Go back"
       >
-        ←
+        <FiChevronLeft />
       </button>
 
       {/* Drone Image */}
       <div className="drone-image-section">
-      
         <div className="drone-image-container">
           <img 
             src={droneImage} 
@@ -176,10 +188,23 @@ function BookingPage() {
       <div className="drone-info-header-black">
         <div className="info-header">
           <div className="drone-name-section">
-            <h2 className="drone-name">{translate('Drone Name', isMarathi)}</h2>
+            <p className="breadcrumb-text">
+              {translate('Service / Drone Spraying', isMarathi)}
+            </p>
+            <h2 className="drone-name">
+              {translate('Premium Crop Protection Drone', isMarathi)}
+            </h2>
+            <p className="drone-subtitle">
+              {translate('High-precision spraying for faster, uniform coverage', isMarathi)}
+            </p>
             <div className="rating">
               <span className="rating-value">4.3</span>
-              <span className="star-icon">⭐</span>
+              <span className="star-icon">
+                <FiStar />
+              </span>
+              <span className="rating-text">
+                {translate('Rated by local farmers', isMarathi)}
+              </span>
             </div>
           </div>
           <div className="price-section">
@@ -195,13 +220,47 @@ function BookingPage() {
       {/* White Section - Slideshow and Rest of Content */}
       <div className="booking-content-white">
         <div className="booking-dark-section">
+          {/* Location Summary */}
+          <div className="location-card-booking">
+            <div className="location-header">
+              <div className="location-icon-wrapper">
+                <span className="location-icon">
+                  <FiMapPin />
+                </span>
+              </div>
+              <button
+                type="button"
+                className="change-location-btn"
+                onClick={handleChangeLocation}
+              >
+                {translate('Change Location', isMarathi)}
+              </button>
+            </div>
+            <div className="location-info">
+              <div className="location-title">
+                {translate('Selected Field Location', isMarathi)}
+              </div>
+              <div className="location-address">
+                {loadingAddress
+                  ? <span className="loading-address">{translate('Fetching address…', isMarathi)}</span>
+                  : locationAddress || translate('Address not available', isMarathi)}
+              </div>
+              {confirmedLocation && (
+                <div className="location-coordinates">
+                  {translate('Coordinates', isMarathi)}:{' '}
+                  {Array.isArray(confirmedLocation) &&
+                    `${confirmedLocation[0].toFixed(6)}, ${confirmedLocation[1].toFixed(6)}`}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Service Details Cards */}
           <div className="service-cards-container">
             {serviceCards.map((card, index) => {
-              const iconText = card.icon === '🛢️' ? 'Tank ICON' : card.icon === '⏱️' ? 'Clock ICON' : 'Temp ICON'
               return (
                 <div key={index} className="service-card">
-                  <div className="service-icon-text">{card.icon} </div>
+                  <div className="service-icon-text">{card.icon}</div>
                   <div className="service-value">{translate(card.value, isMarathi)}</div>
                   <div className="service-desc">{translate(card.desc, isMarathi)}</div>
                 </div>
@@ -212,7 +271,9 @@ function BookingPage() {
           {/* Pilot Information */}
           <div className="pilot-card">
             <div className="pilot-avatar">
-              <div className="avatar-placeholder">👨</div>
+              <div className="avatar-placeholder">
+                <FiUser />
+              </div>
             </div>
             <div className="pilot-info">
               <div className="pilot-name">{translate('Pilot Name', isMarathi)}</div>
@@ -225,13 +286,17 @@ function BookingPage() {
           {/* Give us details Section */}
           <div className="details-section">
             <h3 className="section-title">
-              <span className="title-icon">📋</span>
+              <span className="title-icon">
+                <FiClipboard />
+              </span>
               {translate('Booking Details', isMarathi)}
             </h3>
             
             <div className="quantity-selector">
               <label className="quantity-label">
-                <span className="label-icon">📏</span>
+                <span className="label-icon">
+                  <FiMaximize2 />
+                </span>
                 {translate('Quantity', isMarathi)} ({translate(selectedUnit, isMarathi)})
               </label>
               <div className="quantity-controls">
@@ -262,21 +327,27 @@ function BookingPage() {
                   className={`unit-select-btn ${selectedUnit === 'Acre' ? 'active' : ''}`}
                   onClick={() => setSelectedUnit('Acre')}
                 >
-                  <span className="unit-icon">🌾</span>
+                  <span className="unit-icon">
+                    <FiMaximize2 />
+                  </span>
                   <span>{translate('Acre', isMarathi)}</span>
                 </button>
                 <button 
                   className={`unit-select-btn ${selectedUnit === 'Hour' ? 'active' : ''}`}
                   onClick={() => setSelectedUnit('Hour')}
                 >
-                  <span className="unit-icon">⏰</span>
+                  <span className="unit-icon">
+                    <FiClock />
+                  </span>
                   <span>{translate('Hour', isMarathi)}</span>
                 </button>
                 <button 
                   className={`unit-select-btn ${selectedUnit === 'Day' ? 'active' : ''}`}
                   onClick={() => setSelectedUnit('Day')}
                 >
-                  <span className="unit-icon">📅</span>
+                  <span className="unit-icon">
+                    <FiCalendar />
+                  </span>
                   <span>{translate('Day', isMarathi)}</span>
                 </button>
               </div>
@@ -286,7 +357,9 @@ function BookingPage() {
           {/* Select Date Section */}
           <div className="date-section">
             <label className="date-label">
-              <span className="label-icon">📅</span>
+              <span className="label-icon">
+                <FiCalendar />
+              </span>
               {translate('Select Booking Date', isMarathi)}
             </label>
             <div className="date-picker">
@@ -299,7 +372,9 @@ function BookingPage() {
               />
               {selectedDate && (
                 <div className="date-selected">
-                  <span className="date-icon">✓</span>
+                  <span className="date-icon">
+                    <FiCheckCircle />
+                  </span>
                   {translate('Selected:', isMarathi)} {new Date(selectedDate).toLocaleDateString(isMarathi ? 'mr-IN' : 'en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
                 </div>
               )}
@@ -331,7 +406,9 @@ function BookingPage() {
         onClick={handleBookNow}
         disabled={!selectedDate}
       >
-        <span className="button-icon">✈️</span>
+        <span className="button-icon">
+          <FiArrowRightCircle />
+        </span>
         <span>{translate('Book Now', isMarathi)} - ₹{totalPrice.toLocaleString('en-IN')}</span>
       </button>
     </div>

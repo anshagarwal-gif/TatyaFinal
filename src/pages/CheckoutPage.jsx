@@ -1,5 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import {
+  FiChevronLeft,
+  FiTruck,
+  FiPercent,
+  FiChevronRight,
+  FiPhoneCall,
+  FiPhoneOff,
+  FiShield,
+  FiArrowRightCircle
+} from 'react-icons/fi'
 import '../styles/CheckoutPage.css'
 import { translate } from '../utils/translations'
 
@@ -82,7 +92,9 @@ function CheckoutPage() {
 
       {/* Header */}
       <div className="checkout-header">
-        <button className="back-button" onClick={() => navigate(-1)}>←</button>
+        <button className="back-button" onClick={() => navigate(-1)}>
+          <FiChevronLeft />
+        </button>
         <div className="header-right"></div>
       </div>
 
@@ -118,7 +130,9 @@ function CheckoutPage() {
             </div>
           </div>
           <div className="delivery-illustration">
-            <div className="delivery-person">🚚</div>
+            <div className="delivery-person">
+              <FiTruck />
+            </div>
           </div>
         </div>
       </div>
@@ -161,9 +175,13 @@ function CheckoutPage() {
 
       {/* Offers Section */}
       <div className="offers-section">
-        <div className="offers-icon">%</div>
+        <div className="offers-icon">
+          <FiPercent />
+        </div>
         <span className="offers-text">{translate('Avail Offers / Coupons', isMarathi)}</span>
-        <div className="offers-arrow">→</div>
+        <div className="offers-arrow">
+          <FiChevronRight />
+        </div>
       </div>
 
       {/* Instructions for Pilots */}
@@ -176,7 +194,9 @@ function CheckoutPage() {
             className={`instruction-card ${selectedInstruction === 'call' ? 'selected' : ''}`}
             onClick={() => setSelectedInstruction('call')}
           >
-            <div className="instruction-icon">🛍️</div>
+            <div className="instruction-icon">
+              <FiPhoneCall />
+            </div>
             <div className="instruction-content">
               <div className="instruction-title">{translate('Call me 1 Hr Before', isMarathi)}</div>
               <div className="instruction-desc">
@@ -189,7 +209,9 @@ function CheckoutPage() {
             className={`instruction-card ${selectedInstruction === 'nocontact' ? 'selected' : ''}`}
             onClick={() => setSelectedInstruction('nocontact')}
           >
-            <div className="instruction-icon">🚪</div>
+            <div className="instruction-icon">
+              <FiPhoneOff />
+            </div>
             <div className="instruction-content">
               <div className="instruction-title">{translate('No Contact', isMarathi)}</div>
               <div className="instruction-desc">
@@ -202,7 +224,9 @@ function CheckoutPage() {
 
       {/* Pilot Safety Section */}
       <div className="safety-section">
-        <div className="safety-icon">🚚</div>
+        <div className="safety-icon">
+          <FiShield />
+        </div>
         <div className="safety-text">
           {translate('See how we ensure our Pilot\'s safety', isMarathi)}
         </div>
@@ -211,7 +235,12 @@ function CheckoutPage() {
 
       {/* Continue to Pay Button */}
       <button className="pay-button">
-        {translate('Proceed to Payment', isMarathi)} ₹{Math.round(totalPayable).toLocaleString('en-IN')}
+        <span className="pay-button-icon">
+          <FiArrowRightCircle />
+        </span>
+        <span>
+          {translate('Proceed to Payment', isMarathi)} ₹{Math.round(totalPayable).toLocaleString('en-IN')}
+        </span>
       </button>
     </div>
   )
