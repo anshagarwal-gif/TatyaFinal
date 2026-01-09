@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorDashboardPage.css'
+import '../styles/VendorCoverage.css'
 
 function VendorDashboardPage() {
-  const [activeTab, setActiveTab] = useState('map') // 'map', 'details', 'profile'
+  const [activeTab, setActiveTab] = useState('map') // 'map', 'details', 'profile', 'coverage'
   const navigate = useNavigate()
 
   return (
@@ -13,32 +14,41 @@ function VendorDashboardPage() {
         {activeTab === 'map' && <MapView />}
         {activeTab === 'details' && <DetailsView />}
         {activeTab === 'profile' && <ProfileView navigate={navigate} />}
+        {activeTab === 'coverage' && <CoverageView />}
       </div>
 
       {/* Bottom Navigation */}
       <div className="bottom-nav">
-        <button 
+        <button
           className={`nav-item ${activeTab === 'map' ? 'active' : ''}`}
           onClick={() => setActiveTab('map')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
           </svg>
         </button>
-        <button 
+        <button
           className={`nav-item ${activeTab === 'details' ? 'active' : ''}`}
           onClick={() => setActiveTab('details')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
           </svg>
         </button>
-        <button 
+        <button
           className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
           onClick={() => setActiveTab('profile')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+          </svg>
+        </button>
+        <button
+          className={`nav-item ${activeTab === 'coverage' ? 'active' : ''}`}
+          onClick={() => setActiveTab('coverage')}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
           </svg>
         </button>
       </div>
@@ -54,7 +64,7 @@ function MapView() {
       <div className="map-header">
         <div className="hamburger-menu">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
           </svg>
         </div>
         <h2>Dashboard</h2>
@@ -85,7 +95,7 @@ function MapView() {
         <div className="stat-card">
           <div className="stat-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
             </svg>
           </div>
           <div className="stat-content">
@@ -93,11 +103,11 @@ function MapView() {
             <div className="stat-label">Rating</div>
           </div>
         </div>
-        
+
         <div className="stat-card">
           <div className="stat-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9 11H7v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9h-2M9 11V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>
+              <path d="M9 11H7v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9h-2M9 11V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
             </svg>
           </div>
           <div className="stat-content">
@@ -105,11 +115,11 @@ function MapView() {
             <div className="stat-label">Jobs Completed</div>
           </div>
         </div>
-        
+
         <div className="stat-card">
           <div className="stat-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
             </svg>
           </div>
           <div className="stat-content">
@@ -122,13 +132,13 @@ function MapView() {
       <div className="action-buttons">
         <button className="action-btn primary">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7z"/>
+            <path d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7z" />
           </svg>
           <span className="text">Add Equipment</span>
         </button>
         <button className="action-btn secondary">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z" />
           </svg>
           <span className="text">Boost Income</span>
         </button>
@@ -150,13 +160,13 @@ function MapView() {
         </div>
         <div className="bar-chart">
           <div className="chart-bars">
-            <div className="bar" style={{height: '40%'}} data-value="12"></div>
-            <div className="bar" style={{height: '60%'}} data-value="18"></div>
-            <div className="bar" style={{height: '80%'}} data-value="24"></div>
-            <div className="bar active" style={{height: '100%'}} data-value="30"></div>
-            <div className="bar" style={{height: '90%'}} data-value="27"></div>
-            <div className="bar" style={{height: '70%'}} data-value="21"></div>
-            <div className="bar" style={{height: '85%'}} data-value="25"></div>
+            <div className="bar" style={{ height: '40%' }} data-value="12"></div>
+            <div className="bar" style={{ height: '60%' }} data-value="18"></div>
+            <div className="bar" style={{ height: '80%' }} data-value="24"></div>
+            <div className="bar active" style={{ height: '100%' }} data-value="30"></div>
+            <div className="bar" style={{ height: '90%' }} data-value="27"></div>
+            <div className="bar" style={{ height: '70%' }} data-value="21"></div>
+            <div className="bar" style={{ height: '85%' }} data-value="25"></div>
           </div>
           <div className="chart-labels">
             <span>Sun</span>
@@ -186,7 +196,7 @@ function MapView() {
           <button className="quick-action-btn">
             <div className="quick-action-icon warning">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
               </svg>
             </div>
             <div className="quick-action-content">
@@ -194,11 +204,11 @@ function MapView() {
               <div className="quick-action-subtitle">Equipment problems</div>
             </div>
           </button>
-          
+
           <button className="quick-action-btn">
             <div className="quick-action-icon info">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z"/>
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z" />
               </svg>
             </div>
             <div className="quick-action-content">
@@ -219,7 +229,7 @@ function DetailsView() {
       <div className="details-header">
         <div className="hamburger-menu">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
           </svg>
         </div>
         <h2>Schedule & Bookings</h2>
@@ -230,7 +240,7 @@ function DetailsView() {
           <h3>March 2024</h3>
           <button className="date-nav-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7 10l5 5 5-5z"/>
+              <path d="M7 10l5 5 5-5z" />
             </svg>
           </button>
         </div>
@@ -276,7 +286,7 @@ function DetailsView() {
               <span className="progress-text">60% Complete</span>
             </div>
             <div className="progress-bar">
-              <div className="progress-fill" style={{width: '60%'}}></div>
+              <div className="progress-fill" style={{ width: '60%' }}></div>
             </div>
           </div>
           <div className="summary-stats">
@@ -301,7 +311,7 @@ function DetailsView() {
           <h4>Today's Schedule</h4>
           <button className="add-booking-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
             </svg>
             Add Booking
           </button>
@@ -325,7 +335,7 @@ function DetailsView() {
                   </div>
                   <div className="booking-location">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                     </svg>
                     <span>Pune, Maharashtra</span>
                   </div>
@@ -333,12 +343,12 @@ function DetailsView() {
                 <div className="booking-actions">
                   <button className="action-btn-small">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                     </svg>
                   </button>
                 </div>
               </div>
-              
+
               <div className="booking-item">
                 <div className="booking-info">
                   <div className="booking-main">
@@ -347,7 +357,7 @@ function DetailsView() {
                   </div>
                   <div className="booking-location">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                     </svg>
                     <span>Nashik, Maharashtra</span>
                   </div>
@@ -355,7 +365,7 @@ function DetailsView() {
                 <div className="booking-actions">
                   <button className="action-btn-small">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                     </svg>
                   </button>
                 </div>
@@ -369,7 +379,7 @@ function DetailsView() {
                   </div>
                   <div className="booking-location">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                     </svg>
                     <span>Satara, Maharashtra</span>
                   </div>
@@ -377,7 +387,7 @@ function DetailsView() {
                 <div className="booking-actions">
                   <button className="action-btn-small">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                     </svg>
                   </button>
                 </div>
@@ -402,7 +412,7 @@ function DetailsView() {
                   </div>
                   <div className="booking-location">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
                     </svg>
                     <span>Kolhapur, Maharashtra</span>
                   </div>
@@ -410,7 +420,7 @@ function DetailsView() {
                 <div className="booking-actions">
                   <button className="action-btn-small">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                     </svg>
                   </button>
                 </div>
@@ -428,7 +438,7 @@ function ProfileView({ navigate }) {
   return (
     <div className="profile-view">
       <div className="profile-content">
-        
+
         <div className="profile-header">
           <h2>Sarang Sathe</h2>
           <div className="status-indicator active">
@@ -624,6 +634,202 @@ function ProfileView({ navigate }) {
       </div>
     </div>
   )
+}
+
+
+// Coverage View Component
+function CoverageView() {
+  const [file, setFile] = useState(null);
+  const [params, setParams] = useState({
+    alpha: 1.0,
+    beta: 2.0,
+    threshold: 0.0,
+    minFarms: 1
+  });
+  const [loading, setLoading] = useState(false);
+  const [uploadMsg, setUploadMsg] = useState('');
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+    setUploadMsg('');
+    setResult(null);
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      setError('Please select a CSV file first.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('http://localhost:8080/api/coverage/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Upload failed');
+      setUploadMsg(`Success: ${data.message} (${data.count} farms)`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRun = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('http://localhost:8080/api/coverage/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Run failed');
+      setResult(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="coverage-view">
+      <div className="coverage-header">
+        <h2>Coverage Optimization</h2>
+        <p className="subtitle">Optimize drone centers based on farm locations</p>
+      </div>
+
+      <div className="coverage-content">
+        {/* Upload Section */}
+        <div className="coverage-card">
+          <h3 className="card-title">1. Upload Farm Data</h3>
+          <div className="upload-container">
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="file-input-dark"
+            />
+            <button
+              onClick={handleUpload}
+              disabled={loading || !file}
+              className="action-btn primary"
+            >
+              {loading ? 'Uploading...' : 'Upload CSV'}
+            </button>
+          </div>
+          {uploadMsg && <p className="success-msg">{uploadMsg}</p>}
+        </div>
+
+        {/* Configuration Section */}
+        <div className="coverage-card">
+          <h3 className="card-title">2. Configuration Parameters</h3>
+          <div className="params-grid">
+            <div className="param-group">
+              <label>Alpha (New Farms)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={params.alpha}
+                onChange={(e) => setParams({ ...params, alpha: parseFloat(e.target.value) })}
+                className="form-input-dark"
+              />
+            </div>
+            <div className="param-group">
+              <label>Beta (Overlap)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={params.beta}
+                onChange={(e) => setParams({ ...params, beta: parseFloat(e.target.value) })}
+                className="form-input-dark"
+              />
+            </div>
+            <div className="param-group">
+              <label>Threshold</label>
+              <input
+                type="number"
+                step="0.1"
+                value={params.threshold}
+                onChange={(e) => setParams({ ...params, threshold: parseFloat(e.target.value) })}
+                className="form-input-dark"
+              />
+            </div>
+            <div className="param-group">
+              <label>Min Farms/Center</label>
+              <input
+                type="number"
+                step="1"
+                value={params.minFarms}
+                onChange={(e) => setParams({ ...params, minFarms: parseInt(e.target.value) })}
+                className="form-input-dark"
+              />
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handleRun}
+          disabled={loading}
+          className="action-btn primary full-width"
+        >
+          {loading ? 'Running Optimization...' : 'Run Optimization'}
+        </button>
+
+        {error && <div className="error-msg">{error}</div>}
+
+        {/* Results Section */}
+        {result && (
+          <div className="results-section">
+            <h3 className="results-title">Optimization Results</h3>
+
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-content">
+                  <div className="stat-label">Centers Kept</div>
+                  <div className="stat-value text-green">{result.keptCount}</div>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-content">
+                  <div className="stat-label">Total Covered</div>
+                  <div className="stat-value text-blue">{result.coveredCount}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="data-lists">
+              <div className="data-column">
+                <h4>Selected Centers</h4>
+                <div className="scroll-list">
+                  {result.keptCenters.map((id, idx) => (
+                    <div key={idx} className="list-item">{idx + 1}. {id}</div>
+                  ))}
+                </div>
+              </div>
+              <div className="data-column">
+                <h4>Covered Farms</h4>
+                <div className="scroll-list">
+                  {result.coveredFarms.map((id, idx) => (
+                    <div key={idx} className="list-item">{id}</div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default VendorDashboardPage
