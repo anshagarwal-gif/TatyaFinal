@@ -8,10 +8,12 @@ import {
   FiPhoneCall,
   FiPhoneOff,
   FiShield,
-  FiArrowRightCircle
+  FiArrowRightCircle,
+  FiLoader
 } from 'react-icons/fi'
 import '../styles/CheckoutPage.css'
 import { translate } from '../utils/translations'
+import { createPaymentOrder, verifyPayment, getRazorpayKey } from '../services/api'
 
 function CheckoutPage() {
   const [selectedInstruction, setSelectedInstruction] = useState('call')
@@ -26,8 +28,26 @@ function CheckoutPage() {
     date: '',
     totalPrice: 400,
     pricePerUnit: 400,
-    location: null
+    location: null,
+    bookingId: null
   })
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+
+  useEffect(() => {
+    // Load Razorpay script
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.async = true
+    document.body.appendChild(script)
+
+    return () => {
+      // Cleanup script on unmount
+      const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')
+      if (existingScript) {
+        document.body.removeChild(existingScript)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     // First try to get from navigation state
@@ -39,7 +59,8 @@ function CheckoutPage() {
         date: stateData.date || '',
         totalPrice: stateData.totalPrice || 400,
         pricePerUnit: stateData.pricePerUnit || 400,
-        location: stateData.location || null
+        location: stateData.location || null,
+        bookingId: stateData.bookingId || null
       })
       // Also save to localStorage for persistence
       localStorage.setItem('bookingData', JSON.stringify({
@@ -48,7 +69,8 @@ function CheckoutPage() {
         date: stateData.date || '',
         totalPrice: stateData.totalPrice || 400,
         pricePerUnit: stateData.pricePerUnit || 400,
-        location: stateData.location || null
+        location: stateData.location || null,
+        bookingId: stateData.bookingId || null
       }))
     } else {
       // Fallback to localStorage
@@ -73,6 +95,109 @@ function CheckoutPage() {
   const gstRate = 0.18
   const gstAmount = itemTotal * gstRate
   const totalPayable = itemTotal + gstAmount
+
+  // Handle payment
+  const handlePayment = async () => {
+    if (!bookingData.bookingId) {
+      alert('Booking ID is missing. Please go back and complete the booking first.')
+      navigate('/booking')
+      return
+    }
+
+    setIsProcessingPayment(true)
+    try {
+      // Create payment order
+      const paymentOrderResponse = await createPaymentOrder({
+        bookingId: bookingData.bookingId,
+        amount: totalPayable
+      })
+
+      // Backend returns { orderId, amount } directly
+      const orderId = paymentOrderResponse.orderId || paymentOrderResponse.data?.orderId
+      const amount = Number(paymentOrderResponse.amount || paymentOrderResponse.data?.amount || totalPayable)
+
+      if (!orderId) {
+        throw new Error('Failed to create payment order')
+      }
+
+      // Get Razorpay key from backend API
+      let razorpayKey
+      try {
+        const keyResponse = await getRazorpayKey()
+        razorpayKey = keyResponse.keyId
+        if (!razorpayKey || razorpayKey === 'rzp_test_placeholder') {
+          throw new Error('Razorpay key is not configured. Please configure it in the backend application.properties file.')
+        }
+      } catch (keyError) {
+        console.error('Error fetching Razorpay key:', keyError)
+        throw new Error('Failed to initialize payment. Please ensure Razorpay is properly configured.')
+      }
+
+      // Initialize Razorpay checkout
+      const options = {
+        key: razorpayKey,
+        amount: Math.round(amount * 100), // Convert to paise (amount is in rupees)
+        currency: 'INR',
+        name: 'Tatya Agricultural Services',
+        description: `Payment for booking #${bookingData.bookingId}`,
+        order_id: orderId,
+        handler: async function (response) {
+          try {
+            // Verify payment
+            const verification = await verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            })
+
+            if (verification.success) {
+              alert('Payment successful! Your booking is confirmed.')
+              // Navigate to success page or booking confirmation
+              navigate('/booking-success', {
+                state: {
+                  bookingId: bookingData.bookingId,
+                  paymentId: response.razorpay_payment_id
+                }
+              })
+            } else {
+              alert('Payment verification failed. Please contact support.')
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error)
+            alert('Payment verification failed. Please contact support.')
+          } finally {
+            setIsProcessingPayment(false)
+          }
+        },
+        prefill: {
+          name: 'Customer',
+          email: 'customer@example.com',
+          contact: '9999999999'
+        },
+        theme: {
+          color: '#000000'
+        },
+        modal: {
+          ondismiss: function() {
+            setIsProcessingPayment(false)
+          }
+        }
+      }
+
+      const razorpay = new window.Razorpay(options)
+      razorpay.on('payment.failed', function (response) {
+        console.error('Payment failed:', response.error)
+        alert(`Payment failed: ${response.error.description || 'Unknown error'}`)
+        setIsProcessingPayment(false)
+      })
+
+      razorpay.open()
+    } catch (error) {
+      console.error('Payment error:', error)
+      alert(error.message || 'Failed to initiate payment. Please try again.')
+      setIsProcessingPayment(false)
+    }
+  }
 
   return (
     <div className="checkout-page">
@@ -119,7 +244,7 @@ function CheckoutPage() {
                 className="change-slot-button"
                 onClick={() => navigate('/booking')}
               >
-                {translate('Change Slot', isMarathi)}
+                {translate('Change Date', isMarathi)}
               </button>
               <button 
                 className="change-location-button"
@@ -234,13 +359,26 @@ function CheckoutPage() {
       </div>
 
       {/* Continue to Pay Button */}
-      <button className="pay-button">
-        <span className="pay-button-icon">
-          <FiArrowRightCircle />
-        </span>
-        <span>
-          {translate('Proceed to Payment', isMarathi)} ₹{Math.round(totalPayable).toLocaleString('en-IN')}
-        </span>
+      <button 
+        className="pay-button"
+        onClick={handlePayment}
+        disabled={isProcessingPayment || !bookingData.bookingId}
+      >
+        {isProcessingPayment ? (
+          <>
+            <FiLoader className="spinner" style={{ animation: 'spin 1s linear infinite', marginRight: '8px' }} />
+            <span>{translate('Processing...', isMarathi)}</span>
+          </>
+        ) : (
+          <>
+            <span className="pay-button-icon">
+              <FiArrowRightCircle />
+            </span>
+            <span>
+              {translate('Proceed to Payment', isMarathi)} ₹{Math.round(totalPayable).toLocaleString('en-IN')}
+            </span>
+          </>
+        )}
       </button>
     </div>
   )

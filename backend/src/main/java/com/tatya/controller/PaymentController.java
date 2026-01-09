@@ -3,6 +3,7 @@ package com.tatya.controller;
 import com.tatya.entity.Payment;
 import com.tatya.service.RazorpayPaymentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,9 @@ import java.util.Map;
 public class PaymentController {
 
     private final RazorpayPaymentService paymentService;
+
+    @Value("${razorpay.key.id:rzp_test_placeholder}")
+    private String razorpayKeyId;
 
     @PostMapping("/create-order")
     public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> data) {
@@ -41,6 +45,20 @@ public class PaymentController {
             return ResponseEntity.ok(Map.of("success", true, "message", "Payment verified successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/key")
+    public ResponseEntity<?> getRazorpayKey() {
+        try {
+            if (razorpayKeyId == null || razorpayKeyId.equals("rzp_test_placeholder") || razorpayKeyId.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Razorpay key not configured",
+                        "message", "Please configure razorpay.key.id in application.properties"));
+            }
+            return ResponseEntity.ok(Map.of("keyId", razorpayKeyId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }

@@ -11,13 +11,16 @@ import otpMan from '../assets/OTPMan.png'
 import otpBlackText from '../assets/OTPBlackText.png'
 import otpBlackSubtext from '../assets/OTPBlackSubtext.png'
 import otpOrangeText from '../assets/OTPOrangeText.png'
-import { FiPhone, FiArrowRight, FiRefreshCw, FiEdit2, FiCheckCircle, FiUser, FiBriefcase } from 'react-icons/fi'
+import { FiPhone, FiArrowRight, FiEdit2, FiCheckCircle, FiUser, FiBriefcase } from 'react-icons/fi'
+import { generateOtp, verifyOtp } from '../services/api'
 
 function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [showOTP, setShowOTP] = useState(false)
   const [otp, setOtp] = useState(['', '', '', ''])
   const [isVerifying, setIsVerifying] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const [isMarathi, setIsMarathi] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
   const [splashAnimationComplete, setSplashAnimationComplete] = useState(false)
@@ -51,10 +54,26 @@ function LoginPage() {
   }, [])
 
   const handleGetOTP = async () => {
-    if (phoneNumber.length >= 10) {
-      // Here you would call your API to send OTP
-      // For now, simulate API call
-      setShowOTP(true)
+    if (phoneNumber.length < 10) {
+      setErrorMessage('Please enter a valid 10-digit phone number')
+      return
+    }
+
+    setIsGenerating(true)
+    setErrorMessage('')
+    
+    try {
+      const response = await generateOtp(phoneNumber)
+      if (response.success) {
+        setShowOTP(true)
+      } else {
+        setErrorMessage(response.message || 'Failed to generate OTP')
+      }
+    } catch (error) {
+      console.error('Error generating OTP:', error)
+      setErrorMessage(error.message || 'Failed to generate OTP. Please try again.')
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -108,26 +127,45 @@ function LoginPage() {
     if (otpValue.length !== 4) return
 
     setIsVerifying(true)
-    // Simulate OTP verification (replace with actual API call)
-    setTimeout(() => {
-      setIsVerifying(false)
-      // Navigate based on login type
-      if (isVendorLogin) {
-        navigate('/vendor-dashboard')
+    setErrorMessage('')
+    
+    try {
+      const response = await verifyOtp(phoneNumber, otpValue)
+      if (response.success) {
+        // OTP verified successfully, navigate based on login type
+        if (isVendorLogin) {
+          navigate('/vendor-dashboard')
+        } else {
+          navigate('/location')
+        }
       } else {
-        navigate('/location')
+        // OTP verification failed - show clear error message
+        setErrorMessage(response.message || 'Invalid OTP. Please check and try again.')
+        setOtp(['', '', '', ''])
+        // Focus on first input after a short delay
+        setTimeout(() => {
+          otpInputRefs[0].current?.focus()
+        }, 100)
       }
-    }, 1000)
+    } catch (error) {
+      console.error('Error verifying OTP:', error)
+      // Check if it's a wrong OTP error or network error
+      const errorMsg = error.message || 'Failed to verify OTP'
+      if (errorMsg.includes('Invalid') || errorMsg.includes('incorrect') || errorMsg.includes('wrong') || errorMsg.includes('expired')) {
+        setErrorMessage('Invalid or expired OTP. Please try again or request a new code.')
+      } else {
+        setErrorMessage('Failed to verify OTP. Please check your connection and try again.')
+      }
+      setOtp(['', '', '', ''])
+      // Focus on first input after a short delay
+      setTimeout(() => {
+        otpInputRefs[0].current?.focus()
+      }, 100)
+    } finally {
+      setIsVerifying(false)
+    }
   }
 
-  const handleResendOTP = () => {
-    setOtp(['', '', '', ''])
-    setShowOTP(false)
-    // Resend OTP logic here
-    setTimeout(() => {
-      setShowOTP(true)
-    }, 300)
-  }
 
   return (
     <>
@@ -256,17 +294,31 @@ function LoginPage() {
               {phoneNumber.length > 0 && phoneNumber.length < 10 && (
                 <p className="phone-hint">{translate('Enter 10-digit phone number', isMarathi)}</p>
               )}
+              {errorMessage && !showOTP && (
+                <p className="error-message" style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                  {errorMessage}
+                </p>
+              )}
             </div>
 
             <button 
               type="button"
               className="get-otp-button"
               onClick={handleGetOTP}
-              disabled={phoneNumber.length < 10}
+              disabled={phoneNumber.length < 10 || isGenerating}
               aria-label={translate('Get OTP', isMarathi)}
             >
-              <span>{translate('Get OTP', isMarathi)}</span>
-              <FiArrowRight className="button-icon-right" />
+              {isGenerating ? (
+                <>
+                  <div className="verifying-spinner" style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
+                  <span>{translate('Sending...', isMarathi)}</span>
+                </>
+              ) : (
+                <>
+                  <span>{translate('Get OTP', isMarathi)}</span>
+                  <FiArrowRight className="button-icon-right" />
+                </>
+              )}
             </button>
 
             {isVendorLogin && (
@@ -325,6 +377,25 @@ function LoginPage() {
               ))}
             </div>
 
+            {errorMessage && showOTP && (
+              <div className="otp-error-message">
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                  style={{ marginRight: '8px', flexShrink: 0 }}
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>{errorMessage}</span>
+              </div>
+            )}
+            
             {isVerifying && (
               <div className="otp-verifying">
                 <div className="verifying-spinner"></div>
@@ -335,20 +406,14 @@ function LoginPage() {
             <div className="otp-actions">
               <button 
                 type="button"
-                className="resend-otp-button"
-                onClick={handleResendOTP}
-                disabled={isVerifying}
-                aria-label={translate('Resend OTP', isMarathi)}
-              >
-                <FiRefreshCw className="button-icon-left" />
-                <span>{translate('Resend OTP', isMarathi)}</span>
-              </button>
-              <button 
-                type="button"
                 className="change-number-button"
                 onClick={() => {
                   setShowOTP(false)
                   setOtp(['', '', '', ''])
+                  setPhoneNumber('')
+                  setErrorMessage('')
+                  setIsGenerating(false)
+                  setIsVerifying(false)
                 }}
                 disabled={isVerifying}
                 aria-label={translate('Change Number', isMarathi)}

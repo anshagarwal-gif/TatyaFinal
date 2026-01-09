@@ -4,7 +4,7 @@ import com.tatya.entity.Cluster;
 import com.tatya.entity.Farm;
 import com.tatya.repository.ClusterRepository;
 import com.tatya.repository.FarmRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,17 +13,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class FarmCoverageService {
 
     private static final double RADIUS_M = 5000.0; // 5km radius
     private static final double CONNECTION_DIST_M = 2 * RADIUS_M; // If circles overlap (centers closer than 2R)
     private static final double EARTH_R = 6371000.0;
 
-    @Autowired
-    private FarmRepository farmRepository;
-
-    @Autowired
-    private ClusterRepository clusterRepository;
+    private final FarmRepository farmRepository;
+    private final ClusterRepository clusterRepository;
 
     /**
      * Generates clusters from unassigned farms.

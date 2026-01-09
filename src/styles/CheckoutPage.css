@@ -1,3 +1,17 @@
+/* Spinner Animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
 /* Language Toggle Button */
 .language-toggle {
   position: fixed;
@@ -211,13 +225,14 @@
 
 .summary-label {
   font-size: 14px;
-  color: #666;
+  color: #333333 !important;
+  font-weight: 500;
 }
 
 .summary-value {
   font-size: 14px;
-  color: #000;
-  font-weight: 500;
+  color: #111827 !important;
+  font-weight: 600;
 }
 
 .strikethrough {
@@ -235,7 +250,7 @@
 .total-amount {
   font-size: 18px;
   font-weight: bold;
-  color: #000;
+  color: #059669 !important;
 }
 
 /* Offers Section */
@@ -496,10 +511,12 @@
 
   .summary-label {
     font-size: 16px;
+    color: #333333 !important;
   }
 
   .summary-value {
     font-size: 16px;
+    color: #111827 !important;
   }
 
   .total-row {
@@ -509,6 +526,7 @@
 
   .total-amount {
     font-size: 26px;
+    color: #059669 !important;
   }
 
   .offers-section {

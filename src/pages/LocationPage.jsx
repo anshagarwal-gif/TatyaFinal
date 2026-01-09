@@ -17,8 +17,13 @@ import {
   FiLoader,
   FiAlertCircle,
   FiImage,
-  FiNavigation
+  FiNavigation,
+  FiStar,
+  FiClock,
+  FiPackage,
+  FiUser
 } from 'react-icons/fi'
+import { getAvailableDronesWithSpecifications } from '../services/api'
 
 // Fix for default marker icon in React-Leaflet
 delete L.Icon.Default.prototype._getIconUrl
@@ -67,6 +72,33 @@ function LocationPage() {
   const [capturedImage, setCapturedImage] = useState(null)
   const videoRef = useRef(null)
   const fileInputRef = useRef(null)
+  
+  // Drone selection states
+  const [availableDrones, setAvailableDrones] = useState([])
+  const [selectedDrone, setSelectedDrone] = useState(null)
+  const [loadingDrones, setLoadingDrones] = useState(false)
+
+  // Fetch available drones
+  useEffect(() => {
+    const fetchDrones = async () => {
+      setLoadingDrones(true)
+      try {
+        const response = await getAvailableDronesWithSpecifications()
+        if (response.success && response.data) {
+          setAvailableDrones(response.data)
+          // Auto-select first drone if available
+          if (response.data.length > 0 && !selectedDrone) {
+            setSelectedDrone(response.data[0])
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching drones:', err)
+      } finally {
+        setLoadingDrones(false)
+      }
+    }
+    fetchDrones()
+  }, [])
 
   // Get user's current location
   useEffect(() => {
@@ -215,6 +247,11 @@ function LocationPage() {
 
   const handleConfirmLocation = () => {
     if (selectedLocation) {
+      if (!selectedDrone) {
+        setError(translate('Please select a drone and pilot first', isMarathi))
+        return
+      }
+      
       // Store location in localStorage for persistence
       const locationData = {
         coordinates: selectedLocation,
@@ -222,11 +259,13 @@ function LocationPage() {
       }
       localStorage.setItem('confirmedLocation', JSON.stringify(locationData))
       
-      // Navigate with location data
+      // Navigate with location and drone data
       navigate('/booking', { 
         state: { 
           location: selectedLocation,
-          coordinates: selectedLocation 
+          coordinates: selectedLocation,
+          droneId: selectedDrone.droneId,
+          drone: selectedDrone
         } 
       })
     } else {
@@ -573,12 +612,157 @@ function LocationPage() {
         </div>
       </div>
 
+      {/* Drone and Pilot Selection Cards */}
+      {selectedLocation && (
+        <div className="drone-selection-section" style={{ 
+          padding: '16px', 
+          backgroundColor: '#f9fafb',
+          borderRadius: '16px',
+          marginBottom: '20px',
+          border: '1px solid #e5e7eb'
+        }}>
+          <h3 style={{ 
+            fontSize: '1.125rem', 
+            fontWeight: '600', 
+            marginBottom: '16px',
+            color: '#111827'
+          }}>
+            {translate('Select Drone & Pilot', isMarathi)}
+          </h3>
+          
+          {loadingDrones ? (
+            <div style={{ textAlign: 'center', padding: '24px' }}>
+              <FiLoader style={{ animation: 'spin 1s linear infinite', fontSize: '24px' }} />
+              <p style={{ marginTop: '8px', fontSize: '0.875rem' }}>Loading drones...</p>
+            </div>
+          ) : availableDrones.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {availableDrones.map((drone) => {
+                const pricePerAcre = drone.pricePerAcre ? Number(drone.pricePerAcre) : 400
+                const pilotName = drone.vendor?.user?.fullName || 'Pilot Name'
+                const rating = drone.vendor?.ratingAvg ? Number(drone.vendor.ratingAvg).toFixed(1) : '4.3'
+                const flightTime = drone.flightTimeMinutes ? `> ${drone.flightTimeMinutes} min` : '> 5 min'
+                const capacity = drone.capacityLiters ? `${drone.capacityLiters}L` : '10L'
+                const isSelected = selectedDrone?.droneId === drone.droneId
+
+                return (
+                  <div
+                    key={drone.droneId}
+                    onClick={() => setSelectedDrone(drone)}
+                    style={{
+                      backgroundColor: '#1f2937',
+                      border: `2px solid ${isSelected ? '#4caf50' : '#374151'}`,
+                      borderRadius: '12px',
+                      padding: '16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      color: 'white',
+                      boxShadow: isSelected ? '0 0 0 2px rgba(76, 175, 80, 0.2)' : 'none'
+                    }}
+                  >
+                    {/* Top Section */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Near You</span>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '4px',
+                        backgroundColor: '#059669',
+                        padding: '4px 8px',
+                        borderRadius: '12px',
+                        fontSize: '0.75rem'
+                      }}>
+                        <span>{rating}</span>
+                        <FiStar style={{ fontSize: '12px', fill: '#fbbf24', color: '#fbbf24' }} />
+                      </div>
+                    </div>
+
+                    {/* Middle Section - Drone Details */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ 
+                          fontSize: '1.125rem', 
+                          fontWeight: '600', 
+                          marginBottom: '8px',
+                          color: 'white'
+                        }}>
+                          {drone.droneModel || 'Drone Name'}
+                        </h4>
+                        <div style={{ display: 'flex', gap: '16px', fontSize: '0.875rem', color: '#d1d5db' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <FiClock style={{ fontSize: '14px' }} />
+                            <span>{flightTime}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <FiPackage style={{ fontSize: '14px' }} />
+                            <span>{capacity}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'white' }}>
+                          ₹{Math.round(pricePerAcre)}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>/Acre</div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Section - Pilot and Book Button */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          backgroundColor: '#374151',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white'
+                        }}>
+                          <FiUser style={{ fontSize: '16px' }} />
+                        </div>
+                        <span style={{ fontSize: '0.875rem', color: 'white' }}>{pilotName}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedDrone(drone)
+                        }}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: isSelected ? '#4caf50' : '#374151',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem',
+                          fontWeight: '500',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {isSelected ? translate('Selected', isMarathi) : translate('Select', isMarathi)}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '24px', color: '#6b7280' }}>
+              <p>{translate('No drones available at the moment', isMarathi)}</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Confirm Button */}
       <button 
         type="button"
-        className={`confirm-button ${selectedLocation ? 'active' : ''}`}
+        className={`confirm-button ${selectedLocation && selectedDrone ? 'active' : ''}`}
         onClick={handleConfirmLocation}
-        disabled={!selectedLocation}
+        disabled={!selectedLocation || !selectedDrone}
         aria-label={translate('Confirm Location', isMarathi)}
       >
         <FiCheck className="confirm-icon" />

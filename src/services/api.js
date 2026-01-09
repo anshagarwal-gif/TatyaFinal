@@ -316,3 +316,328 @@ export const updateBooking = async (bookingId, bookingData) => {
   }
 };
 
+/**
+ * Get booking by ID
+ * @param {number} bookingId - Booking ID
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const getBookingById = async (bookingId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch booking');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching booking:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get bookings by customer ID
+ * @param {number} customerId - Customer ID
+ * @returns {Promise<{success: boolean, message: string, data: Array}>}
+ */
+export const getBookingsByCustomer = async (customerId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bookings/customer/${customerId}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch bookings');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching customer bookings:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get bookings by vendor ID
+ * @param {number} vendorId - Vendor ID
+ * @returns {Promise<{success: boolean, message: string, data: Array}>}
+ */
+export const getBookingsByVendor = async (vendorId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bookings/vendor/${vendorId}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch bookings');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching vendor bookings:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get drones by vendor ID
+ * @param {number} vendorId - Vendor ID
+ * @returns {Promise<{success: boolean, message: string, data: Array}>}
+ */
+export const getDronesByVendor = async (vendorId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/drones/vendor/${vendorId}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch drones');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching vendor drones:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get available slots for a drone
+ * @param {number} droneId - Drone ID
+ * @returns {Promise<{success: boolean, message: string, data: Array}>}
+ */
+export const getAvailableSlots = async (droneId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/availability/drone/${droneId}/slots`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch available slots');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching available slots:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get specification by drone ID and option set
+ * @param {number} droneId - Drone ID
+ * @param {number} optionSet - Option set number
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const getSpecificationByDroneAndOptionSet = async (droneId, optionSet) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/drone-specifications/drone/${droneId}/option-set/${optionSet}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch specification');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching specification:', error);
+    throw error;
+  }
+};
+
+// ==================== Cluster APIs ====================
+
+/**
+ * Generate clusters
+ * @returns {Promise<Array>}
+ */
+export const generateClusters = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/clusters/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error('Failed to generate clusters');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error generating clusters:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get active clusters
+ * @returns {Promise<Array>}
+ */
+export const getActiveClusters = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/clusters/active`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching active clusters:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all clusters
+ * @returns {Promise<Array>}
+ */
+export const getAllClusters = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/clusters`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching clusters:', error);
+    throw error;
+  }
+};
+
+// ==================== Farm APIs ====================
+
+/**
+ * Add a farm
+ * @param {number} userId - User ID
+ * @param {Object} farmData - Farm data object
+ * @returns {Promise<Object>}
+ */
+export const addFarm = async (userId, farmData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/farms?userId=${userId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(farmData),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to add farm');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error adding farm:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get farms by user ID
+ * @param {number} userId - User ID
+ * @returns {Promise<Array>}
+ */
+export const getUserFarms = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/farms/user/${userId}`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching user farms:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all farms
+ * @returns {Promise<Array>}
+ */
+export const getAllFarms = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/farms`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching farms:', error);
+    throw error;
+  }
+};
+
+// ==================== Payment APIs ====================
+
+/**
+ * Create payment order
+ * @param {Object} paymentData - Payment data object with bookingId and amount
+ * @returns {Promise<{orderId: string, amount: number}>}
+ */
+export const createPaymentOrder = async (paymentData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/payment/create-order`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(paymentData),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to create payment order');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error creating payment order:', error);
+    throw error;
+  }
+};
+
+/**
+ * Verify payment
+ * @param {Object} paymentData - Payment verification data with razorpay_order_id, razorpay_payment_id, razorpay_signature
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const verifyPayment = async (paymentData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/payment/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(paymentData),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to verify payment');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get Razorpay public key ID
+ * @returns {Promise<{keyId: string}>}
+ */
+export const getRazorpayKey = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/payment/key`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to get Razorpay key');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching Razorpay key:', error);
+    throw error;
+  }
+};
+

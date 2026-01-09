@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   FiMapPin,
   FiChevronLeft,
@@ -12,11 +12,18 @@ import {
   FiDroplet,
   FiClock,
   FiThermometer,
-  FiStar
+  FiStar,
+  FiLoader
 } from 'react-icons/fi'
 import '../styles/BookingPage.css'
 import droneImage from '../assets/Drone.jpg'
 import { translate } from '../utils/translations'
+import { 
+  getDroneWithSpecifications, 
+  getAvailableDates,
+  getAvailableSlotsByDate,
+  createBooking
+} from '../services/api'
 
 function BookingPage() {
   const [quantity, setQuantity] = useState(1)
@@ -28,17 +35,31 @@ function BookingPage() {
   const [isMarathi, setIsMarathi] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
 
+  // API data states
+  const [drone, setDrone] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [availableDates, setAvailableDates] = useState([])
+  const [isBooking, setIsBooking] = useState(false)
+  const [error, setError] = useState(null)
 
-  // Price calculation
-  const pricePerUnit = 400
+  // Get droneId from URL params, navigation state, or localStorage
+  const droneId = searchParams.get('droneId') || location.state?.droneId || location.state?.drone?.droneId || localStorage.getItem('selectedDroneId')
+
+  // Price calculation - will be updated from drone data
+  const pricePerUnit = selectedUnit === 'Acre' 
+    ? (drone?.pricePerAcre ? Number(drone.pricePerAcre) : 400)
+    : selectedUnit === 'Hour'
+    ? (drone?.pricePerHour ? Number(drone.pricePerHour) : 400)
+    : 400
   const totalPrice = quantity * pricePerUnit
 
   // Get minimum date (today)
   const today = new Date().toISOString().split('T')[0]
 
   // Service cards data
-  const serviceCards = [
+  const [serviceCards, setServiceCards] = useState([
     {
       icon: <FiDroplet />,
       value: '10L Tank',
@@ -54,7 +75,100 @@ function BookingPage() {
       value: 'Cool Season',
       desc: 'Temp Control'
     }
-  ]
+  ])
+
+
+  // Fetch drone data from API
+  useEffect(() => {
+    const fetchDroneData = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        let droneData = null
+        let selectedDroneId = droneId
+
+        // Check if drone data was passed from LocationPage
+        if (location.state?.drone) {
+          droneData = location.state.drone
+          selectedDroneId = droneData.droneId
+        } else if (selectedDroneId) {
+          // Fetch specific drone
+          const response = await getDroneWithSpecifications(selectedDroneId)
+          if (response.success && response.data) {
+            droneData = response.data
+          } else {
+            setError('Drone not found')
+            setLoading(false)
+            return
+          }
+        } else {
+          setError('Please select a drone from the location page. Go back and select a drone.')
+          setLoading(false)
+          return
+        }
+
+        if (droneData) {
+          setDrone(droneData)
+
+          // Update service cards with actual drone specifications from database
+          // Extract values from database, handling both direct values and nested structures
+          const capacity = droneData.capacityLiters != null && droneData.capacityLiters !== undefined 
+            ? Math.round(Number(droneData.capacityLiters)) 
+            : null
+          const flightTime = droneData.flightTimeMinutes != null && droneData.flightTimeMinutes !== undefined 
+            ? Number(droneData.flightTimeMinutes) 
+            : null
+          const batteries = droneData.batteryCount != null && droneData.batteryCount !== undefined 
+            ? Number(droneData.batteryCount) 
+            : null
+          
+          // Create service cards with database values
+          const updatedCards = [
+            {
+              icon: <FiDroplet />,
+              value: capacity != null ? `${capacity}L Tank` : 'N/A',
+              desc: 'Capacity'
+            },
+            {
+              icon: <FiClock />,
+              value: flightTime != null ? `${flightTime}Min/ Acre` : 'N/A',
+              desc: 'Flight Time'
+            },
+            {
+              icon: <FiThermometer />,
+              value: batteries != null ? `${batteries} Batteries` : 'N/A',
+              desc: 'Battery Count'
+            }
+          ]
+          setServiceCards(updatedCards)
+          
+          // Debug log to verify data is coming from database
+          console.log('Drone data from database:', {
+            capacityLiters: droneData.capacityLiters,
+            flightTimeMinutes: droneData.flightTimeMinutes,
+            batteryCount: droneData.batteryCount,
+            formatted: { capacity, flightTime, batteries }
+          })
+
+          // Fetch available dates and limit to 1 week (7 days)
+          const datesResponse = await getAvailableDates(selectedDroneId)
+          if (datesResponse.success && datesResponse.data) {
+            // Limit to first 7 dates (1 week)
+            const limitedDates = datesResponse.data.slice(0, 7)
+            setAvailableDates(limitedDates)
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching drone data:', err)
+        setError('Failed to load drone information. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDroneData()
+  }, [droneId, location.state])
 
 
   // Fetch location from navigation state or localStorage
@@ -119,7 +233,8 @@ function BookingPage() {
     }
   }
 
-  const handleBookNow = () => {
+
+  const handleBookNow = async () => {
     if (!selectedDate) {
       alert('Please select a date for booking')
       return
@@ -129,20 +244,129 @@ function BookingPage() {
       navigate('/location')
       return
     }
-    navigate('/checkout', {
-      state: {
-        location: confirmedLocation,
-        quantity,
-        unit: selectedUnit,
-        date: selectedDate,
-        totalPrice,
-        pricePerUnit
+    if (!drone) {
+      alert('Drone information is not loaded. Please try again.')
+      return
+    }
+
+    setIsBooking(true)
+    try {
+      // Get first available slot for the selected date (or use default times)
+      let startTime = '06:00:00'
+      let endTime = '18:00:00'
+      
+      try {
+        const slotsResponse = await getAvailableSlotsByDate(drone.droneId, selectedDate)
+        if (slotsResponse.success && slotsResponse.data && slotsResponse.data.length > 0) {
+          const firstSlot = slotsResponse.data[0]
+          startTime = firstSlot.startTime || firstSlot.start_time || '06:00:00'
+          endTime = firstSlot.endTime || firstSlot.end_time || '18:00:00'
+        }
+      } catch (err) {
+        console.warn('Could not fetch slots, using default times:', err)
       }
-    })
+
+      // Get customer ID from localStorage or use default (for testing)
+      // In production, this should come from authentication
+      const customerId = localStorage.getItem('userId') || localStorage.getItem('customerId') || 1
+
+      // Calculate farm area in acres based on quantity and unit
+      let farmAreaAcres = null
+      if (selectedUnit === 'Acre') {
+        farmAreaAcres = quantity
+      } else if (selectedUnit === 'Hour') {
+        // Convert hours to approximate acres (assuming 1 hour = 2 acres for estimation)
+        farmAreaAcres = quantity * 2
+      } else if (selectedUnit === 'Day') {
+        // Convert days to approximate acres (assuming 1 day = 10 acres for estimation)
+        farmAreaAcres = quantity * 10
+      }
+
+      // Prepare booking data
+      const bookingData = {
+        customerId: Number(customerId),
+        droneId: drone.droneId,
+        serviceDate: selectedDate,
+        startTime: startTime,
+        endTime: endTime,
+        locationLat: Number(confirmedLocation[0]),
+        locationLong: Number(confirmedLocation[1]),
+        farmAreaAcres: farmAreaAcres ? Number(farmAreaAcres) : null,
+        serviceType: 'SPRAYING', // Default service type
+        totalCost: Number(totalPrice.toFixed(2)),
+        quantity: quantity,
+        unit: selectedUnit
+      }
+
+      // Create booking via API
+      const response = await createBooking(bookingData)
+      
+      if (response.success) {
+        // Booking created successfully
+        alert('Booking created successfully!')
+        // Navigate to checkout with booking data
+        navigate('/checkout', {
+          state: {
+            location: confirmedLocation,
+            quantity,
+            unit: selectedUnit,
+            date: selectedDate,
+            totalPrice,
+            pricePerUnit,
+            droneId: drone.droneId,
+            bookingId: response.data?.bookingId || response.data?.booking_id
+          }
+        })
+      } else {
+        alert(response.message || 'Failed to create booking. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error creating booking:', error)
+      alert(error.message || 'Failed to create booking. Please try again.')
+    } finally {
+      setIsBooking(false)
+    }
   }
 
   const handleChangeLocation = () => {
     navigate('/location')
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="booking-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <FiLoader className="spinner" style={{ fontSize: '48px', animation: 'spin 1s linear infinite' }} />
+          <p style={{ marginTop: '16px' }}>Loading drone information...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error || (!drone && !loading)) {
+    return (
+      <div className="booking-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '20px' }}>
+        <div style={{ textAlign: 'center', maxWidth: '400px' }}>
+          <p style={{ color: '#ef4444', marginBottom: '16px', fontSize: '16px' }}>{error || 'Drone not found'}</p>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button 
+              onClick={() => navigate('/location')} 
+              style={{ padding: '12px 24px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
+            >
+              {translate('Go to Location Page', isMarathi)}
+            </button>
+            <button 
+              onClick={() => navigate(-1)} 
+              style={{ padding: '12px 24px', backgroundColor: '#6b7280', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }}
+            >
+              {translate('Go Back', isMarathi)}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -174,7 +398,7 @@ function BookingPage() {
         <div className="drone-image-container">
           <img 
             src={droneImage} 
-            alt="Agricultural Drone" 
+            alt={drone.droneModel || 'Agricultural Drone'} 
             className="drone-image"
             onError={(e) => {
               // Fallback if image doesn't load
@@ -189,23 +413,27 @@ function BookingPage() {
         <div className="info-header">
           <div className="drone-name-section">
             <h2 className="drone-name">
-              {translate('Premium Crop Protection Drone', isMarathi)}
+              {drone.droneModel || translate('Premium Crop Protection Drone', isMarathi)}
             </h2>
-            <div className="rating">
-              <span className="rating-value">4.3</span>
-              <span className="star-icon">
-                <FiStar />
-              </span>
-              <span className="rating-text">
-                {translate('Rated by local farmers', isMarathi)}
-              </span>
-            </div>
+            {drone.vendor?.user && (
+              <div className="rating">
+                <span className="rating-value">
+                  {drone.vendor.ratingAvg ? Number(drone.vendor.ratingAvg).toFixed(1) : '4.3'}
+                </span>
+                <span className="star-icon">
+                  <FiStar />
+                </span>
+                <span className="rating-text">
+                  {translate('Rated by local farmers', isMarathi)}
+                </span>
+              </div>
+            )}
           </div>
           <div className="price-section">
-            <div className="price">400/-</div>
+            <div className="price">₹{pricePerUnit}/-</div>
             <div className="price-unit">
-              <span className="unit-label">{translate('Guntha /', isMarathi)}</span>
-              <button className="unit-button active">{translate('Acre', isMarathi)}</button>
+              <span className="unit-label">{translate('Per', isMarathi)} </span>
+              <button className="unit-button active">{translate(selectedUnit, isMarathi)}</button>
             </div>
           </div>
         </div>
@@ -228,20 +456,50 @@ function BookingPage() {
             })}
           </div>
 
-          {/* Pilot Information */}
-          <div className="pilot-card">
-            <div className="pilot-avatar">
-              <div className="avatar-placeholder">
-                <FiUser />
+
+          {/* Pilot/Vendor Information */}
+          {drone.vendor?.user && (
+            <div className="pilot-card" style={{ marginBottom: '24px' }}>
+              <div className="pilot-avatar">
+                <div className="avatar-placeholder">
+                  <FiUser />
+                </div>
+              </div>
+              <div className="pilot-info" style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <div className="pilot-name">
+                    {drone.vendor.user.fullName || translate('Vendor', isMarathi)}
+                  </div>
+                  {drone.vendor.verifiedStatus === 'VERIFIED' && (
+                    <span style={{ color: '#059669', fontSize: '0.75rem' }}>✓ Verified</span>
+                  )}
+                  {drone.vendor.ratingAvg && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.875rem' }}>
+                      <FiStar style={{ color: '#fbbf24', fill: '#fbbf24' }} />
+                      <span>{Number(drone.vendor.ratingAvg).toFixed(1)}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="pilot-details">
+                  {drone.vendor.serviceArea && (
+                    <div style={{ marginBottom: '4px' }}>
+                      <strong>{translate('Service Area:', isMarathi)}</strong> {drone.vendor.serviceArea}
+                    </div>
+                  )}
+                  {drone.vendor.experienceYears && (
+                    <div style={{ marginBottom: '4px' }}>
+                      <strong>{translate('Experience:', isMarathi)}</strong> {drone.vendor.experienceYears} {translate('years', isMarathi)}
+                    </div>
+                  )}
+                  {drone.vendor.licenseNo && (
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                      {translate('License:', isMarathi)} {drone.vendor.licenseNo}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="pilot-info">
-              <div className="pilot-name">{translate('Pilot Name', isMarathi)}</div>
-              <div className="pilot-details">
-                {translate('Location and other details regarding the pilot', isMarathi)}
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* Give us details Section */}
           <div className="details-section">
@@ -322,31 +580,101 @@ function BookingPage() {
               </span>
               {translate('Select Booking Date', isMarathi)}
             </label>
-            <div className="date-picker">
-              <input 
-                type="date" 
-                className="date-input" 
-                min={today}
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              />
-              {selectedDate && (
-                <div className="date-selected">
-                  <span className="date-icon">
-                    <FiCheckCircle />
-                  </span>
-                  {translate('Selected:', isMarathi)} {new Date(selectedDate).toLocaleDateString(isMarathi ? 'mr-IN' : 'en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
-                </div>
-              )}
-            </div>
+            
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                <FiLoader style={{ animation: 'spin 1s linear infinite', fontSize: '24px', color: '#10b981' }} />
+                <p style={{ marginTop: '8px', fontSize: '0.875rem', color: '#6b7280' }}>Loading available dates...</p>
+              </div>
+            ) : availableDates.length > 0 ? (
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', 
+                gap: '12px',
+                marginTop: '12px'
+              }}>
+                {availableDates.map((date, index) => {
+                  const dateObj = new Date(date)
+                  const isSelected = selectedDate === date
+                  const dayName = dateObj.toLocaleDateString(isMarathi ? 'mr-IN' : 'en-IN', { weekday: 'short' })
+                  const dayNumber = dateObj.getDate()
+                  const monthName = dateObj.toLocaleDateString(isMarathi ? 'mr-IN' : 'en-IN', { month: 'short' })
+                  
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDate(date)
+                      }}
+                      style={{
+                        padding: '12px 8px',
+                        border: `2px solid ${isSelected ? '#10b981' : '#e5e7eb'}`,
+                        borderRadius: '12px',
+                        backgroundColor: isSelected ? '#f0fdf4' : 'white',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '4px',
+                        minWidth: '90px'
+                      }}
+                    >
+                      <div style={{ 
+                        fontSize: '0.75rem', 
+                        color: isSelected ? '#10b981' : '#6b7280',
+                        fontWeight: '600',
+                        textTransform: 'uppercase'
+                      }}>
+                        {dayName}
+                      </div>
+                      <div style={{ 
+                        fontSize: '1.5rem', 
+                        fontWeight: '700',
+                        color: isSelected ? '#059669' : '#111827'
+                      }}>
+                        {dayNumber}
+                      </div>
+                      <div style={{ 
+                        fontSize: '0.7rem', 
+                        color: isSelected ? '#10b981' : '#9ca3af',
+                        textTransform: 'uppercase'
+                      }}>
+                        {monthName}
+                      </div>
+                      {isSelected && (
+                        <FiCheckCircle style={{ 
+                          fontSize: '16px', 
+                          color: '#10b981',
+                          marginTop: '2px'
+                        }} />
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '20px',
+                backgroundColor: '#f9fafb',
+                borderRadius: '12px',
+                marginTop: '12px'
+              }}>
+                <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                  {translate('No available dates for this drone', isMarathi)}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Price Summary */}
+        {/* Price Summary - Final Data Display */}
         <div className="price-summary">
           <div className="summary-row">
-            <span className="summary-label">{translate('Price per', isMarathi)} {translate(selectedUnit, isMarathi)}</span>
-            <span className="summary-value">₹{pricePerUnit}</span>
+            <span className="summary-label">{translate('Price per Acre', isMarathi)}</span>
+            <span className="summary-value">₹{pricePerUnit.toLocaleString('en-IN')}</span>
           </div>
           <div className="summary-row">
             <span className="summary-label">{translate('Quantity', isMarathi)}</span>
@@ -362,14 +690,23 @@ function BookingPage() {
 
       {/* Book Now Button */}
       <button 
-        className={`book-now-button ${!selectedDate ? 'disabled' : ''}`}
+        className={`book-now-button ${!selectedDate || isBooking ? 'disabled' : ''}`}
         onClick={handleBookNow}
-        disabled={!selectedDate}
+        disabled={!selectedDate || isBooking}
       >
-        <span className="button-icon">
-          <FiArrowRightCircle />
-        </span>
-        <span>{translate('Book Now', isMarathi)} - ₹{totalPrice.toLocaleString('en-IN')}</span>
+        {isBooking ? (
+          <>
+            <FiLoader className="spinner" style={{ animation: 'spin 1s linear infinite', marginRight: '8px' }} />
+            <span>{translate('Creating Booking...', isMarathi)}</span>
+          </>
+        ) : (
+          <>
+            <span className="button-icon">
+              <FiArrowRightCircle />
+            </span>
+            <span>{translate('Book Now', isMarathi)} - ₹{totalPrice.toLocaleString('en-IN')}</span>
+          </>
+        )}
       </button>
     </div>
   )
