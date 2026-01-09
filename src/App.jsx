@@ -13,6 +13,9 @@ import VendorDroneDetailsPage from './pages/VendorDroneDetailsPage'
 import VendorEquipmentPage from './pages/VendorEquipmentPage'
 import VendorDashboardPage from './pages/VendorDashboardPage'
 import VendorEditProfilePage from './pages/VendorEditProfilePage'
+import MyFarmsPage from './pages/MyFarmsPage'
+import ClusterManagementPage from './pages/ClusterManagementPage'
+import NearbyClustersPage from './pages/NearbyClustersPage'
 
 function App() {
   return (
@@ -20,6 +23,9 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/location" element={<LocationPage />} />
+        <Route path="/my-farms" element={<MyFarmsPage />} />
+        <Route path="/cluster-management" element={<ClusterManagementPage />} />
+        <Route path="/nearby-clusters" element={<NearbyClustersPage />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/vendor-onboarding" element={<VendorOnboardingPage />} />
