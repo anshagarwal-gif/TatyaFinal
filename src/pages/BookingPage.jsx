@@ -188,15 +188,9 @@ function BookingPage() {
       <div className="drone-info-header-black">
         <div className="info-header">
           <div className="drone-name-section">
-            <p className="breadcrumb-text">
-              {translate('Service / Drone Spraying', isMarathi)}
-            </p>
             <h2 className="drone-name">
               {translate('Premium Crop Protection Drone', isMarathi)}
             </h2>
-            <p className="drone-subtitle">
-              {translate('High-precision spraying for faster, uniform coverage', isMarathi)}
-            </p>
             <div className="rating">
               <span className="rating-value">4.3</span>
               <span className="star-icon">
@@ -220,40 +214,6 @@ function BookingPage() {
       {/* White Section - Slideshow and Rest of Content */}
       <div className="booking-content-white">
         <div className="booking-dark-section">
-          {/* Location Summary */}
-          <div className="location-card-booking">
-            <div className="location-header">
-              <div className="location-icon-wrapper">
-                <span className="location-icon">
-                  <FiMapPin />
-                </span>
-              </div>
-              <button
-                type="button"
-                className="change-location-btn"
-                onClick={handleChangeLocation}
-              >
-                {translate('Change Location', isMarathi)}
-              </button>
-            </div>
-            <div className="location-info">
-              <div className="location-title">
-                {translate('Selected Field Location', isMarathi)}
-              </div>
-              <div className="location-address">
-                {loadingAddress
-                  ? <span className="loading-address">{translate('Fetching address…', isMarathi)}</span>
-                  : locationAddress || translate('Address not available', isMarathi)}
-              </div>
-              {confirmedLocation && (
-                <div className="location-coordinates">
-                  {translate('Coordinates', isMarathi)}:{' '}
-                  {Array.isArray(confirmedLocation) &&
-                    `${confirmedLocation[0].toFixed(6)}, ${confirmedLocation[1].toFixed(6)}`}
-                </div>
-              )}
-            </div>
-          </div>
 
           {/* Service Details Cards */}
           <div className="service-cards-container">
