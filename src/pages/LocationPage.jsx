@@ -6,6 +6,19 @@ import EXIF from 'exif-js'
 import 'leaflet/dist/leaflet.css'
 import '../styles/LocationPage.css'
 import { translate } from '../utils/translations'
+import { 
+  FiSearch, 
+  FiMapPin, 
+  FiCamera, 
+  FiX, 
+  FiRefreshCw, 
+  FiCheck, 
+  FiChevronLeft,
+  FiLoader,
+  FiAlertCircle,
+  FiImage,
+  FiNavigation
+} from 'react-icons/fi'
 
 // Fix for default marker icon in React-Leaflet
 delete L.Icon.Default.prototype._getIconUrl
@@ -364,17 +377,19 @@ function LocationPage() {
 
       {/* Back Button */}
       <button 
+        type="button"
         className="back-button-top"
         onClick={() => navigate(-1)}
         title="Go back"
+        aria-label="Go back"
       >
-        ←
+        <FiChevronLeft />
       </button>
 
       {/* Search Bar */}
       <div className="search-container" ref={searchContainerRef}>
         <div className="search-bar">
-          <div className="search-icon">🔍</div>
+          <FiSearch className="search-icon" />
           <input 
             type="text" 
             className="search-input" 
@@ -382,14 +397,19 @@ function LocationPage() {
             value={searchQuery}
             onChange={handleSearchChange}
             onFocus={() => searchResults.length > 0 && setShowResults(true)}
+            aria-label={translate('Search location', isMarathi)}
           />
-          {isSearching && <div className="search-loading">⏳</div>}
+          {isSearching && (
+            <FiLoader className="search-loading" />
+          )}
           <button 
+            type="button"
             className="location-btn"
             onClick={handleGetCurrentLocation}
             title="Get current location"
+            aria-label="Get current location"
           >
-            📍
+            <FiNavigation />
           </button>
         </div>
         
@@ -401,8 +421,15 @@ function LocationPage() {
                 key={index}
                 className="search-result-item"
                 onClick={() => handleSelectResult(result)}
+                role="button"
+                tabIndex={0}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSelectResult(result)
+                  }
+                }}
               >
-                <div className="result-icon">📍</div>
+                <FiMapPin className="result-icon" />
                 <div className="result-content">
                   <div className="result-name">{result.display_name}</div>
                   {result.address && (
@@ -429,11 +456,13 @@ function LocationPage() {
       {/* Loading/Error Messages */}
       {loading && (
         <div className="location-status">
+          <FiLoader className="status-icon" />
           <div className="status-message">{translate('Loading...', isMarathi)}</div>
         </div>
       )}
       {error && (
         <div className="location-status error">
+          <FiAlertCircle className="status-icon" />
           <div className="status-message">{error}</div>
         </div>
       )}
@@ -494,7 +523,17 @@ function LocationPage() {
 
       {/* Location Input Options */}
       <div className="location-options">
-        <div className="location-card" onClick={handlePhotoBasedLocation}>
+        <div 
+          className="location-card" 
+          onClick={handlePhotoBasedLocation}
+          role="button"
+          tabIndex={0}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handlePhotoBasedLocation()
+            }
+          }}
+        >
           <div className="card-content">
             <div className="card-text">
               <h3 className="card-title">{translate('Photo based location', isMarathi)}</h3>
@@ -502,7 +541,9 @@ function LocationPage() {
                 {translate('Capture image of your farm to provide precise location', isMarathi)}
               </p>
             </div>
-            <div className="card-icon">📷</div>
+            <div className="card-icon-wrapper">
+              <FiCamera className="card-icon" />
+            </div>
           </div>
         </div>
 
@@ -514,6 +555,7 @@ function LocationPage() {
           capture="environment"
           style={{ display: 'none' }}
           onChange={handleFileSelect}
+          aria-label="Select photo"
         />
 
         <div className="location-card">
@@ -524,14 +566,23 @@ function LocationPage() {
                 {translate('Mark Co-ordinates to plot the complete farm.', isMarathi)}
               </p>
             </div>
-            <div className="card-icon">📍</div>
+            <div className="card-icon-wrapper">
+              <FiMapPin className="card-icon" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Confirm Button */}
-      <button className="confirm-button" onClick={handleConfirmLocation}>
-        {translate('Confirm Location', isMarathi)}
+      <button 
+        type="button"
+        className={`confirm-button ${selectedLocation ? 'active' : ''}`}
+        onClick={handleConfirmLocation}
+        disabled={!selectedLocation}
+        aria-label={translate('Confirm Location', isMarathi)}
+      >
+        <FiCheck className="confirm-icon" />
+        <span>{translate('Confirm Location', isMarathi)}</span>
       </button>
 
       {/* Camera Modal */}
@@ -540,7 +591,14 @@ function LocationPage() {
           <div className="camera-modal-content">
             <div className="camera-header">
               <h3>{translate('Capture Farm Location', isMarathi)}</h3>
-              <button className="close-camera-btn" onClick={stopCamera}>✕</button>
+              <button 
+                type="button"
+                className="close-camera-btn" 
+                onClick={stopCamera}
+                aria-label="Close camera"
+              >
+                <FiX />
+              </button>
             </div>
             
             <div className="camera-preview">
@@ -548,18 +606,28 @@ function LocationPage() {
                 <div className="captured-image-container">
                   <img src={capturedImage} alt="Captured" className="captured-image" />
                   <div className="capture-actions">
-                    <button className="retake-btn" onClick={async () => {
-                      setCapturedImage(null)
-                      // Restart camera
-                      if (cameraStream) {
-                        cameraStream.getTracks().forEach(track => track.stop())
-                      }
-                      await startCamera()
-                    }}>
-                      {translate('Retake', isMarathi)}
+                    <button 
+                      type="button"
+                      className="retake-btn" 
+                      onClick={async () => {
+                        setCapturedImage(null)
+                        // Restart camera
+                        if (cameraStream) {
+                          cameraStream.getTracks().forEach(track => track.stop())
+                        }
+                        await startCamera()
+                      }}
+                    >
+                      <FiRefreshCw className="action-icon" />
+                      <span>{translate('Retake', isMarathi)}</span>
                     </button>
-                    <button className="use-photo-btn" onClick={stopCamera}>
-                      {translate('Use Photo', isMarathi)}
+                    <button 
+                      type="button"
+                      className="use-photo-btn" 
+                      onClick={stopCamera}
+                    >
+                      <FiCheck className="action-icon" />
+                      <span>{translate('Use Photo', isMarathi)}</span>
                     </button>
                   </div>
                 </div>
@@ -572,8 +640,13 @@ function LocationPage() {
                     className="camera-video"
                   />
                   <div className="camera-controls">
-                    <button className="capture-btn" onClick={capturePhoto}>
-                      📷
+                    <button 
+                      type="button"
+                      className="capture-btn" 
+                      onClick={capturePhoto}
+                      aria-label="Capture photo"
+                    >
+                      <FiCamera className="capture-icon" />
                     </button>
                   </div>
                 </>
