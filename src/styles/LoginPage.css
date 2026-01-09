@@ -325,7 +325,7 @@
 
 .branding-text-image {
   width: auto;
-  max-width: 200px;
+  max-width: 100px;
   height: auto;
   object-fit: contain;
   display: block;
@@ -888,7 +888,7 @@
   }
 
   .branding-text-image {
-    max-width: 200px;
+    max-width: 100px;
   }
 
   .login-panel {
