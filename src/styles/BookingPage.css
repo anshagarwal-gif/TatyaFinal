@@ -710,7 +710,7 @@
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .summary-row {
@@ -730,17 +730,25 @@
 .summary-label {
   color: #666;
   font-weight: 500;
+  font-size: 14px;
 }
 
-.summary-value {
-  color: #2c3e50;
+.summary-row.total .summary-label {
+  color: #424242;
   font-weight: 600;
+  font-size: 15px;
+}
+
+.summary-value-booki {
+  color: #4caf50;
+  font-weight: 700;
+  font-size: 16px;
 }
 
 .total-price {
-  font-size: 24px;
-  font-weight: 700;
-  color: #4caf50;
+  font-size: 22px;
+  font-weight: 800;
+  color: #2e7d32;
 }
 
 .summary-divider {
@@ -989,18 +997,32 @@
 
   .summary-row {
     padding: 14px 0;
+    font-size: 15px;
   }
 
   .summary-label {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .summary-value-booki {
+    font-size: 17px;
+    font-weight: 700;
+    color: #4caf50;
+  }
+
+  .summary-row.total .summary-label {
     font-size: 16px;
   }
 
-  .summary-value {
-    font-size: 16px;
+  .total-price {
+    font-size: 24px;
+    font-weight: 800;
+    color: #2e7d32;
   }
 
   .total-amount {
-    font-size: 28px;
+    font-size: 32px;
   }
 
   .book-now-button {

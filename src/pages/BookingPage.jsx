@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 import '../styles/BookingPage.css'
 import droneImage from '../assets/Drone.jpg'
 import { translate } from '../utils/translations'
@@ -10,7 +12,8 @@ import {
   getDroneWithSpecifications,
   getAvailableDates, 
   getAvailableSlotsByDate,
-  getAvailableDroneSpecificationsByDroneId
+  getAvailableDroneSpecificationsByDroneId,
+  createBooking
 } from '../services/api'
 
 function BookingPage() {
@@ -30,6 +33,7 @@ function BookingPage() {
   const [loadingDrones, setLoadingDrones] = useState(false)
   const [loadingAvailability, setLoadingAvailability] = useState(false)
   const [loadingSpecifications, setLoadingSpecifications] = useState(false)
+  const [isCreatingBooking, setIsCreatingBooking] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -298,6 +302,41 @@ function BookingPage() {
     })
   }
 
+  // Format date to YYYY-MM-DD using local timezone (avoid UTC conversion issues)
+  const formatDateToLocalString = (date) => {
+    if (!date) return ''
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  // Check if a date object is available (for react-datepicker) - using local timezone
+  const isDateAvailableForPicker = (date) => {
+    if (!date || availableDates.length === 0) return false
+    const dateString = formatDateToLocalString(date)
+    return isDateAvailable(dateString)
+  }
+
+  // Filter dates for datepicker - only allow available dates
+  const filterDate = (date) => {
+    return isDateAvailableForPicker(date)
+  }
+
+  // Convert available dates to Date objects for datepicker (using local timezone)
+  const getAvailableDatesAsObjects = () => {
+    return availableDates.map(dateStr => {
+      // Parse YYYY-MM-DD and create date in local timezone
+      const [year, month, day] = dateStr.split('-').map(Number)
+      return new Date(year, month - 1, day)
+    })
+  }
+
+  // Highlight available dates in calendar
+  const highlightAvailableDates = (date) => {
+    return isDateAvailableForPicker(date)
+  }
+
   // Format date for display
   const formatDateForDisplay = (dateString) => {
     if (!dateString) return ''
@@ -387,7 +426,7 @@ function BookingPage() {
     }
   }
 
-  const handleBookNow = () => {
+  const handleBookNow = async () => {
     if (!selectedDate) {
       alert(translate('Please select a date for booking', isMarathi))
       return
@@ -405,19 +444,110 @@ function BookingPage() {
       alert(translate('Please wait for drone information to load', isMarathi))
       return
     }
-    navigate('/checkout', {
-      state: {
-        location: confirmedLocation,
-        quantity,
-        unit: selectedUnit,
-        date: selectedDate,
-        totalPrice,
-        pricePerUnit,
-        drone: selectedDrone,
-        specification: selectedSpecification,
-        vendor: selectedDrone.vendor
+
+    setIsCreatingBooking(true)
+
+    try {
+      // Fetch available slots for the selected date
+      const slotsResponse = await getAvailableSlotsByDate(selectedDrone.droneId, selectedDate)
+      
+      if (!slotsResponse.success || !slotsResponse.data || slotsResponse.data.length === 0) {
+        alert(translate('No available time slots for the selected date. Please choose another date.', isMarathi))
+        setIsCreatingBooking(false)
+        return
       }
-    })
+
+      // Get the first available slot
+      const availableSlot = slotsResponse.data.find(slot => !slot.isBooked) || slotsResponse.data[0]
+      
+      if (!availableSlot) {
+        alert(translate('No available time slots for the selected date. Please choose another date.', isMarathi))
+        setIsCreatingBooking(false)
+        return
+      }
+
+      // Get customer ID from localStorage (set during login) or use default
+      const customerId = parseInt(localStorage.getItem('userId') || '1') // Default to 1 for testing
+
+      // Map service type - default to SPRAYING for agricultural drones
+      const serviceType = 'SPRAYING' // Can be SPRAYING, MAPPING, or SEEDING
+
+      // Prepare booking data according to BookingRequest DTO
+      const bookingPayload = {
+        customerId: customerId,
+        droneId: selectedDrone.droneId,
+        specificationId: selectedSpecification?.specId || null,
+        serviceDate: selectedDate, // Format: YYYY-MM-DD
+        startTime: availableSlot.startTime, // Format: HH:mm:ss
+        endTime: availableSlot.endTime, // Format: HH:mm:ss
+        locationLat: confirmedLocation[0].toString(), // Latitude as string (will be converted to BigDecimal)
+        locationLong: confirmedLocation[1].toString(), // Longitude as string (will be converted to BigDecimal)
+        farmAreaAcres: selectedUnit === 'Acre' ? quantity.toString() : null, // Only if unit is Acre
+        serviceType: serviceType,
+        totalCost: totalPrice.toString(), // Convert to string for BigDecimal
+        quantity: quantity,
+        unit: selectedUnit // Acre, Hour, Day
+      }
+
+      console.log('Creating booking with payload:', bookingPayload)
+
+      // Call the booking API
+      const response = await createBooking(bookingPayload)
+
+      if (response.success) {
+        // Store booking ID for reference
+        if (response.data?.bookingId) {
+          localStorage.setItem('lastBookingId', response.data.bookingId.toString())
+        }
+        
+        // Calculate GST and total payable for checkout page
+        const gstRate = 0.18
+        const gstAmount = totalPrice * gstRate
+        const totalPayable = totalPrice + gstAmount
+        
+        // Prepare navigation state with all required data
+        const checkoutState = {
+          location: confirmedLocation,
+          quantity: quantity,
+          unit: selectedUnit,
+          date: selectedDate,
+          totalPrice: totalPrice, // Item Total
+          pricePerUnit: pricePerUnit,
+          itemTotal: totalPrice, // Same as totalPrice for clarity
+          gstRate: gstRate, // 0.18 (18%)
+          gstAmount: gstAmount, // Calculated GST amount
+          totalPayable: totalPayable, // Total with GST
+          drone: selectedDrone,
+          specification: selectedSpecification,
+          vendor: selectedDrone.vendor,
+          booking: response.data // Include booking response data
+        }
+        
+        console.log('BookingPage - Navigating to checkout with state:', checkoutState)
+        console.log('BookingPage - Values being passed:', {
+          quantity,
+          itemTotal: totalPrice,
+          gstRate,
+          gstAmount,
+          totalPayable
+        })
+        
+        // Show success message
+        alert(translate('Booking created successfully!', isMarathi))
+        
+        // Navigate to checkout page with booking data
+        navigate('/checkout', {
+          state: checkoutState
+        })
+      } else {
+        alert(response.message || translate('Failed to create booking. Please try again.', isMarathi))
+      }
+    } catch (error) {
+      console.error('Error creating booking:', error)
+      alert(error.message || translate('Failed to create booking. Please try again.', isMarathi))
+    } finally {
+      setIsCreatingBooking(false)
+    }
   }
 
   const handleChangeLocation = () => {
@@ -686,74 +816,133 @@ function BookingPage() {
               </div>
             ) : (
               <>
-                <div className="date-picker">
-                  <input 
-                    type="date" 
-                    className="date-input" 
-                    min={today}
-                    value={selectedDate}
-                    onChange={(e) => {
-                      const selected = e.target.value
-                      if (isDateAvailable(selected)) {
-                        setSelectedDate(selected)
+                <div className="date-picker" style={{ position: 'relative' }}>
+                  <DatePicker
+                    selected={selectedDate ? (() => {
+                      // Parse YYYY-MM-DD and create date in local timezone
+                      const [year, month, day] = selectedDate.split('-').map(Number)
+                      return new Date(year, month - 1, day)
+                    })() : null}
+                    onChange={(date) => {
+                      if (date) {
+                        // Use local timezone to format date string
+                        const dateString = formatDateToLocalString(date)
+                        if (isDateAvailable(dateString)) {
+                          setSelectedDate(dateString)
+                        }
                       } else {
-                        alert(translate('This date is not available. Please select from available dates.', isMarathi))
-                        // Reset to empty or keep previous selection
-                        e.target.value = selectedDate || ''
+                        setSelectedDate('')
                       }
                     }}
-                    onFocus={(e) => {
-                      // Show available dates hint
-                      e.target.title = translate('Only available dates can be selected', isMarathi)
+                    filterDate={filterDate}
+                    minDate={new Date()}
+                    placeholderText={translate('Click to select an available date', isMarathi)}
+                    dateFormat="dd/MM/yyyy"
+                    className="date-input"
+                    calendarClassName="available-dates-calendar"
+                    dayClassName={(date) => {
+                      if (highlightAvailableDates(date)) {
+                        return 'available-date-highlight'
+                      }
+                      return 'unavailable-date-gray'
                     }}
+                    highlightDates={getAvailableDatesAsObjects()}
+                    inline={false}
+                    showPopperArrow={true}
+                    popperPlacement="bottom-start"
+                    wrapperClassName="date-picker-wrapper"
                     style={{
-                      borderColor: selectedDate && !isDateAvailable(selectedDate) ? '#d32f2f' : undefined
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '6px',
+                      border: '1px solid #ddd',
+                      fontSize: '14px',
+                      cursor: 'pointer'
                     }}
                   />
                   {selectedDate && (
                     <div className="date-selected" style={{
-                      color: isDateAvailable(selectedDate) ? 'inherit' : '#d32f2f'
+                      marginTop: '10px',
+                      color: isDateAvailable(selectedDate) ? '#4CAF50' : '#d32f2f'
                     }}>
                       <span className="date-icon">{isDateAvailable(selectedDate) ? '✓' : '⚠'}</span>
                       {translate('Selected:', isMarathi)} {formatDateForDisplay(selectedDate)}
-                      {!isDateAvailable(selectedDate) && (
-                        <span style={{ color: '#d32f2f', fontSize: '12px', display: 'block', marginTop: '4px' }}>
-                          {translate('(Not available)', isMarathi)}
-                        </span>
-                      )}
                     </div>
                   )}
                 </div>
-                {/* Show available dates list */}
-                <div style={{ 
-                  marginTop: '10px', 
-                  fontSize: '12px', 
-                  color: '#666',
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '5px'
-                }}>
-                  <span style={{ fontWeight: '500' }}>{translate('Available dates:', isMarathi)}</span>
-                  {availableDates.slice(0, 5).map((date, idx) => (
-                    <span 
-                      key={idx}
-                      onClick={() => setSelectedDate(date)}
-                      style={{
-                        cursor: 'pointer',
-                        padding: '2px 8px',
-                        backgroundColor: selectedDate === date ? '#4CAF50' : '#e0e0e0',
-                        color: selectedDate === date ? 'white' : '#333',
-                        borderRadius: '4px',
-                        fontSize: '11px'
-                      }}
-                    >
-                      {new Date(date + 'T00:00:00').toLocaleDateString(isMarathi ? 'mr-IN' : 'en-IN', { day: 'numeric', month: 'short' })}
-                    </span>
-                  ))}
-                  {availableDates.length > 5 && (
-                    <span style={{ color: '#999' }}>+{availableDates.length - 5} more</span>
-                  )}
-                </div>
+                
+                {/* Custom CSS for calendar highlighting */}
+                <style>{`
+                  .date-picker-wrapper {
+                    width: 100%;
+                  }
+                  .available-dates-calendar {
+                    border: 1px solid #e0e0e0;
+                    border-radius: 8px;
+                    padding: 10px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                  }
+                  .available-dates-calendar .react-datepicker__day--highlighted,
+                  .available-dates-calendar .react-datepicker__day.available-date-highlight {
+                    background-color: #4CAF50 !important;
+                    color: white !important;
+                    font-weight: bold !important;
+                    border-radius: 50% !important;
+                    cursor: pointer !important;
+                  }
+                  .available-dates-calendar .react-datepicker__day--selected {
+                    background-color: #2E7D32 !important;
+                    color: white !important;
+                    border-radius: 50% !important;
+                    font-weight: bold !important;
+                    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.3);
+                  }
+                  .available-dates-calendar .react-datepicker__day--highlighted:hover,
+                  .available-dates-calendar .react-datepicker__day.available-date-highlight:hover {
+                    background-color: #66BB6A !important;
+                    border-radius: 50% !important;
+                    transform: scale(1.1);
+                    transition: all 0.2s;
+                  }
+                  .available-dates-calendar .react-datepicker__day.unavailable-date-gray {
+                    opacity: 0.3 !important;
+                    cursor: not-allowed !important;
+                    color: #999 !important;
+                    background-color: transparent !important;
+                  }
+                  .available-dates-calendar .react-datepicker__day:not(.available-date-highlight):not(.react-datepicker__day--selected):not(.react-datepicker__day--disabled) {
+                    opacity: 0.3;
+                    cursor: not-allowed;
+                    color: #999 !important;
+                  }
+                  .available-dates-calendar .react-datepicker__day--disabled {
+                    opacity: 0.2;
+                    cursor: not-allowed;
+                    text-decoration: line-through;
+                    color: #ccc !important;
+                  }
+                  .available-dates-calendar .react-datepicker__header {
+                    background-color: #f5f5f5;
+                    border-bottom: 1px solid #e0e0e0;
+                    padding-top: 10px;
+                  }
+                  .available-dates-calendar .react-datepicker__current-month {
+                    color: #333;
+                    font-weight: 600;
+                    margin-bottom: 10px;
+                  }
+                  .available-dates-calendar .react-datepicker__day-name {
+                    color: #666;
+                    font-weight: 600;
+                    width: 2.5rem;
+                    line-height: 2.5rem;
+                  }
+                  .available-dates-calendar .react-datepicker__day {
+                    width: 2.5rem;
+                    line-height: 2.5rem;
+                    margin: 0.166rem;
+                  }
+                `}</style>
               </>
             )}
           </div>
@@ -762,29 +951,58 @@ function BookingPage() {
         {/* Price Summary */}
         <div className="price-summary">
           <div className="summary-row">
-            <span className="summary-label">{translate('Price per', isMarathi)} {translate(selectedUnit, isMarathi)}</span>
-            <span className="summary-value">₹{pricePerUnit}</span>
+            <span className="summary-label">
+              {translate('Price per', isMarathi)} {translate(selectedUnit, isMarathi)}
+            </span>
+            <span className="summary-value-booki">
+              ₹{pricePerUnit.toFixed(0)}
+            </span>
           </div>
           <div className="summary-row">
-            <span className="summary-label">{translate('Quantity', isMarathi)}</span>
-            <span className="summary-value">{quantity} {translate(selectedUnit, isMarathi)}{quantity > 1 ? (isMarathi ? '' : 's') : ''}</span>
+            <span className="summary-label">
+              {translate('Quantity', isMarathi)}
+            </span>
+            <span className="summary-value-booki">
+              {quantity} {translate(selectedUnit, isMarathi)}{quantity > 1 ? (isMarathi ? '' : 's') : ''}
+            </span>
           </div>
           <div className="summary-divider"></div>
-          <div className="summary-row total">
-            <span className="summary-label">{translate('Total Amount', isMarathi)}</span>
-            <span className="summary-value total-price">₹{totalPrice.toLocaleString('en-IN')}</span>
+          <div className="summary-row total" style={{
+            padding: '16px 0',
+            marginTop: '12px',
+            borderTop: '2px solid #e0e0e0'
+          }}>
+            <span className="summary-label" style={{
+              fontSize: '15px',
+              fontWeight: '600',
+              color: '#424242'
+            }}>
+              {translate('Total Amount', isMarathi)}
+            </span>
+            <span className="summary-value-booki total-price" style={{
+              fontSize: '20px',
+              fontWeight: '700',
+              color: '#2c3e50'
+            }}>
+              ₹{totalPrice.toLocaleString('en-IN')}
+            </span>
           </div>
         </div>
       </div>
 
       {/* Book Now Button */}
       <button 
-        className={`book-now-button ${!selectedDate ? 'disabled' : ''}`}
+        className={`book-now-button ${!selectedDate || isCreatingBooking ? 'disabled' : ''}`}
         onClick={handleBookNow}
-        disabled={!selectedDate}
+        disabled={!selectedDate || isCreatingBooking}
       >
         <span className="button-icon">✈️</span>
-        <span>{translate('Book Now', isMarathi)} - ₹{totalPrice.toLocaleString('en-IN')}</span>
+        <span>
+          {isCreatingBooking 
+            ? translate('Creating Booking...', isMarathi) 
+            : `${translate('Book Now', isMarathi)} - ₹${totalPrice.toLocaleString('en-IN')}`
+          }
+        </span>
       </button>
     </div>
   )

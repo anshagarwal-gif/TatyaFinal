@@ -19,53 +19,89 @@ function CheckoutPage() {
     date: '',
     totalPrice: 400,
     pricePerUnit: 400,
+    itemTotal: 400,
+    gstRate: 0.18,
+    gstAmount: 72,
+    totalPayable: 472,
     location: null
   })
 
   useEffect(() => {
     // First try to get from navigation state
     const stateData = location.state
+    console.log('CheckoutPage - Received state data:', stateData)
+    
     if (stateData) {
-      setBookingData({
-        quantity: stateData.quantity || 1,
-        unit: stateData.unit || 'Acre',
-        date: stateData.date || '',
-        totalPrice: stateData.totalPrice || 400,
-        pricePerUnit: stateData.pricePerUnit || 400,
-        location: stateData.location || null
+      const quantity = stateData.quantity || 1
+      const pricePerUnit = stateData.pricePerUnit || 400
+      const itemTotal = stateData.itemTotal || stateData.totalPrice || (pricePerUnit * quantity)
+      const gstRate = stateData.gstRate || 0.18
+      const gstAmount = stateData.gstAmount !== undefined ? stateData.gstAmount : (itemTotal * gstRate)
+      const totalPayable = stateData.totalPayable !== undefined ? stateData.totalPayable : (itemTotal + gstAmount)
+      
+      console.log('CheckoutPage - Calculated values:', {
+        quantity,
+        pricePerUnit,
+        itemTotal,
+        gstRate,
+        gstAmount,
+        totalPayable
       })
-      // Also save to localStorage for persistence
-      localStorage.setItem('bookingData', JSON.stringify({
-        quantity: stateData.quantity || 1,
+      
+      const bookingDataObj = {
+        quantity: quantity,
         unit: stateData.unit || 'Acre',
         date: stateData.date || '',
-        totalPrice: stateData.totalPrice || 400,
-        pricePerUnit: stateData.pricePerUnit || 400,
+        totalPrice: stateData.totalPrice || itemTotal,
+        pricePerUnit: pricePerUnit,
+        itemTotal: itemTotal,
+        gstRate: gstRate,
+        gstAmount: gstAmount,
+        totalPayable: totalPayable,
         location: stateData.location || null
-      }))
+      }
+      
+      setBookingData(bookingDataObj)
+      console.log('CheckoutPage - Set booking data:', bookingDataObj)
+      
+      // Also save to localStorage for persistence
+      localStorage.setItem('bookingData', JSON.stringify(bookingDataObj))
     } else {
       // Fallback to localStorage
       const savedData = localStorage.getItem('bookingData')
       if (savedData) {
         try {
           const parsed = JSON.parse(savedData)
+          console.log('CheckoutPage - Loaded from localStorage:', parsed)
           setBookingData(parsed)
         } catch (e) {
           console.error('Error parsing booking data:', e)
         }
+      } else {
+        console.warn('CheckoutPage - No state data and no localStorage data found')
       }
     }
   }, [location.state])
 
-  // Calculate prices
+  // Use values from bookingData (passed from BookingPage)
   const pricePerUnit = bookingData.pricePerUnit || 400
   const quantity = bookingData.quantity || 1
-  const itemTotal = bookingData.totalPrice || (pricePerUnit * quantity)
+  const itemTotal = bookingData.itemTotal || bookingData.totalPrice || (pricePerUnit * quantity)
   const deliveryFee = 35
   const travelCost = 20
-  const gstRate = 0.18
-  const gstAmount = itemTotal * gstRate
-  const totalPayable = itemTotal + gstAmount
+  const gstRate = bookingData.gstRate !== undefined ? bookingData.gstRate : 0.18
+  const gstAmount = bookingData.gstAmount !== undefined ? bookingData.gstAmount : (itemTotal * gstRate)
+  const totalPayable = bookingData.totalPayable !== undefined ? bookingData.totalPayable : (itemTotal + gstAmount)
+  
+  // Debug logging
+  console.log('CheckoutPage - Current values for display:', {
+    quantity,
+    itemTotal,
+    gstRate,
+    gstAmount,
+    totalPayable,
+    bookingData
+  })
 
   const handleProceedToPayment = async () => {
     if (!bookingData.location || !bookingData.date) {
@@ -179,35 +215,45 @@ function CheckoutPage() {
       <div className="order-summary">
         <div className="summary-row">
           <span className="summary-label">{translate('Total Quantity', isMarathi)}</span>
-          <span className="summary-value">{quantity} {translate(bookingData.unit, isMarathi)}{quantity > 1 ? (isMarathi ? '' : 's') : ''}</span>
+          <span className="summary-value-booki">
+            {quantity > 0 ? `${quantity} ${translate(bookingData.unit || 'Acre', isMarathi)}${quantity > 1 ? (isMarathi ? '' : 's') : ''}` : '0'}
+          </span>
         </div>
         <div className="summary-row">
           <span className="summary-label">{translate('Item Total', isMarathi)}</span>
-          <span className="summary-value">₹{itemTotal.toLocaleString('en-IN')}</span>
+          <span className="summary-value-booki">
+            ₹{(itemTotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          </span>
         </div>
         <div className="summary-row">
           <span className="summary-label">{translate('Delivery Fee (₹35 Saved)', isMarathi)}</span>
-          <span className="summary-value">
-            <span className="strikethrough">₹{deliveryFee}</span> ₹0
+          <span className="summary-value-booki">
+            <span className="strikethrough">₹{deliveryFee}</span> <span style={{ color: '#4caf50', fontWeight: '700' }}>₹0</span>
           </span>
         </div>
         <div className="summary-row">
           <span className="summary-label">{translate('Travel Cost (₹20 Saved)', isMarathi)}</span>
-          <span className="summary-value">
-            <span className="strikethrough">₹{travelCost}</span> ₹0
+          <span className="summary-value-booki">
+            <span className="strikethrough">₹{travelCost}</span> <span style={{ color: '#4caf50', fontWeight: '700' }}>₹0</span>
           </span>
         </div>
         <div className="summary-row">
           <span className="summary-label">{translate('GST', isMarathi)}</span>
-          <span className="summary-value">18%</span>
+          <span className="summary-value-booki">
+            {((gstRate || 0.18) * 100).toFixed(0)}%
+          </span>
         </div>
         <div className="summary-row">
           <span className="summary-label">{translate('Total GST', isMarathi)}</span>
-          <span className="summary-value">₹{Math.round(gstAmount).toLocaleString('en-IN')}</span>
+          <span className="summary-value-booki">
+            ₹{Math.round(gstAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          </span>
         </div>
         <div className="summary-row total-row">
           <span className="summary-label">{translate('Total Payable', isMarathi)}</span>
-          <span className="summary-value total-amount">₹{Math.round(totalPayable).toLocaleString('en-IN')}</span>
+          <span className="summary-value-booki total-amount">
+            ₹{Math.round(totalPayable || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          </span>
         </div>
       </div>
 

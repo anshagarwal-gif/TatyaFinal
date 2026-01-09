@@ -212,18 +212,20 @@
 .summary-label {
   font-size: 14px;
   color: #666;
+  font-weight: 500;
 }
 
-.summary-value {
-  font-size: 14px;
-  color: #000;
-  font-weight: 500;
+.summary-value-booki {
+  font-size: 15px;
+  color: #4caf50;
+  font-weight: 700;
 }
 
 .strikethrough {
   text-decoration: line-through;
   color: #999;
   margin-right: 8px;
+  font-weight: 400;
 }
 
 .total-row {
@@ -232,10 +234,16 @@
   border-top: 2px solid #e0e0e0;
 }
 
+.total-row .summary-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #424242;
+}
+
 .total-amount {
-  font-size: 18px;
-  font-weight: bold;
-  color: #000;
+  font-size: 22px;
+  font-weight: 800;
+  color: #2e7d32;
 }
 
 /* Offers Section */
@@ -496,10 +504,14 @@
 
   .summary-label {
     font-size: 16px;
+    font-weight: 500;
+    color: #666;
   }
 
-  .summary-value {
-    font-size: 16px;
+  .summary-value-booki {
+    font-size: 17px;
+    font-weight: 700;
+    color: #4caf50;
   }
 
   .total-row {
@@ -507,8 +519,16 @@
     padding-top: 20px;
   }
 
+  .total-row .summary-label {
+    font-size: 18px;
+    font-weight: 600;
+    color: #424242;
+  }
+
   .total-amount {
-    font-size: 26px;
+    font-size: 28px;
+    font-weight: 800;
+    color: #2e7d32;
   }
 
   .offers-section {
