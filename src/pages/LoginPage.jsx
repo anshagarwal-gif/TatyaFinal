@@ -11,7 +11,7 @@ import otpMan from '../assets/OTPMan.png'
 import otpBlackText from '../assets/OTPBlackText.png'
 import otpBlackSubtext from '../assets/OTPBlackSubtext.png'
 import otpOrangeText from '../assets/OTPOrangeText.png'
-import { FiPhone, FiArrowRight, FiEdit2, FiCheckCircle, FiUser, FiBriefcase } from 'react-icons/fi'
+import { FiPhone, FiArrowRight, FiEdit2, FiCheckCircle, FiUser, FiBriefcase, FiLock, FiMail } from 'react-icons/fi'
 import { generateOtp, verifyOtp } from '../services/api'
 
 function LoginPage() {
@@ -25,6 +25,10 @@ function LoginPage() {
   const [showSplash, setShowSplash] = useState(true)
   const [splashAnimationComplete, setSplashAnimationComplete] = useState(false)
   const [isVendorLogin, setIsVendorLogin] = useState(false)
+  // Vendor login states
+  const [vendorUserId, setVendorUserId] = useState('')
+  const [vendorPassword, setVendorPassword] = useState('')
+  const [isVendorLoggingIn, setIsVendorLoggingIn] = useState(false)
   const otpInputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)]
   const navigate = useNavigate()
 
@@ -132,12 +136,8 @@ function LoginPage() {
     try {
       const response = await verifyOtp(phoneNumber, otpValue)
       if (response.success) {
-        // OTP verified successfully, navigate based on login type
-        if (isVendorLogin) {
-          navigate('/vendor-dashboard')
-        } else {
-          navigate('/location')
-        }
+        // OTP verified successfully, navigate to location (customer only)
+        navigate('/location')
       } else {
         // OTP verification failed - show clear error message
         setErrorMessage(response.message || 'Invalid OTP. Please check and try again.')
@@ -165,6 +165,41 @@ function LoginPage() {
       setIsVerifying(false)
     }
   }
+
+  // Vendor login handler - pure frontend, no API calls
+  const handleVendorLogin = (e) => {
+    e.preventDefault()
+    
+    if (!vendorUserId.trim()) {
+      setErrorMessage('Please enter your User ID')
+      return
+    }
+    
+    if (!vendorPassword.trim()) {
+      setErrorMessage('Please enter your password')
+      return
+    }
+
+    setIsVendorLoggingIn(true)
+    setErrorMessage('')
+    
+    // Simulate login delay for better UX
+    setTimeout(() => {
+      // Pure frontend - just navigate to vendor dashboard
+      // No actual authentication check
+      setIsVendorLoggingIn(false)
+      navigate('/vendor-dashboard')
+    }, 500)
+  }
+
+  // Reset vendor form when switching to customer
+  useEffect(() => {
+    if (!isVendorLogin) {
+      setVendorUserId('')
+      setVendorPassword('')
+      setErrorMessage('')
+    }
+  }, [isVendorLogin])
 
 
   return (
@@ -269,67 +304,136 @@ function LoginPage() {
         
         {!showOTP ? (
           <>
-            <div className="form-group">
-              <label className="form-label" htmlFor="phone-input">
-                {translate('Phone Number', isMarathi)}
-              </label>
-              <div className="phone-input-container">
-                <span className="country-code">+91</span>
-                <FiPhone className="phone-icon" />
-                <input
-                  id="phone-input"
-                  type="tel"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  autoComplete="tel-national"
-                  className="phone-input"
-                  placeholder={translate('Enter your phone number', isMarathi)}
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                  onKeyPress={handlePhoneKeyPress}
-                  maxLength="10"
-                  aria-label={translate('Phone Number', isMarathi)}
-                />
-              </div>
-              {phoneNumber.length > 0 && phoneNumber.length < 10 && (
-                <p className="phone-hint">{translate('Enter 10-digit phone number', isMarathi)}</p>
-              )}
-              {errorMessage && !showOTP && (
-                <p className="error-message" style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                  {errorMessage}
-                </p>
-              )}
-            </div>
+            {isVendorLogin ? (
+              // Vendor Login Form - User ID and Password
+              <form onSubmit={handleVendorLogin}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="vendor-userid">
+                    {translate('User ID', isMarathi)}
+                  </label>
+                  <div className="phone-input-container">
+                    <FiUser className="phone-icon" />
+                    <input
+                      id="vendor-userid"
+                      type="text"
+                      className="phone-input"
+                      placeholder={translate('Enter your User ID', isMarathi)}
+                      value={vendorUserId}
+                      onChange={(e) => setVendorUserId(e.target.value)}
+                      autoComplete="username"
+                      aria-label={translate('User ID', isMarathi)}
+                    />
+                  </div>
+                </div>
 
-            <button 
-              type="button"
-              className="get-otp-button"
-              onClick={handleGetOTP}
-              disabled={phoneNumber.length < 10 || isGenerating}
-              aria-label={translate('Get OTP', isMarathi)}
-            >
-              {isGenerating ? (
-                <>
-                  <div className="verifying-spinner" style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
-                  <span>{translate('Sending...', isMarathi)}</span>
-                </>
-              ) : (
-                <>
-                  <span>{translate('Get OTP', isMarathi)}</span>
-                  <FiArrowRight className="button-icon-right" />
-                </>
-              )}
-            </button>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="vendor-password">
+                    {translate('Password', isMarathi)}
+                  </label>
+                  <div className="phone-input-container">
+                    <FiLock className="phone-icon" />
+                    <input
+                      id="vendor-password"
+                      type="password"
+                      className="phone-input"
+                      placeholder={translate('Enter your password', isMarathi)}
+                      value={vendorPassword}
+                      onChange={(e) => setVendorPassword(e.target.value)}
+                      autoComplete="current-password"
+                      aria-label={translate('Password', isMarathi)}
+                    />
+                  </div>
+                </div>
 
-            {isVendorLogin && (
-              <button 
-                type="button"
-                className="vendor-register-button"
-                onClick={() => navigate('/vendor-onboarding')}
-                aria-label={translate('New Vendor? Register Here', isMarathi)}
-              >
-                {translate('New Vendor? Register Here', isMarathi)}
-              </button>
+                {errorMessage && (
+                  <p className="error-message" style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                    {errorMessage}
+                  </p>
+                )}
+
+                <button 
+                  type="submit"
+                  className="get-otp-button"
+                  disabled={!vendorUserId.trim() || !vendorPassword.trim() || isVendorLoggingIn}
+                  aria-label={translate('Login', isMarathi)}
+                >
+                  {isVendorLoggingIn ? (
+                    <>
+                      <div className="verifying-spinner" style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
+                      <span>{translate('Logging in...', isMarathi)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{translate('Login', isMarathi)}</span>
+                      <FiArrowRight className="button-icon-right" />
+                    </>
+                  )}
+                </button>
+
+                <button 
+                  type="button"
+                  className="vendor-register-button"
+                  onClick={() => navigate('/vendor-onboarding')}
+                  aria-label={translate('New Vendor? Register Here', isMarathi)}
+                >
+                  {translate('New Vendor? Register Here', isMarathi)}
+                </button>
+              </form>
+            ) : (
+              // Customer Login Form - Phone Number and OTP (unchanged)
+              <>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="phone-input">
+                    {translate('Phone Number', isMarathi)}
+                  </label>
+                  <div className="phone-input-container">
+                    <span className="country-code">+91</span>
+                    <FiPhone className="phone-icon" />
+                    <input
+                      id="phone-input"
+                      type="tel"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      autoComplete="tel-national"
+                      className="phone-input"
+                      placeholder={translate('Enter your phone number', isMarathi)}
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                      onKeyPress={handlePhoneKeyPress}
+                      maxLength="10"
+                      aria-label={translate('Phone Number', isMarathi)}
+                    />
+                  </div>
+                  {phoneNumber.length > 0 && phoneNumber.length < 10 && (
+                    <p className="phone-hint">{translate('Enter 10-digit phone number', isMarathi)}</p>
+                  )}
+                  {errorMessage && !showOTP && (
+                    <p className="error-message" style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                      {errorMessage}
+                    </p>
+                  )}
+                </div>
+
+                <button 
+                  type="button"
+                  className="get-otp-button"
+                  onClick={handleGetOTP}
+                  disabled={phoneNumber.length < 10 || isGenerating}
+                  aria-label={translate('Get OTP', isMarathi)}
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="verifying-spinner" style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
+                      <span>{translate('Sending...', isMarathi)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{translate('Get OTP', isMarathi)}</span>
+                      <FiArrowRight className="button-icon-right" />
+                    </>
+                  )}
+                </button>
+              </>
             )}
           </>
         ) : (

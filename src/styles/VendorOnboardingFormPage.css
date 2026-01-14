@@ -73,6 +73,8 @@
   background: white;
   padding-bottom: 40px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -120,6 +122,8 @@
   padding: 20px;
   margin: 0 auto;
   box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Title Section */
@@ -151,31 +155,38 @@
 /* Phone Verification Section */
 .verification-section {
   margin-bottom: 32px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .phone-input-group {
   display: flex;
   gap: 12px;
   margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .country-code-input {
   flex: 0 0 80px;
+  min-width: 70px;
   height: 56px;
   background: #F5F5F5;
   border: none;
   border-radius: 12px;
-  padding: 0 16px;
+  padding: 0 12px;
   font-size: 16px;
   font-weight: 400;
   color: #666;
   text-align: center;
   font-family: 'Inter', sans-serif;
   cursor: not-allowed;
+  box-sizing: border-box;
 }
 
 .phone-input {
   flex: 1;
+  min-width: 0;
   height: 56px;
   background: #F5F5F5;
   border: none;
@@ -185,6 +196,8 @@
   font-weight: 400;
   color: #1C1B1F;
   font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .phone-input::placeholder {
@@ -280,6 +293,8 @@
 /* Sign Up Section */
 .signup-section {
   margin-bottom: 32px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .signup-prompt {
@@ -317,6 +332,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-input {
@@ -330,6 +347,7 @@
   font-weight: 400;
   color: #1C1B1F;
   font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
 }
 
 .form-input::placeholder {
@@ -339,6 +357,27 @@
 .form-input:focus {
   outline: none;
   background: #EEEEEE;
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%231C1B1F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 20px;
+  padding-right: 48px;
+  cursor: pointer;
+}
+
+.form-select option {
+  background: white;
+  color: #1C1B1F;
+  padding: 12px;
+  font-size: 16px;
+}
+
+.form-select option:disabled {
+  color: #999;
 }
 
 .send-otp-button {
@@ -404,6 +443,8 @@
   .form-content-wrapper {
     max-width: 500px;
     padding: 30px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .language-toggle {
@@ -419,14 +460,35 @@
 
   .main-title {
     font-size: 30px;
+    word-wrap: break-word;
   }
 
   .main-subtitle {
     font-size: 17px;
+    word-wrap: break-word;
   }
 
   .signup-title {
     font-size: 26px;
+    word-wrap: break-word;
+  }
+
+  .phone-input-group {
+    width: 100%;
+  }
+
+  .form-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .otp-input-group {
+    gap: 10px;
+  }
+
+  .otp-input {
+    width: 54px;
+    height: 60px;
   }
 }
 
@@ -449,6 +511,7 @@
     border-radius: 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     margin-top: 60px;
+    box-sizing: border-box;
   }
 
   .form-header {
@@ -471,14 +534,17 @@
 
   .main-title {
     font-size: 36px;
+    word-wrap: break-word;
   }
 
   .main-subtitle {
     font-size: 18px;
+    word-wrap: break-word;
   }
 
   .signup-title {
     font-size: 28px;
+    word-wrap: break-word;
   }
 
   .title-section {
@@ -487,10 +553,30 @@
 
   .verification-section {
     margin-bottom: 40px;
+    width: 100%;
   }
 
   .signup-section {
     margin-bottom: 40px;
+    width: 100%;
+  }
+
+  .phone-input-group {
+    width: 100%;
+  }
+
+  .form-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .otp-input-group {
+    gap: 12px;
+  }
+
+  .otp-input {
+    width: 56px;
+    height: 64px;
   }
 }
 
@@ -513,6 +599,8 @@
   .form-content-wrapper {
     padding: 16px;
     padding-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .title-section {
@@ -523,33 +611,40 @@
     font-size: 26px;
     line-height: 1.3;
     margin-bottom: 6px;
+    word-wrap: break-word;
   }
 
   .main-subtitle {
     font-size: 14px;
     line-height: 1.4;
+    word-wrap: break-word;
   }
 
   .verification-section {
     margin-bottom: 28px;
+    width: 100%;
   }
 
   .phone-input-group {
     gap: 8px;
     margin-bottom: 18px;
+    width: 100%;
+    flex-wrap: nowrap;
   }
 
   .country-code-input {
     flex: 0 0 75px;
+    min-width: 70px;
     height: 50px;
     font-size: 14px;
-    padding: 0 12px;
+    padding: 0 10px;
   }
 
   .phone-input {
     height: 50px;
     font-size: 14px;
-    padding: 0 14px;
+    padding: 0 12px;
+    min-width: 0;
   }
 
   .loading-spinner {
@@ -567,47 +662,102 @@
     height: 50px;
     font-size: 15px;
     margin-bottom: 12px;
+    width: 100%;
   }
 
   .signup-section {
     margin-bottom: 28px;
+    width: 100%;
   }
 
   .signup-prompt {
     font-size: 14px;
     line-height: 1.4;
     margin-bottom: 24px;
+    word-wrap: break-word;
   }
 
   .signup-title {
     font-size: 20px;
     line-height: 1.3;
     margin-bottom: 20px;
+    word-wrap: break-word;
   }
 
   .signup-form {
     gap: 14px;
+    width: 100%;
   }
 
   .form-input {
     height: 50px;
     font-size: 14px;
     padding: 0 14px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .send-otp-button {
     height: 50px;
     font-size: 15px;
     margin-top: 4px;
+    width: 100%;
   }
 
   .form-footer {
     margin-top: 32px;
+    width: 100%;
   }
 
   .footer-text {
     font-size: 12px;
     line-height: 1.5;
+    word-wrap: break-word;
+  }
+
+  /* OTP Responsive Styles */
+  .otp-verification-section {
+    width: 100%;
+  }
+
+  .otp-header {
+    margin-bottom: 24px;
+  }
+
+  .otp-title {
+    font-size: 22px;
+  }
+
+  .otp-subtitle {
+    font-size: 13px;
+  }
+
+  .otp-input-group {
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 0 4px;
+  }
+
+  .otp-input {
+    width: 50px;
+    height: 56px;
+    font-size: 20px;
+    min-width: 45px;
+  }
+
+  .otp-actions {
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .change-number-button {
+    height: 50px;
+    font-size: 14px;
+  }
+
+  .resend-otp-button {
+    height: 50px;
+    font-size: 14px;
   }
 }
 
@@ -638,27 +788,38 @@
   .form-content-wrapper {
     padding: 14px;
     padding-top: 18px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .main-title {
     font-size: 24px;
+    word-wrap: break-word;
   }
 
   .main-subtitle {
     font-size: 13px;
+    word-wrap: break-word;
+  }
+
+  .phone-input-group {
+    gap: 6px;
+    width: 100%;
   }
 
   .country-code-input {
     flex: 0 0 70px;
+    min-width: 65px;
     height: 48px;
     font-size: 13px;
-    padding: 0 10px;
+    padding: 0 8px;
   }
 
   .phone-input {
     height: 48px;
     font-size: 13px;
-    padding: 0 12px;
+    padding: 0 10px;
+    min-width: 0;
   }
 
   .verify-button,
@@ -666,24 +827,56 @@
   .send-otp-button {
     height: 48px;
     font-size: 14px;
+    width: 100%;
   }
 
   .form-input {
     height: 48px;
     font-size: 13px;
     padding: 0 12px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .signup-title {
     font-size: 18px;
+    word-wrap: break-word;
   }
 
   .signup-prompt {
     font-size: 13px;
+    word-wrap: break-word;
   }
 
   .footer-text {
     font-size: 11px;
+    word-wrap: break-word;
+  }
+
+  /* OTP Extra Small Mobile */
+  .otp-title {
+    font-size: 20px;
+  }
+
+  .otp-subtitle {
+    font-size: 12px;
+  }
+
+  .otp-input-group {
+    gap: 6px;
+    padding: 0 2px;
+  }
+
+  .otp-input {
+    width: 45px;
+    height: 52px;
+    font-size: 18px;
+    min-width: 40px;
+  }
+
+  .change-number-button {
+    height: 48px;
+    font-size: 13px;
   }
 }
 
@@ -692,18 +885,281 @@
   .form-content-wrapper {
     max-width: 550px;
     padding: 60px 50px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .main-title {
     font-size: 40px;
+    word-wrap: break-word;
   }
 
   .main-subtitle {
     font-size: 20px;
+    word-wrap: break-word;
   }
 
   .signup-title {
     font-size: 30px;
+    word-wrap: break-word;
+  }
+
+  .phone-input-group {
+    width: 100%;
+  }
+
+  .form-input {
+    width: 100%;
+    box-sizing: border-box;
   }
 }
 
+/* OTP Verification Section */
+.otp-verification-section {
+  animation: slideUpFadeIn 0.5s ease-out;
+  width: 100%;
+}
+
+@keyframes slideUpFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.otp-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.otp-title-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.otp-success-icon {
+  font-size: 28px;
+  color: #10b981;
+  animation: checkmarkPop 0.5s ease-out;
+}
+
+@keyframes checkmarkPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.otp-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.otp-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.otp-phone {
+  font-weight: 600;
+  color: #111827;
+}
+
+.otp-input-group {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.otp-input {
+  width: 56px;
+  height: 64px;
+  min-width: 50px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  background: #ffffff;
+  transition: all 0.2s;
+  outline: none;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+.otp-input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+  transform: scale(1.05);
+}
+
+.otp-input:disabled {
+  background: #f9fafb;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.otp-error-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  color: #dc2626;
+  font-size: 14px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.otp-verifying {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.verifying-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.otp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.change-number-button {
+  width: 100%;
+  height: 56px;
+  background: transparent;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.change-number-button:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.change-number-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-icon-left {
+  font-size: 18px;
+}
+
+.signup-prompt-section {
+  margin-top: 24px;
+  text-align: center;
+  width: 100%;
+}
+
+.error-message {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Ensure all buttons are responsive */
+.verify-button,
+.resend-otp-button,
+.send-otp-button,
+.change-number-button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsive OTP section */
+@media (max-width: 480px) {
+  .otp-verification-section {
+    width: 100%;
+    padding: 0;
+  }
+
+  .otp-header {
+    padding: 0 4px;
+  }
+
+  .otp-title-wrapper {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .otp-success-icon {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 360px) {
+  .otp-title {
+    font-size: 18px;
+  }
+
+  .otp-success-icon {
+    font-size: 20px;
+  }
+
+  .otp-input-group {
+    gap: 4px;
+  }
+
+  .otp-input {
+    width: 42px;
+    height: 50px;
+    font-size: 16px;
+  }
+}
