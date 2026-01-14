@@ -1,6 +1,8 @@
 package com.tatya.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,6 +35,8 @@ public class Farm {
     private BigDecimal longitude;
 
     @Column(name = "area_acres", precision = 10, scale = 2)
+    @NotNull
+    @DecimalMin("0.0")
     private BigDecimal areaAcres;
 
     // Optional: Image or map snapshot URL

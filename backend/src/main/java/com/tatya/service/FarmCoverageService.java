@@ -2,6 +2,7 @@ package com.tatya.service;
 
 import com.tatya.entity.Cluster;
 import com.tatya.entity.Farm;
+import java.math.BigDecimal;
 import com.tatya.repository.ClusterRepository;
 import com.tatya.repository.FarmRepository;
 import lombok.RequiredArgsConstructor;
@@ -68,11 +69,22 @@ public class FarmCoverageService {
                 List<Farm> component = new ArrayList<>();
                 bfs(farm, adjacencyList, visited, component);
 
-                // 4. Validate Cluster Size (Step 6)
-                // Example: At least 2 farms (User said 20, but for demo/testing we use 2)
-                if (component.size() >= 2) {
-                    Cluster cluster = createClusterFromComponent(component);
-                    newClusters.add(cluster);
+                // 4. Validate Cluster Size & Area (Step 6 + New 10-acre rule)
+                if (component.size() >= 1) {
+                    BigDecimal totalArea = component.stream()
+                            .map(f -> f.getAreaAcres() != null ? f.getAreaAcres() : BigDecimal.ZERO)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    if (totalArea.compareTo(BigDecimal.valueOf(10)) <= 0) {
+                        // Fits in one cluster
+                        if (component.size() >= 2) {
+                            newClusters.add(createClusterFromComponent(component));
+                        }
+                    } else {
+                        // Exceeds 10 acres - Split logic
+                        List<Cluster> splitClusters = splitComponentIntoClusters(component, adjacencyList);
+                        newClusters.addAll(splitClusters);
+                    }
                 }
             }
         }
@@ -111,11 +123,83 @@ public class FarmCoverageService {
         cluster.setStatus(Cluster.ClusterStatus.PENDING);
         cluster.setFarms(new HashSet<>(farms));
 
+        // Calculate Center
+        if (!farms.isEmpty()) {
+            double avgLat = farms.stream().mapToDouble(f -> f.getLatitude().doubleValue()).average().orElse(0.0);
+            double avgLon = farms.stream().mapToDouble(f -> f.getLongitude().doubleValue()).average().orElse(0.0);
+            cluster.setCenterLatitude(BigDecimal.valueOf(avgLat));
+            cluster.setCenterLongitude(BigDecimal.valueOf(avgLon));
+        }
+
+        // Set Priority (Random 1-10 as per requirement)
+        cluster.setPriority((int) (Math.random() * 10) + 1);
+
         // Step 8: Suggest Dates (Today + 2 days, for 3 days duration)
         cluster.setStartDate(LocalDate.now().plusDays(2));
         cluster.setEndDate(LocalDate.now().plusDays(5));
 
         return cluster;
+    }
+
+    private List<Cluster> splitComponentIntoClusters(List<Farm> component, Map<Long, List<Farm>> adjacencyList) {
+        List<Cluster> result = new ArrayList<>();
+        Set<Long> unassignedIds = component.stream().map(Farm::getId).collect(Collectors.toSet());
+        Map<Long, Farm> farmMap = component.stream().collect(Collectors.toMap(Farm::getId, f -> f));
+
+        int safetyCounter = 0;
+        final int MAX_ITERATIONS = 5000;
+
+        while (!unassignedIds.isEmpty()) {
+            if (++safetyCounter > MAX_ITERATIONS) {
+                // Failsafe to prevent infinite loops if logic is flawed or data is unusual
+                break;
+            }
+            Long seedId = unassignedIds.iterator().next();
+            Farm seed = farmMap.get(seedId);
+
+            List<Farm> clusterFarms = new ArrayList<>();
+            clusterFarms.add(seed);
+            unassignedIds.remove(seedId);
+
+            BigDecimal currentArea = seed.getAreaAcres() != null ? seed.getAreaAcres() : BigDecimal.ZERO;
+
+            boolean addedAnything = true;
+            while (addedAnything && currentArea.compareTo(BigDecimal.valueOf(10)) < 0) {
+                addedAnything = false;
+
+                Farm bestCandidate = null;
+
+                for (Farm member : clusterFarms) {
+                    List<Farm> neighbors = adjacencyList.get(member.getId());
+                    if (neighbors != null) {
+                        for (Farm n : neighbors) {
+                            if (unassignedIds.contains(n.getId())) {
+                                BigDecimal nArea = n.getAreaAcres() != null ? n.getAreaAcres() : BigDecimal.ZERO;
+                                if (currentArea.add(nArea).compareTo(BigDecimal.valueOf(10)) <= 0) {
+                                    bestCandidate = n;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (bestCandidate != null)
+                        break;
+                }
+
+                if (bestCandidate != null) {
+                    clusterFarms.add(bestCandidate);
+                    BigDecimal nArea = bestCandidate.getAreaAcres() != null ? bestCandidate.getAreaAcres()
+                            : BigDecimal.ZERO;
+                    currentArea = currentArea.add(nArea);
+                    unassignedIds.remove(bestCandidate.getId());
+                    addedAnything = true;
+                }
+            }
+            if (!clusterFarms.isEmpty()) {
+                result.add(createClusterFromComponent(clusterFarms));
+            }
+        }
+        return result;
     }
 
     private double haversineM(double lat1, double lon1, double lat2, double lon2) {
