@@ -443,64 +443,6 @@ export const getSpecificationByDroneAndOptionSet = async (droneId, optionSet) =>
   }
 };
 
-// ==================== Cluster APIs ====================
-
-/**
- * Generate clusters
- * @returns {Promise<Array>}
- */
-export const generateClusters = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/clusters/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error('Failed to generate clusters');
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error generating clusters:', error);
-    throw error;
-  }
-};
-
-/**
- * Get active clusters
- * @returns {Promise<Array>}
- */
-export const getActiveClusters = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/clusters/active`);
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching active clusters:', error);
-    throw error;
-  }
-};
-
-/**
- * Get all clusters
- * @returns {Promise<Array>}
- */
-export const getAllClusters = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/clusters`);
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching clusters:', error);
-    throw error;
-  }
-};
-
 // ==================== Farm APIs ====================
 
 /**
