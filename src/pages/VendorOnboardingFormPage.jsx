@@ -221,7 +221,7 @@ function VendorOnboardingFormPage() {
                 onChange={(e) => setSelectedOption(e.target.value)}
               >
                 <option value="" disabled>
-                  {translate('Select', isMarathi)}
+                  {translate('What Defines you the best?', isMarathi)}
                 </option>
                 <option value="Individual Equipment Owner">
                   {translate('Individual Equipment Owner', isMarathi)}
