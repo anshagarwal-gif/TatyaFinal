@@ -1,0 +1,177 @@
+.approve-vendor-container {
+  width: 100%;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.approve-vendor-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1f2937 0%, #16a34a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 2rem;
+  letter-spacing: -0.5px;
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.approve-vendor-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #16a34a 0%, #059669 100%);
+  border-radius: 2px;
+}
+
+.approve-vendor-empty {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 4rem 3rem;
+  text-align: center;
+  border: 2px dashed rgba(22, 163, 74, 0.2);
+}
+
+.approve-vendor-empty-text {
+  color: #6b7280;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.approve-vendor-table-container {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fffe 100%);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(22, 163, 74, 0.1);
+  overflow: hidden;
+  border: 1px solid rgba(22, 163, 74, 0.1);
+}
+
+.approve-vendor-table-wrapper {
+  overflow-x: auto;
+}
+
+.approve-vendor-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.approve-vendor-table thead {
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+  border-bottom: 2px solid rgba(22, 163, 74, 0.2);
+}
+
+.approve-vendor-table th {
+  padding: 1.25rem 1.5rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.approve-vendor-table tbody tr {
+  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+  transition: all 0.2s;
+}
+
+.approve-vendor-table tbody tr:hover {
+  background: linear-gradient(90deg, rgba(22, 163, 74, 0.05) 0%, rgba(5, 150, 105, 0.05) 100%);
+  transform: scale(1.001);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.1);
+}
+
+.approve-vendor-table td {
+  padding: 1.25rem 1.5rem;
+  font-size: 0.9375rem;
+  color: #111827;
+}
+
+.approve-vendor-table td.font-medium {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.approve-vendor-table td.text-gray-700 {
+  color: #4b5563;
+}
+
+.approve-vendor-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.approve-vendor-button {
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+}
+
+.approve-vendor-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.approve-vendor-button:hover::before {
+  left: 100%;
+}
+
+.approve-vendor-button.green {
+  background: linear-gradient(135deg, #16a34a 0%, #059669 100%);
+  color: white;
+}
+
+.approve-vendor-button.green:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.5), 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.approve-vendor-button.red {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.approve-vendor-button.red:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5), 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.approve-vendor-icon {
+  height: 1.125rem;
+  width: 1.125rem;
+}

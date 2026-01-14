@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import LocationPage from './pages/LocationPage'
 import BookingPage from './pages/BookingPage'
@@ -16,6 +16,14 @@ import VendorEditProfilePage from './pages/VendorEditProfilePage'
 import MyFarmsPage from './pages/MyFarmsPage'
 import ClusterManagementPage from './pages/ClusterManagementPage'
 import NearbyClustersPage from './pages/NearbyClustersPage'
+// Admin Panel Imports
+import AdminLoginPage from './pages/AdminLoginPage'
+import AdminLayout from './components/AdminLayout'
+import AdminDashboardPage from './pages/AdminDashboardPage'
+import VendorManagementPage from './pages/VendorManagementPage'
+import ApproveRejectVendorPage from './pages/ApproveRejectVendorPage'
+import UsersManagementPage from './pages/UsersManagementPage'
+import FinancePage from './pages/FinancePage'
 
 function App() {
   return (
@@ -38,6 +46,16 @@ function App() {
          <Route path="/vendor-payouts" element={<VendorPayoutsPage />} />
         <Route path="/vendor-dashboard" element={<VendorDashboardPage />} />
         <Route path="/vendor-edit-profile" element={<VendorEditProfilePage />} />
+        {/* Admin Panel Routes */}
+        <Route path="/adminlogin/101" element={<AdminLoginPage />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="vendors" element={<VendorManagementPage />} />
+          <Route path="approve-vendors" element={<ApproveRejectVendorPage />} />
+          <Route path="users" element={<UsersManagementPage />} />
+          <Route path="finance" element={<FinancePage />} />
+        </Route>
       </Routes>
     </Router>
   )

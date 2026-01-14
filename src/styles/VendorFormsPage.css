@@ -7,7 +7,57 @@
   position: relative;
 }
 
+/* Header with Back Button */
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-bottom: 1px solid #f0f0f0;
+}
 
+.back-button {
+  width: 40px;
+  height: 40px;
+  background: #000;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 0;
+  line-height: 1;
+}
+
+.back-button:hover {
+  background: #333;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.back-button:active {
+  transform: scale(0.95);
+}
+
+.progress-indicator {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
 
 .form-content {
   flex: 1;
@@ -196,6 +246,43 @@
   font-weight: 500;
 }
 
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.checkbox-item-inline {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 12px 16px;
+  background: #F5F5F5;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-item-inline:hover {
+  background: #EEEEEE;
+}
+
+.checkbox-item-inline input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  accent-color: #4CAF50;
+  cursor: pointer;
+}
+
+.checkbox-item-inline .checkbox-label {
+  font-size: 14px;
+  color: #000;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
 .submit-button {
   width: 100%;
   height: 56px;
@@ -261,5 +348,18 @@
   
   .date-row {
     gap: 12px;
+  }
+
+  .checkbox-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
+
+  .checkbox-item-inline {
+    padding: 10px 12px;
+  }
+
+  .checkbox-item-inline .checkbox-label {
+    font-size: 13px;
   }
 }
