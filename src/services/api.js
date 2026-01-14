@@ -641,3 +641,92 @@ export const getRazorpayKey = async () => {
   }
 };
 
+// ==================== Cluster APIs ====================
+
+/**
+ * Generate clusters from unassigned farms
+ * @returns {Promise<Array>} List of generated clusters
+ */
+export const generateClusters = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/clusters/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to generate clusters');
+    }
+
+    return { success: true, data: data };
+  } catch (error) {
+    console.error('Error generating clusters:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all active clusters
+ * @returns {Promise<Array>} List of active clusters
+ */
+export const getActiveClusters = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/clusters/active`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch active clusters');
+    }
+
+    return { success: true, data: data };
+  } catch (error) {
+    console.error('Error fetching active clusters:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all clusters
+ * @returns {Promise<Array>} List of all clusters
+ */
+export const getAllClusters = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/clusters`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch clusters');
+    }
+
+    return { success: true, data: data };
+  } catch (error) {
+    console.error('Error fetching clusters:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get cluster by ID
+ * @param {number} clusterId - Cluster ID
+ * @returns {Promise<Object>} Cluster details
+ */
+export const getClusterById = async (clusterId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/clusters/${clusterId}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch cluster');
+    }
+
+    return { success: true, data: data };
+  } catch (error) {
+    console.error('Error fetching cluster:', error);
+    throw error;
+  }
+};
+
