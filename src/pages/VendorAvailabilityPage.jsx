@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
-import { saveOnboardingStep5 } from '../services/api'
+import { saveOnboardingStep5, getOnboardingData } from '../services/api'
 
 function VendorAvailabilityPage() {
   const navigate = useNavigate()
@@ -15,7 +15,70 @@ function VendorAvailabilityPage() {
   })
   const [errors, setErrors] = useState({})
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
+
+  // Load saved data when component mounts
+  useEffect(() => {
+    const loadSavedData = async () => {
+      const vendorId = localStorage.getItem('vendorId')
+      if (!vendorId) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const response = await getOnboardingData(parseInt(vendorId))
+        if (response.success && response.data) {
+          const data = response.data
+          const drone = data.drone
+          
+          if (drone) {
+            // Get availability dates from Availability records
+            let startDate = ''
+            let endDate = ''
+            
+            // Try to get from availability records if available
+            if (drone.availabilities && drone.availabilities.length > 0) {
+              const firstAvailability = drone.availabilities[0]
+              startDate = firstAvailability.startDate || ''
+              endDate = firstAvailability.endDate || ''
+            }
+            
+            // Parse time batches from JSON string
+            let timeBatches = []
+            if (drone.timeBatches) {
+              try {
+                timeBatches = typeof drone.timeBatches === 'string' 
+                  ? JSON.parse(drone.timeBatches) 
+                  : drone.timeBatches
+              } catch (e) {
+                // If JSON parsing fails, try comma-separated
+                if (typeof drone.timeBatches === 'string') {
+                  timeBatches = drone.timeBatches.split(',').map(b => b.trim()).filter(b => b)
+                }
+              }
+            }
+            
+            setFormData(prev => ({
+              ...prev,
+              startDate: startDate,
+              endDate: endDate,
+              slaReachTime: drone.slaReachTimeHours ? String(drone.slaReachTimeHours) : '',
+              timeBatches: timeBatches || [],
+              availabilityStatus: drone.availabilityStatus || ''
+            }))
+          }
+        }
+      } catch (error) {
+        console.error('Error loading saved data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSavedData()
+  }, [])
 
   const timeBatchOptions = [
     { value: 'morning', label: 'Morning Batch (6-11 AM)' },
@@ -88,6 +151,17 @@ function VendorAvailabilityPage() {
       setErrorMessage(error.message || 'Failed to save. Please try again.')
       setIsSaving(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="vendor-form-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto' }}></div>
+          <p style={{ marginTop: '16px' }}>Loading saved data...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

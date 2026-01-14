@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
-import { saveOnboardingStep3 } from '../services/api'
+import { saveOnboardingStep3, getOnboardingData } from '../services/api'
 
 function VendorCapacityPage() {
   const navigate = useNavigate()
@@ -15,7 +15,67 @@ function VendorCapacityPage() {
     leadTime: ''
   })
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
+
+  // Load saved data when component mounts
+  useEffect(() => {
+    const loadSavedData = async () => {
+      const vendorId = localStorage.getItem('vendorId')
+      if (!vendorId) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const response = await getOnboardingData(parseInt(vendorId))
+        if (response.success && response.data && response.data.drone) {
+          const drone = response.data.drone
+          
+          // Parse operational months and days from JSON string
+          let operationalMonths = []
+          let operationalDays = []
+          
+          try {
+            if (drone.operationalMonths) {
+              operationalMonths = typeof drone.operationalMonths === 'string' 
+                ? JSON.parse(drone.operationalMonths) 
+                : drone.operationalMonths
+            }
+            if (drone.operationalDays) {
+              operationalDays = typeof drone.operationalDays === 'string'
+                ? JSON.parse(drone.operationalDays)
+                : drone.operationalDays
+            }
+          } catch (e) {
+            // If JSON parsing fails, try comma-separated
+            if (drone.operationalMonths && typeof drone.operationalMonths === 'string') {
+              operationalMonths = drone.operationalMonths.split(',').map(m => m.trim()).filter(m => m)
+            }
+            if (drone.operationalDays && typeof drone.operationalDays === 'string') {
+              operationalDays = drone.operationalDays.split(',').map(d => d.trim()).filter(d => d)
+            }
+          }
+          
+          setFormData(prev => ({
+            ...prev,
+            maxAcresPerDay: drone.maxAcresPerDay ? String(drone.maxAcresPerDay) : '',
+            minBookingAcres: drone.minBookingAcres ? String(drone.minBookingAcres) : '',
+            serviceRadius: drone.serviceRadiusKm ? String(drone.serviceRadiusKm) : '',
+            operationalMonths: operationalMonths || [],
+            operationalDays: operationalDays || [],
+            leadTime: drone.leadTimeDays ? String(drone.leadTimeDays) : ''
+          }))
+        }
+      } catch (error) {
+        console.error('Error loading saved data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSavedData()
+  }, [])
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -82,6 +142,17 @@ function VendorCapacityPage() {
       setErrorMessage(error.message || 'Failed to save. Please try again.')
       setIsSaving(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="vendor-form-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto' }}></div>
+          <p style={{ marginTop: '16px' }}>Loading saved data...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

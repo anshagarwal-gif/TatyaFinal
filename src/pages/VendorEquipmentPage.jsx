@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
-import { saveOnboardingStep1, uploadEquipmentImages, uploadDocuments } from '../services/api'
+import { saveOnboardingStep1, uploadEquipmentImages, uploadDocuments, getOnboardingData } from '../services/api'
 
 function VendorEquipmentPage() {
   const navigate = useNavigate()
@@ -16,7 +16,41 @@ function VendorEquipmentPage() {
     uploadDocuments: null
   })
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
+
+  // Load saved data when component mounts
+  useEffect(() => {
+    const loadSavedData = async () => {
+      const vendorId = localStorage.getItem('vendorId')
+      if (!vendorId) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const response = await getOnboardingData(parseInt(vendorId))
+        if (response.success && response.data && response.data.drone) {
+          const drone = response.data.drone
+          setFormData(prev => ({
+            ...prev,
+            equipmentType: drone.equipmentType || '',
+            brand: drone.brand || '',
+            modelName: drone.modelName || '',
+            yearOfMake: drone.yearOfMake ? String(drone.yearOfMake) : '',
+            serialNo: drone.serialNo || ''
+          }))
+        }
+      } catch (error) {
+        console.error('Error loading saved data:', error)
+        // Continue even if loading fails - user can still fill the form
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSavedData()
+  }, [])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -91,6 +125,17 @@ function VendorEquipmentPage() {
 
   const handleBack = () => {
     navigate(-1)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="vendor-form-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto' }}></div>
+          <p style={{ marginTop: '16px' }}>Loading saved data...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

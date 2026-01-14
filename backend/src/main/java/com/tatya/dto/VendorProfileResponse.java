@@ -1,8 +1,11 @@
 package com.tatya.dto;
 
+import com.tatya.entity.Availability;
 import com.tatya.entity.Drone;
 import com.tatya.entity.Vendor;
 import com.tatya.entity.VendorBankAccount;
+
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -81,6 +84,10 @@ public class VendorProfileResponse {
     }
     
     public static VendorProfileResponse fromVendor(Vendor vendor, Drone drone, VendorBankAccount bankAccount) {
+        return fromVendor(vendor, drone, bankAccount, null);
+    }
+    
+    public static VendorProfileResponse fromVendor(Vendor vendor, Drone drone, VendorBankAccount bankAccount, List<Availability> availabilities) {
         VendorProfileResponse response = new VendorProfileResponse();
         response.setVendorId(vendor.getVendorId());
         response.setUserId(vendor.getUser().getId());
@@ -123,8 +130,17 @@ public class VendorProfileResponse {
             droneInfo.setHasChargingFacility(drone.getHasChargingFacility());
             droneInfo.setNumberOfSpareBatteries(drone.getNumberOfSpareBatteries());
             droneInfo.setDroneWarehouseDescription(drone.getDroneWarehouse() != null ? drone.getDroneWarehouse() : null);
-            droneInfo.setAvailabilityStartDate(drone.getAvailabilityStartDate() != null ? drone.getAvailabilityStartDate().toString() : null);
-            droneInfo.setAvailabilityEndDate(drone.getAvailabilityEndDate() != null ? drone.getAvailabilityEndDate().toString() : null);
+            
+            // Get availability dates from Availability records (use first one if available)
+            if (availabilities != null && !availabilities.isEmpty()) {
+                Availability firstAvailability = availabilities.get(0);
+                droneInfo.setAvailabilityStartDate(firstAvailability.getStartDate() != null ? firstAvailability.getStartDate().toString() : null);
+                droneInfo.setAvailabilityEndDate(firstAvailability.getEndDate() != null ? firstAvailability.getEndDate().toString() : null);
+            } else {
+                droneInfo.setAvailabilityStartDate(null);
+                droneInfo.setAvailabilityEndDate(null);
+            }
+            
             droneInfo.setSlaReachTimeHours(drone.getSlaReachTimeHours());
             droneInfo.setWorkingHoursBatches(drone.getTimeBatches());
             droneInfo.setAvailabilityStatus(drone.getAvailabilityStatus());

@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
-import { saveOnboardingStep6 } from '../services/api'
+import { saveOnboardingStep6, getOnboardingData } from '../services/api'
 
 function VendorPayoutsPage() {
   const navigate = useNavigate()
@@ -15,7 +15,42 @@ function VendorPayoutsPage() {
   })
   const [errors, setErrors] = useState({})
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
+
+  // Load saved data when component mounts
+  useEffect(() => {
+    const loadSavedData = async () => {
+      const vendorId = localStorage.getItem('vendorId')
+      if (!vendorId) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const response = await getOnboardingData(parseInt(vendorId))
+        if (response.success && response.data) {
+          const bankAccount = response.data.bankAccount
+          if (bankAccount) {
+            setFormData(prev => ({
+              ...prev,
+              accountHolderName: bankAccount.accountHolderName || '',
+              accountNumber: bankAccount.accountNumber || '',
+              upiId: bankAccount.upiId || '',
+              bankIfscCode: bankAccount.bankIfscCode || '',
+              bankName: bankAccount.bankName || ''
+            }))
+          }
+        }
+      } catch (error) {
+        console.error('Error loading saved data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSavedData()
+  }, [])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -76,6 +111,17 @@ function VendorPayoutsPage() {
       setErrorMessage(error.message || 'Failed to save. Please try again.')
       setIsSaving(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="vendor-form-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto' }}></div>
+          <p style={{ marginTop: '16px' }}>Loading saved data...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

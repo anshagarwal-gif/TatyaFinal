@@ -916,6 +916,33 @@ export const saveOnboardingStep5 = async (step5Data) => {
 };
 
 /**
+ * Get saved onboarding data for a vendor
+ * @param {number} vendorId - Vendor ID
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const getOnboardingData = async (vendorId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/onboarding/${vendorId}/data`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch onboarding data');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching onboarding data:', error);
+    throw error;
+  }
+};
+
+/**
  * Save Step 6: Payouts
  * @param {Object} step6Data - Bank account data
  * @returns {Promise<{success: boolean, message: string, data: Object}>}

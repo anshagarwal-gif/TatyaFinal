@@ -4,10 +4,12 @@ import com.tatya.dto.UpdateVendorProfileRequest;
 import com.tatya.dto.VendorProfileResponse;
 import com.tatya.dto.VendorRegistrationRequest;
 import com.tatya.dto.VendorResponse;
+import com.tatya.entity.Availability;
 import com.tatya.entity.Drone;
 import com.tatya.entity.User;
 import com.tatya.entity.Vendor;
 import com.tatya.entity.VendorBankAccount;
+import com.tatya.repository.AvailabilityRepository;
 import com.tatya.repository.DroneRepository;
 import com.tatya.repository.UserRepository;
 import com.tatya.repository.VendorBankAccountRepository;
@@ -18,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -30,6 +33,7 @@ public class VendorService {
     private final VendorRepository vendorRepository;
     private final DroneRepository droneRepository;
     private final VendorBankAccountRepository bankAccountRepository;
+    private final AvailabilityRepository availabilityRepository;
     private final OtpService otpService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -177,7 +181,13 @@ public class VendorService {
                 .findByVendor_VendorIdAndIsActiveTrue(vendorId)
                 .orElse(null);
 
-        return VendorProfileResponse.fromVendor(vendor, drone, bankAccount);
+        // Get availability records for the drone
+        List<Availability> availabilities = null;
+        if (drone != null) {
+            availabilities = availabilityRepository.findByDrone_DroneId(drone.getDroneId());
+        }
+
+        return VendorProfileResponse.fromVendor(vendor, drone, bankAccount, availabilities);
     }
 
     /**
@@ -274,20 +284,29 @@ public class VendorService {
             drone.setNumberOfSpareBatteries(request.getNumberOfSpareBatteries());
         if (request.getDroneWarehouseDescription() != null)
             drone.setDroneWarehouse(request.getDroneWarehouseDescription());
-        if (request.getAvailabilityStartDate() != null) {
-            try {
-                drone.setAvailabilityStartDate(java.time.LocalDate.parse(request.getAvailabilityStartDate()));
-            } catch (Exception e) {
-                log.warn("Invalid date format: {}", request.getAvailabilityStartDate());
+        
+        // Update availability start and end dates in Availability records
+        if (request.getAvailabilityStartDate() != null || request.getAvailabilityEndDate() != null) {
+            java.util.List<Availability> availabilities = availabilityRepository.findByDrone_DroneId(drone.getDroneId());
+            for (Availability availability : availabilities) {
+                if (request.getAvailabilityStartDate() != null) {
+                    try {
+                        availability.setStartDate(java.time.LocalDate.parse(request.getAvailabilityStartDate()));
+                    } catch (Exception e) {
+                        log.warn("Invalid date format: {}", request.getAvailabilityStartDate());
+                    }
+                }
+                if (request.getAvailabilityEndDate() != null) {
+                    try {
+                        availability.setEndDate(java.time.LocalDate.parse(request.getAvailabilityEndDate()));
+                    } catch (Exception e) {
+                        log.warn("Invalid date format: {}", request.getAvailabilityEndDate());
+                    }
+                }
+                availabilityRepository.save(availability);
             }
         }
-        if (request.getAvailabilityEndDate() != null) {
-            try {
-                drone.setAvailabilityEndDate(java.time.LocalDate.parse(request.getAvailabilityEndDate()));
-            } catch (Exception e) {
-                log.warn("Invalid date format: {}", request.getAvailabilityEndDate());
-            }
-        }
+        
         if (request.getSlaReachTimeHours() != null)
             drone.setSlaReachTimeHours(request.getSlaReachTimeHours());
         if (request.getWorkingHoursBatches() != null)
@@ -327,6 +346,12 @@ public class VendorService {
                 .findByVendor_VendorIdAndIsActiveTrue(vendorId)
                 .orElse(null);
 
-        return VendorProfileResponse.fromVendor(vendor, drone, bankAccount);
+        // Get availability records for the drone
+        List<Availability> availabilities = null;
+        if (drone != null) {
+            availabilities = availabilityRepository.findByDrone_DroneId(drone.getDroneId());
+        }
+
+        return VendorProfileResponse.fromVendor(vendor, drone, bankAccount, availabilities);
     }
 }

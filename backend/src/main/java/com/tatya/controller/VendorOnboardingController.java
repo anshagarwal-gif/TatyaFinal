@@ -4,6 +4,7 @@ import com.tatya.dto.*;
 import com.tatya.entity.Drone;
 import com.tatya.entity.VendorBankAccount;
 import com.tatya.entity.VendorDocument;
+import com.tatya.repository.VendorBankAccountRepository;
 import com.tatya.service.FileUploadService;
 import com.tatya.service.VendorOnboardingService;
 import jakarta.validation.Valid;
@@ -26,6 +27,7 @@ public class VendorOnboardingController {
     
     private final VendorOnboardingService onboardingService;
     private final FileUploadService fileUploadService;
+    private final VendorBankAccountRepository bankAccountRepository;
     
     /**
      * Save Step 1: Equipment Basics
@@ -171,5 +173,40 @@ public class VendorOnboardingController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(e.getMessage()));
         }
+    }
+    
+    /**
+     * Get saved onboarding data for a vendor
+     * GET /api/vendors/onboarding/{vendorId}/data
+     */
+    @GetMapping("/{vendorId}/data")
+    public ResponseEntity<ApiResponse<OnboardingDataResponse>> getOnboardingData(@PathVariable Long vendorId) {
+        try {
+            Drone drone = onboardingService.getOnboardingData(vendorId);
+            VendorBankAccount bankAccount = bankAccountRepository
+                .findByVendor_VendorIdAndIsActiveTrue(vendorId)
+                .orElse(null);
+            
+            OnboardingDataResponse response = new OnboardingDataResponse();
+            response.setDrone(drone);
+            response.setBankAccount(bankAccount);
+            
+            return ResponseEntity.ok(ApiResponse.success("Onboarding data retrieved successfully", response));
+        } catch (Exception e) {
+            log.error("Error fetching onboarding data for vendor {}", vendorId, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    
+    /**
+     * Response DTO for onboarding data
+     */
+    @lombok.Data
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class OnboardingDataResponse {
+        private Drone drone;
+        private VendorBankAccount bankAccount;
     }
 }
