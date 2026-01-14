@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
+import { saveOnboardingStep6 } from '../services/api'
 
 function VendorPayoutsPage() {
   const navigate = useNavigate()
@@ -13,6 +14,8 @@ function VendorPayoutsPage() {
     bankName: ''
   })
   const [errors, setErrors] = useState({})
+  const [isSaving, setIsSaving] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -42,11 +45,36 @@ function VendorPayoutsPage() {
     navigate('/vendor-availability')
   }
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      // Complete onboarding and navigate to vendor dashboard
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return
+    }
+
+    const vendorId = localStorage.getItem('vendorId')
+    if (!vendorId) {
+      setErrorMessage('Please complete registration first')
+      return
+    }
+
+    setIsSaving(true)
+    setErrorMessage('')
+
+    try {
+      const step6Data = {
+        vendorId: parseInt(vendorId),
+        accountHolderName: formData.accountHolderName,
+        accountNumber: formData.accountNumber,
+        bankIfscCode: formData.bankIfscCode,
+        bankName: formData.bankName || null,
+        upiId: formData.upiId || null
+      }
+
+      await saveOnboardingStep6(step6Data)
       alert('Account created successfully! Your account is pending approval.')
       navigate('/vendor-dashboard')
+    } catch (error) {
+      setErrorMessage(error.message || 'Failed to save. Please try again.')
+      setIsSaving(false)
     }
   }
 
@@ -137,12 +165,19 @@ function VendorPayoutsPage() {
           <p>Tatya will send your payouts securely every 7 days.</p>
         </div>
 
+        {errorMessage && (
+          <div style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '1rem', textAlign: 'center' }}>
+            {errorMessage}
+          </div>
+        )}
+
         {/* Submit Button */}
         <button 
           className="submit-button"
           onClick={handleSubmit}
+          disabled={isSaving}
         >
-          Submit
+          {isSaving ? 'Submitting...' : 'Submit'}
         </button>
 
       </div>

@@ -672,3 +672,397 @@ export const getClusterById = async (clusterId) => {
   }
 };
 
+// ==================== Vendor Registration & Login APIs ====================
+
+/**
+ * Register a new vendor - saves vendor data and sends OTP
+ * @param {Object} vendorData - Vendor registration data {fullName, email, phoneNumber, vendorType}
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const registerVendor = async (vendorData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(vendorData),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to register vendor');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error registering vendor:', error);
+    throw error;
+  }
+};
+
+/**
+ * Verify OTP and login vendor
+ * @param {string} phoneNumber - 10 digit phone number
+ * @param {string} otpCode - 4 digit OTP code
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const verifyVendorAndLogin = async (phoneNumber, otpCode) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/verify-and-login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ phoneNumber, otpCode }),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to verify OTP and login');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error verifying vendor OTP:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get vendor by phone number
+ * @param {string} phoneNumber - 10 digit phone number
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const getVendorByPhone = async (phoneNumber) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/phone/${phoneNumber}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch vendor');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching vendor:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get vendor by ID
+ * @param {number} vendorId - Vendor ID
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const getVendorById = async (vendorId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/${vendorId}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch vendor');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching vendor:', error);
+    throw error;
+  }
+};
+
+// ==================== Vendor Onboarding APIs ====================
+
+/**
+ * Save Step 1: Equipment Basics
+ * @param {Object} step1Data - Equipment basics data {vendorId, equipmentType, brand, modelName, yearOfMake, serialNo}
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const saveOnboardingStep1 = async (step1Data) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/onboarding/step1`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(step1Data),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to save step 1');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error saving step 1:', error);
+    throw error;
+  }
+};
+
+/**
+ * Save Step 2: Drone-Specific Details
+ * @param {Object} step2Data - Drone details data
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const saveOnboardingStep2 = async (step2Data) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/onboarding/step2`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(step2Data),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to save step 2');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error saving step 2:', error);
+    throw error;
+  }
+};
+
+/**
+ * Save Step 3: Capacity & Coverage
+ * @param {Object} step3Data - Capacity data
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const saveOnboardingStep3 = async (step3Data) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/onboarding/step3`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(step3Data),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to save step 3');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error saving step 3:', error);
+    throw error;
+  }
+};
+
+/**
+ * Save Step 4: Location & Logistics
+ * @param {Object} step4Data - Location data
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const saveOnboardingStep4 = async (step4Data) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/onboarding/step4`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(step4Data),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to save step 4');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error saving step 4:', error);
+    throw error;
+  }
+};
+
+/**
+ * Save Step 5: Availability & SLA
+ * @param {Object} step5Data - Availability data
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const saveOnboardingStep5 = async (step5Data) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/onboarding/step5`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(step5Data),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to save step 5');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error saving step 5:', error);
+    throw error;
+  }
+};
+
+/**
+ * Save Step 6: Payouts
+ * @param {Object} step6Data - Bank account data
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const saveOnboardingStep6 = async (step6Data) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/onboarding/step6`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(step6Data),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to save step 6');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error saving step 6:', error);
+    throw error;
+  }
+};
+
+/**
+ * Upload equipment images
+ * @param {number} vendorId - Vendor ID
+ * @param {number} droneId - Drone ID (optional)
+ * @param {FileList} files - Image files
+ * @returns {Promise<{success: boolean, message: string, data: Array}>}
+ */
+export const uploadEquipmentImages = async (vendorId, droneId, files) => {
+  try {
+    const formData = new FormData();
+    formData.append('vendorId', vendorId);
+    if (droneId) {
+      formData.append('droneId', droneId);
+    }
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i]);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/vendors/onboarding/upload-images`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to upload images');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error uploading images:', error);
+    throw error;
+  }
+};
+
+/**
+ * Upload documents
+ * @param {number} vendorId - Vendor ID
+ * @param {number} droneId - Drone ID (optional)
+ * @param {FileList} files - Document files
+ * @returns {Promise<{success: boolean, message: string, data: Array}>}
+ */
+export const uploadDocuments = async (vendorId, droneId, files) => {
+  try {
+    const formData = new FormData();
+    formData.append('vendorId', vendorId);
+    if (droneId) {
+      formData.append('droneId', droneId);
+    }
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i]);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/vendors/onboarding/upload-documents`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to upload documents');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error uploading documents:', error);
+    throw error;
+  }
+};
+
+// ==================== Vendor Profile APIs ====================
+
+/**
+ * Get complete vendor profile with drone and bank account
+ * @param {number} vendorId - Vendor ID
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const getVendorProfile = async (vendorId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/${vendorId}/profile`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch vendor profile');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching vendor profile:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update vendor profile
+ * @param {number} vendorId - Vendor ID
+ * @param {Object} profileData - Profile data to update
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const updateVendorProfile = async (vendorId, profileData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/${vendorId}/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profileData),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update vendor profile');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error updating vendor profile:', error);
+    throw error;
+  }
+};

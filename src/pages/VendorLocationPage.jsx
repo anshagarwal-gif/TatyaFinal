@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
+import { saveOnboardingStep4 } from '../services/api'
 
 function VendorLocationPage() {
   const navigate = useNavigate()
@@ -13,6 +14,8 @@ function VendorLocationPage() {
     numberOfSpareBatteries: '',
     droneWarehouse: ''
   })
+  const [isSaving, setIsSaving] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -32,9 +35,33 @@ function VendorLocationPage() {
     navigate('/vendor-capacity')
   }
 
-  const handleSubmit = () => {
-    // Navigate to next step: Availability & SLA
-    navigate('/vendor-availability')
+  const handleSubmit = async () => {
+    const vendorId = localStorage.getItem('vendorId')
+    if (!vendorId) {
+      setErrorMessage('Please complete registration first')
+      return
+    }
+
+    setIsSaving(true)
+    setErrorMessage('')
+
+    try {
+      const step4Data = {
+        vendorId: parseInt(vendorId),
+        baseLocation: formData.baseLocation,
+        coordinates: formData.coordinates,
+        serviceAreas: formData.serviceAreas,
+        hasChargingFacility: formData.hasChargingFacility,
+        numberOfSpareBatteries: formData.numberOfSpareBatteries ? parseInt(formData.numberOfSpareBatteries) : null,
+        droneWarehouse: formData.droneWarehouse
+      }
+
+      await saveOnboardingStep4(step4Data)
+      navigate('/vendor-availability')
+    } catch (error) {
+      setErrorMessage(error.message || 'Failed to save. Please try again.')
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -136,12 +163,19 @@ function VendorLocationPage() {
           </div>
         </div>
 
+        {errorMessage && (
+          <div style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '1rem', textAlign: 'center' }}>
+            {errorMessage}
+          </div>
+        )}
+
         {/* Submit Button */}
         <button 
           className="submit-button"
           onClick={handleSubmit}
+          disabled={isSaving}
         >
-          Continue
+          {isSaving ? 'Saving...' : 'Continue'}
         </button>
       </div>
     </div>

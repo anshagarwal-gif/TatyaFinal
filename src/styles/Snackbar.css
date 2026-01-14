@@ -1,0 +1,167 @@
+.snackbar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  z-index: 10000;
+  min-width: 300px;
+  max-width: 90%;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.snackbar-show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.snackbar-content {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  gap: 12px;
+}
+
+.snackbar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.snackbar-success .snackbar-icon {
+  color: #10b981;
+}
+
+.snackbar-error .snackbar-icon {
+  color: #ef4444;
+}
+
+.snackbar-info .snackbar-icon {
+  color: #3b82f6;
+}
+
+.snackbar-message {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  line-height: 1.5;
+}
+
+.snackbar-success {
+  border-left: 4px solid #10b981;
+}
+
+.snackbar-error {
+  border-left: 4px solid #ef4444;
+}
+
+.snackbar-info {
+  border-left: 4px solid #3b82f6;
+}
+
+.snackbar-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: color 0.2s;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.snackbar-close:hover {
+  color: #1f2937;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.snackbar-close:active {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+  .snackbar {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    max-width: none;
+    min-width: auto;
+    transform: translateY(100px);
+  }
+
+  .snackbar-show {
+    transform: translateY(0);
+  }
+
+  .snackbar-content {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .snackbar-message {
+    font-size: 13px;
+  }
+
+  .snackbar-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .snackbar-close {
+    padding: 2px;
+  }
+}
+
+/* Tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .snackbar {
+    min-width: 350px;
+    max-width: 500px;
+  }
+}
+
+/* Animation for slide up */
+@keyframes slideUp {
+  from {
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUpMobile {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .snackbar-show {
+    animation: slideUpMobile 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@media (min-width: 641px) {
+  .snackbar-show {
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}

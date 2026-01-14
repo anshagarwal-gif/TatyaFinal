@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
+import { saveOnboardingStep1, uploadEquipmentImages, uploadDocuments } from '../services/api'
 
 function VendorEquipmentPage() {
   const navigate = useNavigate()
@@ -11,9 +12,12 @@ function VendorEquipmentPage() {
     modelName: '',
     yearOfMake: '',
     serialNo: '',
-    uploadImages: '',
-    uploadDocuments: ''
+    uploadImages: null,
+    uploadDocuments: null
   })
+  const [isSaving, setIsSaving] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -21,9 +25,68 @@ function VendorEquipmentPage() {
     }))
   }
 
-  const handleSubmit = () => {
-    // Navigate to next step: Drone-Specific Details
-    navigate('/vendor-drone-details')
+  const handleSubmit = async () => {
+    // Get vendorId from localStorage
+    const vendorId = localStorage.getItem('vendorId')
+    if (!vendorId) {
+      setErrorMessage('Please complete registration first')
+      return
+    }
+
+    // Validate required fields
+    if (!formData.equipmentType || !formData.brand || !formData.modelName || !formData.yearOfMake) {
+      setErrorMessage('Please fill in all required fields')
+      return
+    }
+
+    setIsSaving(true)
+    setErrorMessage('')
+
+    try {
+      // Save step 1 data
+      const step1Data = {
+        vendorId: parseInt(vendorId),
+        equipmentType: formData.equipmentType,
+        brand: formData.brand,
+        modelName: formData.modelName,
+        yearOfMake: parseInt(formData.yearOfMake),
+        serialNo: formData.serialNo || null
+      }
+
+      const response = await saveOnboardingStep1(step1Data)
+      const droneId = response.data?.droneId || null
+
+      // Upload images if provided
+      if (formData.uploadImages && formData.uploadImages.length > 0) {
+        try {
+          await uploadEquipmentImages(parseInt(vendorId), droneId, formData.uploadImages)
+        } catch (error) {
+          console.error('Error uploading images:', error)
+          // Continue even if image upload fails
+        }
+      }
+
+      // Upload documents if provided
+      if (formData.uploadDocuments && formData.uploadDocuments.length > 0) {
+        try {
+          await uploadDocuments(parseInt(vendorId), droneId, formData.uploadDocuments)
+        } catch (error) {
+          console.error('Error uploading documents:', error)
+          // Continue even if document upload fails
+        }
+      }
+
+      // Store droneId for next steps
+      if (droneId) {
+        localStorage.setItem('droneId', droneId)
+      }
+
+      // Navigate to next step
+      navigate('/vendor-drone-details')
+    } catch (error) {
+      setErrorMessage(error.message || 'Failed to save. Please try again.')
+      setIsSaving(false)
+    }
   }
 
   const handleBack = () => {
@@ -123,7 +186,7 @@ function VendorEquipmentPage() {
               type="file"
               accept="image/*"
               multiple
-              onChange={(e) => handleInputChange('uploadImages', e.target.files)}
+              onChange={(e) => handleInputChange('uploadImages', e.target.files || null)}
               className="form-input"
               style={{ padding: '12px' }}
             />
@@ -137,19 +200,26 @@ function VendorEquipmentPage() {
               type="file"
               accept=".pdf,.doc,.docx"
               multiple
-              onChange={(e) => handleInputChange('uploadDocuments', e.target.files)}
+              onChange={(e) => handleInputChange('uploadDocuments', e.target.files || null)}
               className="form-input"
               style={{ padding: '12px' }}
             />
           </div>
         </div>
 
+        {errorMessage && (
+          <div style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '1rem', textAlign: 'center' }}>
+            {errorMessage}
+          </div>
+        )}
+
         {/* Submit Button */}
         <button 
           className="submit-button"
           onClick={handleSubmit}
+          disabled={isSaving}
         >
-          Continue
+          {isSaving ? 'Saving...' : 'Continue'}
         </button>
 
       </div>

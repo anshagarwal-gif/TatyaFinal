@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorDashboardPage.css'
+import { getVendorProfile } from '../services/api'
 
 function VendorDashboardPage() {
   const [activeTab, setActiveTab] = useState('map') // 'map', 'details', 'profile'
@@ -10,7 +11,7 @@ function VendorDashboardPage() {
     <div className="vendor-dashboard">
       {/* Main Content */}
       <div className="dashboard-content">
-        {activeTab === 'map' && <MapView />}
+        {activeTab === 'map' && <MapViewWithData />}
         {activeTab === 'details' && <DetailsView />}
         {activeTab === 'profile' && <ProfileView navigate={navigate} />}
       </div>
@@ -47,8 +48,40 @@ function VendorDashboardPage() {
   )
 }
 
-// Map View Component
-function MapView() {
+// Map View Component with Data
+function MapViewWithData() {
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const vendorId = localStorage.getItem('vendorId')
+        if (!vendorId) {
+          setLoading(false)
+          return
+        }
+        const response = await getVendorProfile(parseInt(vendorId))
+        setProfile(response.data)
+      } catch (error) {
+        console.error('Error fetching profile:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProfile()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="map-view">
+        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>
+      </div>
+    )
+  }
+
+  const vendorName = profile?.fullName?.split(' ')[0] || 'Vendor'
+
   return (
     <div className="map-view">
       <div className="map-header">
@@ -62,7 +95,7 @@ function MapView() {
 
       <div className="greeting-section">
         <div className="greeting-text">
-          <h3>Hi, Sarang</h3>
+          <h3>Hi, {vendorName}</h3>
           <p className="greeting-subtitle">Welcome back to your dashboard</p>
         </div>
         <div className="earnings-card">
@@ -425,15 +458,56 @@ function DetailsView() {
 
 // Profile View Component
 function ProfileView({ navigate }) {
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const vendorId = localStorage.getItem('vendorId')
+        if (!vendorId) {
+          setLoading(false)
+          return
+        }
+        const response = await getVendorProfile(parseInt(vendorId))
+        setProfile(response.data)
+      } catch (error) {
+        console.error('Error fetching profile:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProfile()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="profile-view">
+        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div className="profile-view">
+        <div style={{ padding: '2rem', textAlign: 'center' }}>No profile data found</div>
+      </div>
+    )
+  }
+
+  const drone = profile.drone || {}
+  const bankAccount = profile.bankAccount || {}
+
   return (
     <div className="profile-view">
       <div className="profile-content">
         
         <div className="profile-header">
-          <h2>Sarang Sathe</h2>
-          <div className="status-indicator active">
+          <h2>{profile.fullName || 'Vendor'}</h2>
+          <div className={`status-indicator ${profile.verifiedStatus === 'VERIFIED' ? 'active' : ''}`}>
             <span>●</span>
-            Active Vendor
+            {profile.verifiedStatus === 'VERIFIED' ? 'Active Vendor' : 'Pending Verification'}
           </div>
         </div>
 
@@ -446,17 +520,12 @@ function ProfileView({ navigate }) {
 
             <div className="profile-section">
               <div className="section-title">Email Address</div>
-              <div className="section-value">sarang.sathe@email.com</div>
+              <div className="section-value">{profile.email || 'Not provided'}</div>
             </div>
 
             <div className="profile-section">
               <div className="section-title">Phone Number</div>
-              <div className="section-value">+91 98765 43210</div>
-            </div>
-
-            <div className="profile-section">
-              <div className="section-title">Social Media</div>
-              <div className="section-value">Instagram | Facebook | LinkedIn</div>
+              <div className="section-value">{profile.phone || 'Not provided'}</div>
             </div>
 
             <div className="profile-actions">
@@ -474,18 +543,18 @@ function ProfileView({ navigate }) {
 
             <div className="profile-section">
               <div className="section-title">Equipment Type</div>
-              <div className="section-value">Agricultural Drone</div>
+              <div className="section-value">{drone.equipmentType || 'Not provided'}</div>
             </div>
 
             <div className="profile-section">
               <div className="section-title">Brand & Model</div>
-              <div className="section-value">DJI Agras T30</div>
+              <div className="section-value">{drone.brand && drone.modelName ? `${drone.brand} ${drone.modelName}` : 'Not provided'}</div>
             </div>
 
             <div className="profile-section">
-              <div className="section-title">Payload Capacity</div>
+              <div className="section-title">Tank Size</div>
               <div className="value-highlight">
-                <div className="section-value">30 Liters</div>
+                <div className="section-value">{drone.tankSizeLiters ? `${drone.tankSizeLiters} Liters` : 'Not provided'}</div>
               </div>
             </div>
 
@@ -529,18 +598,18 @@ function ProfileView({ navigate }) {
             <div className="profile-section">
               <div className="section-title">Max Acres per Day</div>
               <div className="value-highlight">
-                <div className="section-value">15 Acres</div>
+                <div className="section-value">{drone.maxAcresPerDay ? `${drone.maxAcresPerDay} Acres` : 'Not provided'}</div>
               </div>
             </div>
 
             <div className="profile-section">
               <div className="section-title">Service Radius</div>
-              <div className="section-value">50 km</div>
+              <div className="section-value">{drone.serviceRadiusKm ? `${drone.serviceRadiusKm} km` : 'Not provided'}</div>
             </div>
 
             <div className="profile-section">
               <div className="section-title">Min Booking</div>
-              <div className="section-value">2 Acres</div>
+              <div className="section-value">{drone.minBookingAcres ? `${drone.minBookingAcres} Acres` : 'Not provided'}</div>
             </div>
           </div>
 
@@ -552,20 +621,20 @@ function ProfileView({ navigate }) {
 
             <div className="profile-section">
               <div className="section-title">Base Location</div>
-              <div className="section-value">Pune, Maharashtra</div>
+              <div className="section-value">{drone.baseLocation || 'Not provided'}</div>
             </div>
 
             <div className="profile-section">
               <div className="section-title">Service Areas</div>
-              <div className="section-value">Pune, Mumbai, Nashik</div>
+              <div className="section-value">{drone.serviceAreas || 'Not provided'}</div>
             </div>
 
             <div className="profile-section">
               <div className="section-title">Charging Facility</div>
               <div className="section-value">
-                <span className="status-indicator active">
+                <span className={`status-indicator ${drone.hasChargingFacility ? 'active' : ''}`}>
                   <span>●</span>
-                  Available
+                  {drone.hasChargingFacility ? 'Available' : 'Not Available'}
                 </span>
               </div>
             </div>
@@ -580,18 +649,18 @@ function ProfileView({ navigate }) {
             <div className="profile-section">
               <div className="section-title">SLA Reach Time</div>
               <div className="value-highlight">
-                <div className="section-value">2 Hours</div>
+                <div className="section-value">{drone.slaReachTimeHours ? `${drone.slaReachTimeHours} Hours` : 'Not provided'}</div>
               </div>
             </div>
 
             <div className="profile-section">
               <div className="section-title">Working Hours</div>
-              <div className="section-value">06:00 AM - 06:00 PM</div>
+              <div className="section-value">{drone.workingHoursBatches || 'Not provided'}</div>
             </div>
 
             <div className="profile-section">
               <div className="section-title">Lead Time</div>
-              <div className="section-value">2 Days</div>
+              <div className="section-value">{drone.leadTimeDays ? `${drone.leadTimeDays} Days` : 'Not provided'}</div>
             </div>
           </div>
 
@@ -603,17 +672,17 @@ function ProfileView({ navigate }) {
 
             <div className="profile-section">
               <div className="section-title">UPI ID</div>
-              <div className="section-value">sarang@paytm</div>
+              <div className="section-value">{bankAccount.upiId || 'Not provided'}</div>
             </div>
 
             <div className="profile-section">
               <div className="section-title">Bank Account</div>
-              <div className="section-value">HDFC Bank - XXXX1234</div>
+              <div className="section-value">{bankAccount.bankName && bankAccount.accountNumber ? `${bankAccount.bankName} - ${bankAccount.accountNumber.slice(-4)}` : 'Not provided'}</div>
             </div>
 
             <div className="profile-section">
               <div className="section-title">IFSC Code</div>
-              <div className="section-value">HDFC0001234</div>
+              <div className="section-value">{bankAccount.bankIfscCode || 'Not provided'}</div>
             </div>
           </div>
         </div>

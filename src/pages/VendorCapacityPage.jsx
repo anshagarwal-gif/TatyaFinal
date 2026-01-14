@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
+import { saveOnboardingStep3 } from '../services/api'
 
 function VendorCapacityPage() {
   const navigate = useNavigate()
@@ -13,6 +14,8 @@ function VendorCapacityPage() {
     operationalDays: [],
     leadTime: ''
   })
+  const [isSaving, setIsSaving] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -52,9 +55,33 @@ function VendorCapacityPage() {
     navigate('/vendor-drone-details')
   }
 
-  const handleSubmit = () => {
-    // Navigate to next step: Location & Logistics
-    navigate('/vendor-location')
+  const handleSubmit = async () => {
+    const vendorId = localStorage.getItem('vendorId')
+    if (!vendorId) {
+      setErrorMessage('Please complete registration first')
+      return
+    }
+
+    setIsSaving(true)
+    setErrorMessage('')
+
+    try {
+      const step3Data = {
+        vendorId: parseInt(vendorId),
+        maxAcresPerDay: formData.maxAcresPerDay ? parseInt(formData.maxAcresPerDay) : null,
+        minBookingAcres: formData.minBookingAcres ? parseInt(formData.minBookingAcres) : null,
+        serviceRadius: formData.serviceRadius ? parseFloat(formData.serviceRadius) : null,
+        operationalMonths: formData.operationalMonths,
+        operationalDays: formData.operationalDays,
+        leadTime: formData.leadTime ? parseInt(formData.leadTime) : null
+      }
+
+      await saveOnboardingStep3(step3Data)
+      navigate('/vendor-location')
+    } catch (error) {
+      setErrorMessage(error.message || 'Failed to save. Please try again.')
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -158,12 +185,19 @@ function VendorCapacityPage() {
           </div>
         </div>
 
+        {errorMessage && (
+          <div style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '1rem', textAlign: 'center' }}>
+            {errorMessage}
+          </div>
+        )}
+
         {/* Submit Button */}
         <button 
           className="submit-button"
           onClick={handleSubmit}
+          disabled={isSaving}
         >
-          Continue
+          {isSaving ? 'Saving...' : 'Continue'}
         </button>
 
       </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/VendorOnboardingFormPage.css'
 import { translate } from '../utils/translations'
 import { FiPhone, FiCheckCircle, FiEdit2, FiArrowLeft } from 'react-icons/fi'
+import { registerVendor, verifyVendorAndLogin, generateOtp } from '../services/api'
 
 function VendorOnboardingFormPage() {
   const navigate = useNavigate()
@@ -74,7 +75,7 @@ function VendorOnboardingFormPage() {
   }
 
   // Single OTP send function - validate original fields
-  const handleSendOTP = () => {
+  const handleSendOTP = async () => {
     // Validate name
     if (!fullName.trim()) {
       setErrorMessage('Please enter your full name')
@@ -108,36 +109,63 @@ function VendorOnboardingFormPage() {
     setIsGenerating(true)
     setErrorMessage('')
     
-    // Simulate OTP sending (pure frontend)
-    setTimeout(() => {
+    try {
+      // Register vendor and send OTP
+      await registerVendor({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phoneNumber: phone,
+        vendorType: selectedOption
+      })
+      
       setIsGenerating(false)
       setShowOTP(true)
-    }, 1500)
+    } catch (error) {
+      setIsGenerating(false)
+      setErrorMessage(error.message || 'Failed to register. Please try again.')
+    }
   }
 
   // Single OTP verification function
-  const handleVerifyOTP = (otpValue) => {
+  const handleVerifyOTP = async (otpValue) => {
     if (otpValue.length !== 4) return
 
     setIsVerifying(true)
     setErrorMessage('')
     
-    // Simulate OTP verification (pure frontend)
-    setTimeout(() => {
+    try {
+      const phone = phoneNumber.replace(/\D/g, '')
+      const response = await verifyVendorAndLogin(phone, otpValue)
+      
+      // Store vendor data in localStorage for later use
+      if (response.data) {
+        localStorage.setItem('vendor', JSON.stringify(response.data))
+        localStorage.setItem('vendorId', response.data.vendorId)
+        localStorage.setItem('userId', response.data.userId)
+      }
+      
       setIsVerifying(false)
       // Navigate to first step in onboarding sequence: Equipment Basics
       navigate('/vendor-equipment')
-    }, 1500)
+    } catch (error) {
+      setIsVerifying(false)
+      setErrorMessage(error.message || 'Invalid OTP. Please try again.')
+    }
   }
 
-  const handleResendOTP = () => {
+  const handleResendOTP = async () => {
     setIsGenerating(true)
     setErrorMessage('')
     setOtp(['', '', '', ''])
     
-    setTimeout(() => {
+    try {
+      const phone = phoneNumber.replace(/\D/g, '')
+      await generateOtp(phone)
       setIsGenerating(false)
-    }, 1500)
+    } catch (error) {
+      setIsGenerating(false)
+      setErrorMessage(error.message || 'Failed to resend OTP. Please try again.')
+    }
   }
 
   const handleChangeNumber = () => {

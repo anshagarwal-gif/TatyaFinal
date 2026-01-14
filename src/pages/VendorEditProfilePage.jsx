@@ -1,84 +1,144 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorEditProfilePage.css'
+import { getVendorProfile, updateVendorProfile } from '../services/api'
+import Snackbar from '../components/Snackbar'
 
 function VendorEditProfilePage() {
   const navigate = useNavigate()
   
   const [formData, setFormData] = useState({
     // Personal Information
-    vendorName: 'Sarang Sathe',
+    vendorName: '',
     emailAddress: '',
-    phoneNumber: '+91 9876543210',
-    socialMedia: {
-      instagram: '',
-      facebook: '',
-      linkedin: ''
-    },
+    phoneNumber: '',
     
     // Equipment Details
-    equipmentType: 'Agricultural Drone',
-    droneName: 'DJI Agras T30',
-    droneModel: 'T30',
-    brand: 'DJI',
-    modelName: 'Agras T30',
-    yearOfMake: '2023',
-    serialNo: 'DJI123456789',
+    equipmentType: '',
+    brand: '',
+    modelName: '',
+    yearOfMake: '',
+    serialNo: '',
     
     // Drone Specifications
-    payload: '30',
-    sprayWidth: '9',
-    tankSize: '30',
-    flightTime: '18',
-    batterySwapTime: '5',
-    uin: 'UIN123456789',
-    uaop: 'UAOP987654321',
-    pilotLicense: 'DGCA-RPL-001',
-    
-    // Safety Features
-    safetyFeatures: {
-      returnToHome: true,
-      terrainFollowing: true,
-      obstacleAvoidance: false,
-      gpsTracking: true
-    },
-    
-    // Rental & Pricing
-    rentalType: 'per_acre',
-    pricingPerAcre: '500',
-    pricingPerHour: '1200',
-    pricingPerDay: '8000',
+    droneName: '',
+    droneType: '',
+    tankSize: '',
+    sprayWidth: '',
+    batteryCapacity: '',
+    batteryCount: '',
+    flightTime: '',
+    batterySwapTime: '',
+    uin: '',
+    uaop: '',
+    pilotLicense: '',
+    returnToHome: false,
+    terrainFollowing: false,
     
     // Capacity & Coverage
-    maxAcresPerDay: '15',
-    minBookingAcres: '2',
-    serviceRadius: '50',
-    operationalMonths: ['march', 'april', 'may', 'june', 'july', 'august'],
-    leadTime: '2',
+    maxAcresPerDay: '',
+    minBookingAcres: '',
+    serviceRadius: '',
+    operationalMonths: [],
+    leadTime: '',
     
     // Location & Logistics
-    baseLocation: 'Pune, Maharashtra',
-    coordinates: '18.5204, 73.8567',
-    serviceAreas: ['pune', 'mumbai', 'nashik'],
-    hasChargingFacility: true,
-    numberOfSpareBatteries: '4',
-    droneWarehouse: 'Climate-controlled warehouse with 24/7 security and charging stations for 10 drones.',
+    baseLocation: '',
+    coordinates: '',
+    serviceAreas: '',
+    hasChargingFacility: false,
+    numberOfSpareBatteries: '',
+    droneWarehouse: '',
     
     // Availability & SLA
-    availabilityStart: '2024-03-01',
-    availabilityEnd: '2024-08-31',
-    slaReachTime: '2',
-    workingHours: {
-      start: '06:00',
-      end: '18:00'
-    },
+    availabilityStart: '',
+    availabilityEnd: '',
+    slaReachTime: '',
+    workingHoursBatches: '',
+    availabilityStatus: '',
     
     // Payouts
-    upiId: 'sarang@paytm',
-    bankIfscCode: 'HDFC0001234',
-    bankName: 'HDFC Bank',
-    bankAccountNumber: 'XXXX-XXXX-1234'
+    upiId: '',
+    bankIfscCode: '',
+    bankName: '',
+    bankAccountNumber: '',
+    accountHolderName: ''
   })
+  
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [snackbar, setSnackbar] = useState({ isOpen: false, message: '', type: 'success' })
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const vendorId = localStorage.getItem('vendorId')
+        if (!vendorId) {
+          setError('Please login first')
+          setLoading(false)
+          return
+        }
+        
+        const response = await getVendorProfile(parseInt(vendorId))
+        const profile = response.data
+        const drone = profile.drone || {}
+        const bankAccount = profile.bankAccount || {}
+        
+        setFormData({
+          vendorName: profile.fullName || '',
+          emailAddress: profile.email || '',
+          phoneNumber: profile.phone || '',
+          equipmentType: drone.equipmentType || '',
+          brand: drone.brand || '',
+          modelName: drone.modelName || '',
+          yearOfMake: drone.yearOfMake ? String(drone.yearOfMake) : '',
+          serialNo: drone.serialNo || '',
+          droneName: drone.droneName || '',
+          droneType: drone.droneType || '',
+          tankSize: drone.tankSizeLiters ? String(drone.tankSizeLiters) : '',
+          sprayWidth: drone.sprayWidthMeters ? String(drone.sprayWidthMeters) : '',
+          batteryCapacity: drone.batteryCapacityMah ? String(drone.batteryCapacityMah) : '',
+          batteryCount: drone.batteryCount ? String(drone.batteryCount) : '',
+          flightTime: drone.flightTimeMinutes ? String(drone.flightTimeMinutes) : '',
+          batterySwapTime: drone.batterySwapTimeMinutes ? String(drone.batterySwapTimeMinutes) : '',
+          uin: drone.uin || '',
+          uaop: drone.uaop || '',
+          pilotLicense: drone.pilotLicense || '',
+          returnToHome: drone.returnToHome || false,
+          terrainFollowing: drone.terrainFollowing || false,
+          maxAcresPerDay: drone.maxAcresPerDay ? String(drone.maxAcresPerDay) : '',
+          minBookingAcres: drone.minBookingAcres ? String(drone.minBookingAcres) : '',
+          serviceRadius: drone.serviceRadiusKm ? String(drone.serviceRadiusKm) : '',
+          operationalMonths: drone.operationalMonths ? (typeof drone.operationalMonths === 'string' ? JSON.parse(drone.operationalMonths) : drone.operationalMonths) : [],
+          leadTime: drone.leadTimeDays ? String(drone.leadTimeDays) : '',
+          baseLocation: drone.baseLocation || '',
+          coordinates: drone.coordinates || '',
+          serviceAreas: drone.serviceAreas || '',
+          hasChargingFacility: drone.hasChargingFacility || false,
+          numberOfSpareBatteries: drone.numberOfSpareBatteries ? String(drone.numberOfSpareBatteries) : '',
+          droneWarehouse: drone.droneWarehouseDescription || '',
+          availabilityStart: drone.availabilityStartDate || '',
+          availabilityEnd: drone.availabilityEndDate || '',
+          slaReachTime: drone.slaReachTimeHours ? String(drone.slaReachTimeHours) : '',
+          workingHoursBatches: drone.workingHoursBatches || '',
+          availabilityStatus: drone.availabilityStatus || '',
+          upiId: bankAccount.upiId || '',
+          bankIfscCode: bankAccount.bankIfscCode || '',
+          bankName: bankAccount.bankName || '',
+          bankAccountNumber: bankAccount.accountNumber || '',
+          accountHolderName: bankAccount.accountHolderName || ''
+        })
+      } catch (error) {
+        console.error('Error loading profile:', error)
+        setError('Failed to load profile data')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadProfile()
+  }, [])
 
   const handleInputChange = (field, value) => {
     if (field.includes('.')) {
@@ -115,14 +175,93 @@ function VendorEditProfilePage() {
     }))
   }
 
-  const handleSave = () => {
-    // Save logic here
-    alert('Profile updated successfully!')
-    navigate('/vendor-dashboard')
+  const handleSave = async () => {
+    const vendorId = localStorage.getItem('vendorId')
+    if (!vendorId) {
+      setError('Please login first')
+      return
+    }
+
+    setSaving(true)
+    setError('')
+
+    try {
+      const updateData = {
+        fullName: formData.vendorName,
+        email: formData.emailAddress,
+        equipmentType: formData.equipmentType,
+        brand: formData.brand,
+        modelName: formData.modelName,
+        yearOfMake: formData.yearOfMake ? parseInt(formData.yearOfMake) : null,
+        serialNo: formData.serialNo,
+        droneName: formData.droneName,
+        droneType: formData.droneType,
+        tankSizeLiters: formData.tankSize ? parseFloat(formData.tankSize) : null,
+        sprayWidthMeters: formData.sprayWidth ? parseFloat(formData.sprayWidth) : null,
+        batteryCapacityMah: formData.batteryCapacity ? parseInt(formData.batteryCapacity) : null,
+        batteryCount: formData.batteryCount ? parseInt(formData.batteryCount) : null,
+        flightTimeMinutes: formData.flightTime ? parseInt(formData.flightTime) : null,
+        batterySwapTimeMinutes: formData.batterySwapTime ? parseInt(formData.batterySwapTime) : null,
+        uin: formData.uin,
+        uaop: formData.uaop,
+        pilotLicense: formData.pilotLicense,
+        returnToHome: formData.returnToHome,
+        terrainFollowing: formData.terrainFollowing,
+        maxAcresPerDay: formData.maxAcresPerDay ? parseInt(formData.maxAcresPerDay) : null,
+        minBookingAcres: formData.minBookingAcres ? parseInt(formData.minBookingAcres) : null,
+        serviceRadiusKm: formData.serviceRadius ? parseFloat(formData.serviceRadius) : null,
+        operationalMonths: Array.isArray(formData.operationalMonths) ? JSON.stringify(formData.operationalMonths) : formData.operationalMonths,
+        leadTimeDays: formData.leadTime ? parseInt(formData.leadTime) : null,
+        baseLocation: formData.baseLocation,
+        coordinates: formData.coordinates,
+        serviceAreas: formData.serviceAreas,
+        hasChargingFacility: formData.hasChargingFacility,
+        numberOfSpareBatteries: formData.numberOfSpareBatteries ? parseInt(formData.numberOfSpareBatteries) : null,
+        droneWarehouseDescription: formData.droneWarehouse,
+        availabilityStartDate: formData.availabilityStart,
+        availabilityEndDate: formData.availabilityEnd,
+        slaReachTimeHours: formData.slaReachTime ? parseInt(formData.slaReachTime) : null,
+        workingHoursBatches: formData.workingHoursBatches,
+        availabilityStatus: formData.availabilityStatus,
+        accountHolderName: formData.accountHolderName,
+        accountNumber: formData.bankAccountNumber,
+        bankIfscCode: formData.bankIfscCode,
+        bankName: formData.bankName,
+        upiId: formData.upiId
+      }
+
+      await updateVendorProfile(parseInt(vendorId), updateData)
+      setSnackbar({
+        isOpen: true,
+        message: 'Profile updated successfully!',
+        type: 'success'
+      })
+      // Navigate after a short delay to show the snackbar
+      setTimeout(() => {
+        navigate('/vendor-dashboard')
+      }, 1500)
+    } catch (error) {
+      const errorMessage = error.message || 'Failed to update profile. Please try again.'
+      setError(errorMessage)
+      setSnackbar({
+        isOpen: true,
+        message: errorMessage,
+        type: 'error'
+      })
+      setSaving(false)
+    }
   }
 
   const handleCancel = () => {
     navigate('/vendor-dashboard')
+  }
+
+  if (loading) {
+    return (
+      <div className="vendor-edit-profile">
+        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading profile...</div>
+      </div>
+    )
   }
 
   return (
@@ -135,8 +274,16 @@ function VendorEditProfilePage() {
           </svg>
         </button>
         <h1>Edit Vendor Profile</h1>
-        <button className="save-btn" onClick={handleSave}>Save</button>
+        <button className="save-btn" onClick={handleSave} disabled={saving}>
+          {saving ? 'Saving...' : 'Save'}
+        </button>
       </div>
+      
+      {error && (
+        <div style={{ padding: '1rem', margin: '1rem', background: '#fee', color: '#c33', borderRadius: '4px' }}>
+          {error}
+        </div>
+      )}
 
       <div className="edit-content">
         {/* Personal Information Section */}
@@ -151,6 +298,7 @@ function VendorEditProfilePage() {
               onChange={(e) => handleInputChange('vendorName', e.target.value)}
               className="form-input"
               required
+              disabled={saving}
             />
           </div>
 
@@ -173,40 +321,10 @@ function VendorEditProfilePage() {
               onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
               className="form-input"
               required
+              disabled
+              title="Phone number cannot be changed"
             />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Instagram Handle</label>
-            <input
-              type="text"
-              value={formData.socialMedia.instagram}
-              onChange={(e) => handleInputChange('socialMedia.instagram', e.target.value)}
-              className="form-input"
-              placeholder="@username"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Facebook Profile</label>
-            <input
-              type="text"
-              value={formData.socialMedia.facebook}
-              onChange={(e) => handleInputChange('socialMedia.facebook', e.target.value)}
-              className="form-input"
-              placeholder="facebook.com/username"
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">LinkedIn Profile</label>
-            <input
-              type="text"
-              value={formData.socialMedia.linkedin}
-              onChange={(e) => handleInputChange('socialMedia.linkedin', e.target.value)}
-              className="form-input"
-              placeholder="linkedin.com/in/username"
-            />
+            <small className="form-help">Phone number cannot be changed</small>
           </div>
         </div>
 
@@ -258,16 +376,16 @@ function VendorEditProfilePage() {
 
           <div className="form-group">
             <label className="form-label">Year of Make *</label>
-            <select
+            <input
+              type="number"
               value={formData.yearOfMake}
               onChange={(e) => handleInputChange('yearOfMake', e.target.value)}
-              className="form-select"
+              className="form-input"
               required
-            >
-              {Array.from({length: 10}, (_, i) => 2024 - i).map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
+              disabled={saving}
+              min="2010"
+              max="2025"
+            />
           </div>
 
           <div className="form-group">
@@ -382,8 +500,9 @@ function VendorEditProfilePage() {
             <label className="checkbox-item">
               <input
                 type="checkbox"
-                checked={formData.safetyFeatures.returnToHome}
-                onChange={() => handleSafetyFeatureChange('returnToHome')}
+                checked={formData.returnToHome}
+                onChange={() => handleInputChange('returnToHome', !formData.returnToHome)}
+                disabled={saving}
               />
               <span className="checkbox-label">Return To Home (RTH)</span>
             </label>
@@ -391,28 +510,11 @@ function VendorEditProfilePage() {
             <label className="checkbox-item">
               <input
                 type="checkbox"
-                checked={formData.safetyFeatures.terrainFollowing}
-                onChange={() => handleSafetyFeatureChange('terrainFollowing')}
+                checked={formData.terrainFollowing}
+                onChange={() => handleInputChange('terrainFollowing', !formData.terrainFollowing)}
+                disabled={saving}
               />
               <span className="checkbox-label">Terrain Following</span>
-            </label>
-
-            <label className="checkbox-item">
-              <input
-                type="checkbox"
-                checked={formData.safetyFeatures.obstacleAvoidance}
-                onChange={() => handleSafetyFeatureChange('obstacleAvoidance')}
-              />
-              <span className="checkbox-label">Obstacle Avoidance</span>
-            </label>
-
-            <label className="checkbox-item">
-              <input
-                type="checkbox"
-                checked={formData.safetyFeatures.gpsTracking}
-                onChange={() => handleSafetyFeatureChange('gpsTracking')}
-              />
-              <span className="checkbox-label">GPS Tracking</span>
             </label>
           </div>
         </div>
@@ -509,42 +611,28 @@ function VendorEditProfilePage() {
 
           <div className="form-group">
             <label className="form-label">Operational Months</label>
-            <select
-              multiple
-              value={formData.operationalMonths}
-              onChange={(e) => handleArrayChange('operationalMonths', Array.from(e.target.selectedOptions, option => option.value).join(','))}
-              className="form-select multi-select"
-            >
-              <option value="january">January</option>
-              <option value="february">February</option>
-              <option value="march">March</option>
-              <option value="april">April</option>
-              <option value="may">May</option>
-              <option value="june">June</option>
-              <option value="july">July</option>
-              <option value="august">August</option>
-              <option value="september">September</option>
-              <option value="october">October</option>
-              <option value="november">November</option>
-              <option value="december">December</option>
-            </select>
-            <small className="form-help">Hold Ctrl/Cmd to select multiple months</small>
+            <input
+              type="text"
+              value={Array.isArray(formData.operationalMonths) ? formData.operationalMonths.join(', ') : formData.operationalMonths}
+              onChange={(e) => handleInputChange('operationalMonths', e.target.value.split(',').map(s => s.trim()).filter(s => s))}
+              className="form-input"
+              disabled={saving}
+              placeholder="march, april, may"
+            />
+            <small className="form-help">Separate months with commas</small>
           </div>
 
           <div className="form-group">
             <label className="form-label">Lead Time (Days) *</label>
-            <select
+            <input
+              type="number"
               value={formData.leadTime}
               onChange={(e) => handleInputChange('leadTime', e.target.value)}
-              className="form-select"
+              className="form-input"
               required
-            >
-              <option value="1">1 Day</option>
-              <option value="2">2 Days</option>
-              <option value="3">3 Days</option>
-              <option value="7">1 Week</option>
-              <option value="14">2 Weeks</option>
-            </select>
+              disabled={saving}
+              min="1"
+            />
           </div>
         </div>
 
@@ -578,10 +666,11 @@ function VendorEditProfilePage() {
             <label className="form-label">Service Areas</label>
             <input
               type="text"
-              value={formData.serviceAreas.join(', ')}
-              onChange={(e) => handleArrayChange('serviceAreas', e.target.value)}
+              value={formData.serviceAreas}
+              onChange={(e) => handleInputChange('serviceAreas', e.target.value)}
               className="form-input"
               placeholder="pune, mumbai, nashik"
+              disabled={saving}
             />
             <small className="form-help">Separate multiple areas with commas</small>
           </div>
@@ -648,40 +737,40 @@ function VendorEditProfilePage() {
 
           <div className="form-group">
             <label className="form-label">SLA Reach Time (Hours) *</label>
-            <select
+            <input
+              type="number"
               value={formData.slaReachTime}
               onChange={(e) => handleInputChange('slaReachTime', e.target.value)}
-              className="form-select"
+              className="form-input"
               required
-            >
-              <option value="1">1 Hour</option>
-              <option value="2">2 Hours</option>
-              <option value="4">4 Hours</option>
-              <option value="8">8 Hours</option>
-              <option value="24">24 Hours</option>
-            </select>
+              disabled={saving}
+              min="1"
+            />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Working Hours Start</label>
-              <input
-                type="time"
-                value={formData.workingHours.start}
-                onChange={(e) => handleInputChange('workingHours.start', e.target.value)}
-                className="form-input"
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Working Hours End</label>
-              <input
-                type="time"
-                value={formData.workingHours.end}
-                onChange={(e) => handleInputChange('workingHours.end', e.target.value)}
-                className="form-input"
-              />
-            </div>
+          <div className="form-group">
+            <label className="form-label">Working Hours Batches</label>
+            <input
+              type="text"
+              value={formData.workingHoursBatches}
+              onChange={(e) => handleInputChange('workingHoursBatches', e.target.value)}
+              className="form-input"
+              disabled={saving}
+              placeholder="06:00-10:00, 14:00-18:00"
+            />
+            <small className="form-help">Format: HH:MM-HH:MM (comma-separated for multiple batches)</small>
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Availability Status</label>
+            <input
+              type="text"
+              value={formData.availabilityStatus}
+              onChange={(e) => handleInputChange('availabilityStatus', e.target.value)}
+              className="form-input"
+              disabled={saving}
+              placeholder="Available, Busy, Maintenance"
+            />
           </div>
         </div>
 
@@ -723,12 +812,26 @@ function VendorEditProfilePage() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Bank Account Number</label>
+            <label className="form-label">Account Holder Name *</label>
+            <input
+              type="text"
+              value={formData.accountHolderName}
+              onChange={(e) => handleInputChange('accountHolderName', e.target.value)}
+              className="form-input"
+              required
+              disabled={saving}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Bank Account Number *</label>
             <input
               type="text"
               value={formData.bankAccountNumber}
               onChange={(e) => handleInputChange('bankAccountNumber', e.target.value)}
               className="form-input"
+              required
+              disabled={saving}
             />
           </div>
         </div>
@@ -743,6 +846,14 @@ function VendorEditProfilePage() {
           </button>
         </div>
       </div>
+      
+      <Snackbar
+        isOpen={snackbar.isOpen}
+        message={snackbar.message}
+        type={snackbar.type}
+        onClose={() => setSnackbar({ ...snackbar, isOpen: false })}
+        duration={snackbar.type === 'success' ? 3000 : 5000}
+      />
     </div>
   )
 }

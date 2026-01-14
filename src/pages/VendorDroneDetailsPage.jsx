@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
+import { saveOnboardingStep2 } from '../services/api'
 
 function VendorDroneDetailsPage() {
   const navigate = useNavigate()
@@ -20,6 +21,8 @@ function VendorDroneDetailsPage() {
     returnToHome: false,
     terrainFollowing: false
   })
+  const [isSaving, setIsSaving] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -39,9 +42,40 @@ function VendorDroneDetailsPage() {
     navigate('/vendor-equipment')
   }
 
-  const handleSubmit = () => {
-    // Navigate to next step: Capacity & Coverage
-    navigate('/vendor-capacity')
+  const handleSubmit = async () => {
+    const vendorId = localStorage.getItem('vendorId')
+    if (!vendorId) {
+      setErrorMessage('Please complete registration first')
+      return
+    }
+
+    setIsSaving(true)
+    setErrorMessage('')
+
+    try {
+      const step2Data = {
+        vendorId: parseInt(vendorId),
+        droneName: formData.droneName,
+        droneType: formData.droneType,
+        tankSize: formData.tankSize ? parseFloat(formData.tankSize) : null,
+        sprayWidth: formData.sprayWidth ? parseFloat(formData.sprayWidth) : null,
+        batteryCapacity: formData.batteryCapacity ? parseInt(formData.batteryCapacity) : null,
+        numberOfBatteries: formData.numberOfBatteries ? parseInt(formData.numberOfBatteries) : null,
+        flightTime: formData.flightTime ? parseInt(formData.flightTime) : null,
+        batterySwapTime: formData.batterySwapTime ? parseInt(formData.batterySwapTime) : null,
+        uin: formData.uin || null,
+        uaop: formData.uaop || null,
+        pilotLicense: formData.pilotLicense || null,
+        returnToHome: formData.returnToHome,
+        terrainFollowing: formData.terrainFollowing
+      }
+
+      await saveOnboardingStep2(step2Data)
+      navigate('/vendor-capacity')
+    } catch (error) {
+      setErrorMessage(error.message || 'Failed to save. Please try again.')
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -240,12 +274,19 @@ function VendorDroneDetailsPage() {
           </div>
         </div>
 
+        {errorMessage && (
+          <div style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '1rem', textAlign: 'center' }}>
+            {errorMessage}
+          </div>
+        )}
+
         {/* Submit Button */}
         <button 
           className="submit-button"
           onClick={handleSubmit}
+          disabled={isSaving}
         >
-          Continue
+          {isSaving ? 'Saving...' : 'Continue'}
         </button>
 
       </div>
