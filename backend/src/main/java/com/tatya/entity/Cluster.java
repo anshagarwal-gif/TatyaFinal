@@ -38,6 +38,15 @@ public class Cluster {
     @Column(nullable = false)
     private ClusterStatus status = ClusterStatus.PENDING;
 
+    @Column(name = "priority")
+    private Integer priority; // 1-10
+
+    @Column(name = "center_lat", precision = 10, scale = 8)
+    private java.math.BigDecimal centerLatitude;
+
+    @Column(name = "center_long", precision = 11, scale = 8)
+    private java.math.BigDecimal centerLongitude;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "cluster_farms", joinColumns = @JoinColumn(name = "cluster_id"), inverseJoinColumns = @JoinColumn(name = "farm_id"))
     private Set<Farm> farms = new HashSet<>();
