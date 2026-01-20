@@ -140,6 +140,24 @@ export const translations = {
   'Cannot be changed': 'बदलता येत नाही',
   'Change Booking Date': 'बुकिंग तारीख बदला',
   'Only date can be changed': 'केवळ तारीख बदलता येते',
+  
+  // Benefits Page
+  'What\'s in for you?': 'तुमच्यासाठी काय आहे?',
+  'Benefits': 'फायदे',
+  'Details': 'तपशील',
+  'See All benefits': 'सर्व फायदे पहा',
+  'Continue': 'पुढे जा',
+  
+  // Service Selection Page
+  'Get multiple options': 'अनेक पर्याय मिळवा',
+  'Loading services...': 'सेवा लोड होत आहेत...',
+  'Retry': 'पुन्हा प्रयत्न करा',
+  'reviews': 'पुनरावलोकने',
+  'Book +': 'बुक +',
+  'No services available at the moment': 'सध्या कोणतीही सेवा उपलब्ध नाही',
+  'Near You': 'तुमच्या जवळ',
+  'Expert Pilot': 'तज्ञ पायलट',
+  'Get ratings on each drone, see what you\'re getting, find the best options, and make informed decisions.': 'प्रत्येक ड्रोनवर रेटिंग मिळवा, तुम्हाला काय मिळत आहे ते पहा, सर्वोत्तम पर्याय शोधा आणि माहितीपूर्ण निर्णय घ्या.',
 }
 
 // Translation function

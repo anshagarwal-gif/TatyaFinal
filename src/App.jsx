@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
+import BenefitsPage from './pages/BenefitsPage'
 import LocationPage from './pages/LocationPage'
 import BookingPage from './pages/BookingPage'
 import CheckoutPage from './pages/CheckoutPage'
@@ -30,6 +31,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LoginPage />} />
+        <Route path="/benefits" element={<BenefitsPage />} />
         <Route path="/location" element={<LocationPage />} />
         <Route path="/my-farms" element={<MyFarmsPage />} />
         <Route path="/cluster-management" element={<ClusterManagementPage />} />

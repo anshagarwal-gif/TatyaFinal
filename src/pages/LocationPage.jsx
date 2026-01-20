@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import EXIF from 'exif-js'
@@ -54,6 +54,7 @@ function MapClickHandler({ onMapClick }) {
 
 function LocationPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [userLocation, setUserLocation] = useState(null)
   const [mapCenter, setMapCenter] = useState([19.0760, 72.8777]) // Default: Mumbai
   const [mapZoom, setMapZoom] = useState(13)
@@ -78,6 +79,18 @@ function LocationPage() {
   const [selectedDrone, setSelectedDrone] = useState(null)
   const [loadingDrones, setLoadingDrones] = useState(false)
 
+  // Check for drone from navigation state (from ServiceSelectionPage)
+  useEffect(() => {
+    if (location.state?.drone) {
+      setSelectedDrone(location.state.drone)
+    } else if (location.state?.droneId) {
+      // If only droneId is passed, we'll fetch it in the next effect
+      const droneId = location.state.droneId
+      // Store for later use
+      localStorage.setItem('selectedDroneId', droneId.toString())
+    }
+  }, [location.state])
+
   // Fetch available drones
   useEffect(() => {
     const fetchDrones = async () => {
@@ -86,8 +99,21 @@ function LocationPage() {
         const response = await getAvailableDronesWithSpecifications()
         if (response.success && response.data) {
           setAvailableDrones(response.data)
-          // Auto-select first drone if available
-          if (response.data.length > 0 && !selectedDrone) {
+          
+          // If drone was passed from navigation state, use it
+          if (location.state?.drone) {
+            setSelectedDrone(location.state.drone)
+          } else if (location.state?.droneId) {
+            // Find the drone by ID
+            const drone = response.data.find(d => d.droneId === location.state.droneId)
+            if (drone) {
+              setSelectedDrone(drone)
+            } else if (response.data.length > 0 && !selectedDrone) {
+              // Fallback to first drone if not found
+              setSelectedDrone(response.data[0])
+            }
+          } else if (response.data.length > 0 && !selectedDrone) {
+            // Auto-select first drone if available and no drone was passed
             setSelectedDrone(response.data[0])
           }
         }
@@ -98,7 +124,7 @@ function LocationPage() {
       }
     }
     fetchDrones()
-  }, [])
+  }, [location.state])
 
   // Get user's current location
   useEffect(() => {

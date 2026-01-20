@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/LoginPage.css'
 import { translate } from '../utils/translations'
 import tatyaLogo from '../assets/tatyalogo.png'
-import textImage from '../assets/WhiteText.png'
+import textImage from '../assets/NewSBlackTex.png'
 import firstBanner from '../assets/FirstBanner.png'
 import whiteText from '../assets/WhiteText.png'
 import greenText from '../assets/GreenText.png'
@@ -136,8 +136,8 @@ function LoginPage() {
     try {
       const response = await verifyOtp(phoneNumber, otpValue)
       if (response.success) {
-        // OTP verified successfully, navigate to location (customer only)
-        navigate('/location')
+        // OTP verified successfully, navigate to benefits page (customer only)
+        navigate('/benefits')
       } else {
         // OTP verification failed - show clear error message
         setErrorMessage(response.message || 'Invalid OTP. Please check and try again.')
