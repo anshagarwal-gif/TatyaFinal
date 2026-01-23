@@ -168,3 +168,47 @@
 .admin-login-button:active {
   transform: translateY(0);
 }
+
+.admin-login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-login-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background-color: #fef2f2;
+  border: 2px solid #fecaca;
+  border-radius: 0.75rem;
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+.admin-error-icon {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #dc2626;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

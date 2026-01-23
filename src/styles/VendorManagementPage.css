@@ -220,6 +220,17 @@
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
+.vendor-action-button.green {
+  background: linear-gradient(135deg, #16a34a 0%, #059669 100%);
+  color: white;
+}
+
+.vendor-action-button.green:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+}
+
 .vendor-action-icon {
   height: 1rem;
   width: 1rem;

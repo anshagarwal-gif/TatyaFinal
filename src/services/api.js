@@ -1093,3 +1093,348 @@ export const updateVendorProfile = async (vendorId, profileData) => {
     throw error;
   }
 };
+
+// ==================== Admin APIs ====================
+
+/**
+ * Admin login
+ * @param {Object} loginData - Login data {email, password}
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const adminLogin = async (loginData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(loginData),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      // Extract error message from response
+      const errorMessage = data.message || 'Invalid email or password. Please try again.';
+      throw new Error(errorMessage);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error logging in admin:', error);
+    // Re-throw with a user-friendly message if it's a network error
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Unable to connect to server. Please check your internet connection.');
+    }
+    throw error;
+  }
+};
+
+/**
+ * Get admin dashboard statistics
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const getAdminDashboardStats = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/dashboard/stats`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch dashboard stats');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all vendors for admin
+ * @returns {Promise<{success: boolean, message: string, data: Array}>}
+ */
+export const getAdminVendors = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/vendors`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch vendors');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching vendors:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get pending vendors
+ * @returns {Promise<{success: boolean, message: string, data: Array}>}
+ */
+export const getPendingVendors = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/vendors/pending`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch pending vendors');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching pending vendors:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get vendor details by ID
+ * @param {number} vendorId - Vendor ID
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const getAdminVendorDetails = async (vendorId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/vendors/${vendorId}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch vendor details');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching vendor details:', error);
+    throw error;
+  }
+};
+
+/**
+ * Approve or reject a vendor
+ * @param {Object} approvalData - Approval data {vendorId, action: 'VERIFIED' | 'REJECTED'}
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const approveOrRejectVendor = async (approvalData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/vendors/approve-reject`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(approvalData),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to process vendor approval');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error processing vendor approval:', error);
+    throw error;
+  }
+};
+
+/**
+ * Deactivate a vendor
+ * @param {number} vendorId - Vendor ID
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const deactivateVendor = async (vendorId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/vendors/${vendorId}/deactivate`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to deactivate vendor');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error deactivating vendor:', error);
+    throw error;
+  }
+};
+
+/**
+ * Reactivate a vendor
+ * @param {number} vendorId - Vendor ID
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const reactivateVendor = async (vendorId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/vendors/${vendorId}/reactivate`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to reactivate vendor');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error reactivating vendor:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all users for admin
+ * @returns {Promise<{success: boolean, message: string, data: Array}>}
+ */
+export const getAdminUsers = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/users`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch users');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get user details by ID
+ * @param {number} userId - User ID
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const getAdminUserDetails = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch user details');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a user
+ * @param {number} userId - User ID
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const deleteUser = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to delete user');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get finance statistics
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const getFinanceStats = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/finance/stats`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch finance stats');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching finance stats:', error);
+    throw error;
+  }
+};
+
+/**
+ * Export vendors and drones to Excel
+ * @returns {Promise<Blob>}
+ */
+export const exportVendorsAndDrones = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/vendors/export/excel`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to export vendors and drones');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'vendors_and_drones.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    return blob;
+  } catch (error) {
+    console.error('Error exporting vendors and drones:', error);
+    throw error;
+  }
+};
+
+/**
+ * Export users to Excel
+ * @returns {Promise<Blob>}
+ */
+export const exportUsers = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/users/export/excel`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to export users');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'users.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    return blob;
+  } catch (error) {
+    console.error('Error exporting users:', error);
+    throw error;
+  }
+};

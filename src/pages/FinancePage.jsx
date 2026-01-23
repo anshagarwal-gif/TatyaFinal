@@ -1,11 +1,42 @@
+import { useState, useEffect } from 'react'
 import { FiDollarSign, FiShoppingBag } from 'react-icons/fi'
+import { getFinanceStats } from '../services/api'
 import '../styles/FinancePage.css'
 
 function FinancePage() {
-  // Mock finance data
-  const financeData = {
-    totalOrders: 1247,
-    totalCollection: 1875000
+  const [financeData, setFinanceData] = useState({
+    totalOrders: 0,
+    totalCollection: 0
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchFinanceStats = async () => {
+      try {
+        const response = await getFinanceStats()
+        if (response.success && response.data) {
+          setFinanceData({
+            totalOrders: response.data.totalOrders || 0,
+            totalCollection: response.data.totalCollection || 0
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching finance stats:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFinanceStats()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="finance-container">
+        <h1 className="finance-title">Finance</h1>
+        <p>Loading...</p>
+      </div>
+    )
   }
 
   return (
