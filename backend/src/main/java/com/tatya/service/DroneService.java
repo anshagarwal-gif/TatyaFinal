@@ -3,7 +3,10 @@ package com.tatya.service;
 import com.tatya.entity.Drone;
 import com.tatya.entity.User;
 import com.tatya.entity.Vendor;
+import com.tatya.exception.VendorKycPendingException;
+import com.tatya.exception.VendorRejectedException;
 import com.tatya.repository.DroneRepository;
+import com.tatya.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ import java.util.stream.Collectors;
 public class DroneService {
     
     private final DroneRepository droneRepository;
+    private final VendorRepository vendorRepository;
     
     public List<Drone> getAllDrones() {
         return droneRepository.findAll();
@@ -32,6 +36,14 @@ public class DroneService {
     }
     
     public List<Drone> getDronesByVendorId(Long vendorId) {
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() -> new RuntimeException("Vendor not found with ID: " + vendorId));
+        if (vendor.getVerifiedStatus() == Vendor.VerifiedStatus.REJECTED) {
+            throw new VendorRejectedException("Your KYC was rejected. Please contact support.");
+        }
+        if (vendor.getVerifiedStatus() != Vendor.VerifiedStatus.VERIFIED) {
+            throw new VendorKycPendingException("KYC under processing. Please wait for admin approval.");
+        }
         return droneRepository.findByVendor_VendorId(vendorId);
     }
     

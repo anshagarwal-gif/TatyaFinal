@@ -7,6 +7,8 @@ function ApproveRejectVendorPage() {
   const [pendingVendors, setPendingVendors] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [approvingVendors, setApprovingVendors] = useState(new Set()) // Track which vendors are being approved
+  const [rejectingVendors, setRejectingVendors] = useState(new Set()) // Track which vendors are being rejected
 
   useEffect(() => {
     const fetchPendingVendors = async () => {
@@ -37,6 +39,9 @@ function ApproveRejectVendorPage() {
   }
 
   const handleApprove = async (vendorId) => {
+    // Add vendor to approving set
+    setApprovingVendors(prev => new Set(prev).add(vendorId))
+    
     try {
       const response = await approveOrRejectVendor({
         vendorId,
@@ -48,6 +53,13 @@ function ApproveRejectVendorPage() {
       }
     } catch (err) {
       alert(err.message || 'Failed to approve vendor')
+    } finally {
+      // Remove vendor from approving set
+      setApprovingVendors(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(vendorId)
+        return newSet
+      })
     }
   }
 
@@ -55,6 +67,9 @@ function ApproveRejectVendorPage() {
     if (!window.confirm('Are you sure you want to reject this vendor?')) {
       return
     }
+
+    // Add vendor to rejecting set
+    setRejectingVendors(prev => new Set(prev).add(vendorId))
 
     try {
       const response = await approveOrRejectVendor({
@@ -67,6 +82,13 @@ function ApproveRejectVendorPage() {
       }
     } catch (err) {
       alert(err.message || 'Failed to reject vendor')
+    } finally {
+      // Remove vendor from rejecting set
+      setRejectingVendors(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(vendorId)
+        return newSet
+      })
     }
   }
 
@@ -137,16 +159,36 @@ function ApproveRejectVendorPage() {
                               <button
                                 onClick={() => handleApprove(vendor.vendorId)}
                                 className="approve-vendor-button green"
+                                disabled={approvingVendors.has(vendor.vendorId) || rejectingVendors.has(vendor.vendorId)}
                               >
-                                <FiCheck className="approve-vendor-icon" />
-                                Approve
+                                {approvingVendors.has(vendor.vendorId) ? (
+                                  <>
+                                    <span className="approve-vendor-spinner"></span>
+                                    Sending Email...
+                                  </>
+                                ) : (
+                                  <>
+                                    <FiCheck className="approve-vendor-icon" />
+                                    Approve
+                                  </>
+                                )}
                               </button>
                               <button
                                 onClick={() => handleReject(vendor.vendorId)}
                                 className="approve-vendor-button red"
+                                disabled={approvingVendors.has(vendor.vendorId) || rejectingVendors.has(vendor.vendorId)}
                               >
-                                <FiX className="approve-vendor-icon" />
-                                Reject
+                                {rejectingVendors.has(vendor.vendorId) ? (
+                                  <>
+                                    <span className="approve-vendor-spinner"></span>
+                                    Rejecting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <FiX className="approve-vendor-icon" />
+                                    Reject
+                                  </>
+                                )}
                               </button>
                             </>
                           ) : (

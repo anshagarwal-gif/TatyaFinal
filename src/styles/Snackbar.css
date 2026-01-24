@@ -54,6 +54,26 @@
   line-height: 1.5;
 }
 
+.snackbar-message-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.snackbar-otp-code {
+  font-size: 24px;
+  font-weight: 700;
+  color: #3b82f6;
+  letter-spacing: 4px;
+  font-family: 'Courier New', monospace;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-align: center;
+  margin-top: 4px;
+}
+
 .snackbar-success {
   border-left: 4px solid #10b981;
 }

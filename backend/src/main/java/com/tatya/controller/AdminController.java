@@ -195,6 +195,22 @@ public class AdminController {
     }
 
     /**
+     * Get only customer users
+     */
+    @GetMapping("/users/customers")
+    public ResponseEntity<ApiResponse<List<AdminUserResponse>>> getAllCustomers() {
+        try {
+            log.info("Fetching all customers");
+            List<AdminUserResponse> users = adminService.getAllCustomers();
+            return ResponseEntity.ok(ApiResponse.success("Customers retrieved successfully", users));
+        } catch (Exception e) {
+            log.error("Error fetching customers", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch customers"));
+        }
+    }
+
+    /**
      * Get user details by ID
      */
     @GetMapping("/users/{userId}")

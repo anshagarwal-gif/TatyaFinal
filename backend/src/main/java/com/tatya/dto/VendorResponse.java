@@ -18,6 +18,7 @@ public class VendorResponse {
     private String vendorType;
     private Vendor.VerifiedStatus verifiedStatus;
     private User.UserStatus userStatus;
+    private String otpCode; // Optional: OTP code returned during registration
     
     public static VendorResponse fromVendor(Vendor vendor) {
         if (vendor == null || vendor.getUser() == null) {

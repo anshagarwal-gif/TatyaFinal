@@ -732,6 +732,34 @@ export const verifyVendorAndLogin = async (phoneNumber, otpCode) => {
 };
 
 /**
+ * Vendor login with email + password (works only after admin approval)
+ * @param {Object} loginData - {email, password}
+ * @returns {Promise<{success: boolean, message: string, data: Object}>}
+ */
+export const vendorLoginWithPassword = async (loginData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(loginData),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to login')
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error logging in vendor:', error)
+    throw error
+  }
+}
+
+/**
  * Get vendor by phone number
  * @param {string} phoneNumber - 10 digit phone number
  * @returns {Promise<{success: boolean, message: string, data: Object}>}
@@ -1312,6 +1340,26 @@ export const getAdminUsers = async () => {
     throw error;
   }
 };
+
+/**
+ * Get only customer users for admin
+ * @returns {Promise<{success: boolean, message: string, data: Array}>}
+ */
+export const getAdminCustomers = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/users/customers`)
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch customers')
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error fetching customers:', error)
+    throw error
+  }
+}
 
 /**
  * Get user details by ID

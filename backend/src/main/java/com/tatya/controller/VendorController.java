@@ -3,9 +3,12 @@ package com.tatya.controller;
 import com.tatya.dto.ApiResponse;
 import com.tatya.dto.UpdateVendorProfileRequest;
 import com.tatya.dto.VendorLoginRequest;
+import com.tatya.dto.VendorPasswordLoginRequest;
 import com.tatya.dto.VendorProfileResponse;
 import com.tatya.dto.VendorRegistrationRequest;
 import com.tatya.dto.VendorResponse;
+import com.tatya.exception.VendorKycPendingException;
+import com.tatya.exception.VendorRejectedException;
 import com.tatya.service.VendorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -78,6 +81,33 @@ public class VendorController {
     }
 
     /**
+     * Vendor login using email + password (allowed only after admin approval)
+     * POST /api/vendors/login
+     */
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<VendorResponse>> loginWithPassword(
+            @Valid @RequestBody VendorPasswordLoginRequest request) {
+        try {
+            log.info("Vendor password login request received for email: {}", request.getEmail());
+
+            VendorResponse vendor = vendorService.loginWithPassword(request.getEmail(), request.getPassword());
+
+            return ResponseEntity.ok(ApiResponse.success("Login successful", vendor));
+        } catch (VendorKycPendingException | VendorRejectedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (RuntimeException e) {
+            log.error("Error during vendor password login", e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error during vendor password login", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Login failed. Please try again."));
+        }
+    }
+
+    /**
      * Get vendor by phone number
      * GET /api/vendors/phone/{phoneNumber}
      */
@@ -119,6 +149,9 @@ public class VendorController {
         try {
             VendorProfileResponse profile = vendorService.getVendorProfile(vendorId);
             return ResponseEntity.ok(ApiResponse.success("Vendor profile retrieved successfully", profile));
+        } catch (VendorKycPendingException | VendorRejectedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error(e.getMessage()));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error(e.getMessage()));
@@ -140,6 +173,9 @@ public class VendorController {
         try {
             VendorProfileResponse profile = vendorService.updateVendorProfile(vendorId, request);
             return ResponseEntity.ok(ApiResponse.success("Vendor profile updated successfully", profile));
+        } catch (VendorKycPendingException | VendorRejectedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error(e.getMessage()));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(e.getMessage()));

@@ -106,7 +106,7 @@ function VendorPayoutsPage() {
 
       await saveOnboardingStep6(step6Data)
       alert('Account created successfully! Your account is pending approval.')
-      navigate('/vendor-dashboard')
+      navigate('/vendor-kyc-pending')
     } catch (error) {
       setErrorMessage(error.message || 'Failed to save. Please try again.')
       setIsSaving(false)

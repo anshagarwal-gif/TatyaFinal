@@ -36,8 +36,10 @@ public class OtpController {
             // OTP has been sent via SMS service
             log.info("OTP generated and sent via SMS for phone number: {}", request.getPhoneNumber());
             
+            // Return OTP code in response for frontend snackbar display (development/testing)
             return ResponseEntity.ok(ApiResponse.success(
-                "OTP has been sent to your mobile number. Please check your SMS."
+                "OTP has been sent to your mobile number. Please check your SMS.",
+                otpCode
             ));
         } catch (Exception e) {
             log.error("Error generating OTP", e);

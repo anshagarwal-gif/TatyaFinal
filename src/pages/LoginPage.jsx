@@ -12,7 +12,8 @@ import otpBlackText from '../assets/OTPBlackText.png'
 import otpBlackSubtext from '../assets/OTPBlackSubtext.png'
 import otpOrangeText from '../assets/OTPOrangeText.png'
 import { FiPhone, FiArrowRight, FiEdit2, FiCheckCircle, FiUser, FiBriefcase, FiLock, FiMail } from 'react-icons/fi'
-import { generateOtp, verifyOtp } from '../services/api'
+import { generateOtp, verifyOtp, vendorLoginWithPassword } from '../services/api'
+import Snackbar from '../components/Snackbar'
 
 function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -26,9 +27,12 @@ function LoginPage() {
   const [splashAnimationComplete, setSplashAnimationComplete] = useState(false)
   const [isVendorLogin, setIsVendorLogin] = useState(false)
   // Vendor login states
-  const [vendorUserId, setVendorUserId] = useState('')
+  const [vendorEmail, setVendorEmail] = useState('')
   const [vendorPassword, setVendorPassword] = useState('')
   const [isVendorLoggingIn, setIsVendorLoggingIn] = useState(false)
+  // Snackbar state for OTP display
+  const [snackbarOpen, setSnackbarOpen] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
   const otpInputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)]
   const navigate = useNavigate()
 
@@ -69,6 +73,11 @@ function LoginPage() {
     try {
       const response = await generateOtp(phoneNumber)
       if (response.success) {
+        // Show snackbar with OTP code if available
+        if (response.data) {
+          setOtpCode(response.data)
+          setSnackbarOpen(true)
+        }
         setShowOTP(true)
       } else {
         setErrorMessage(response.message || 'Failed to generate OTP')
@@ -166,12 +175,12 @@ function LoginPage() {
     }
   }
 
-  // Vendor login handler - pure frontend, no API calls
-  const handleVendorLogin = (e) => {
+  // Vendor login handler - calls backend (email + password)
+  const handleVendorLogin = async (e) => {
     e.preventDefault()
     
-    if (!vendorUserId.trim()) {
-      setErrorMessage('Please enter your User ID')
+    if (!vendorEmail.trim()) {
+      setErrorMessage('Please enter your email')
       return
     }
     
@@ -183,19 +192,37 @@ function LoginPage() {
     setIsVendorLoggingIn(true)
     setErrorMessage('')
     
-    // Simulate login delay for better UX
-    setTimeout(() => {
-      // Pure frontend - just navigate to vendor dashboard
-      // No actual authentication check
+    try {
+      const response = await vendorLoginWithPassword({
+        email: vendorEmail.trim(),
+        password: vendorPassword.trim(),
+      })
+
+      const vendor = response?.data
+      if (vendor) {
+        localStorage.setItem('vendor', JSON.stringify(vendor))
+        localStorage.setItem('vendorId', vendor.vendorId)
+        localStorage.setItem('userId', vendor.userId)
+      }
+
       setIsVendorLoggingIn(false)
+
+      if (vendor?.verifiedStatus !== 'VERIFIED') {
+        navigate('/vendor-kyc-pending')
+        return
+      }
+
       navigate('/vendor-dashboard')
-    }, 500)
+    } catch (error) {
+      setIsVendorLoggingIn(false)
+      setErrorMessage(error.message || 'Login failed. Please try again.')
+    }
   }
 
   // Reset vendor form when switching to customer
   useEffect(() => {
     if (!isVendorLogin) {
-      setVendorUserId('')
+      setVendorEmail('')
       setVendorPassword('')
       setErrorMessage('')
     }
@@ -308,20 +335,20 @@ function LoginPage() {
               // Vendor Login Form - User ID and Password
               <form onSubmit={handleVendorLogin}>
                 <div className="form-group">
-                  <label className="form-label" htmlFor="vendor-userid">
-                    {translate('User ID', isMarathi)}
+                  <label className="form-label" htmlFor="vendor-email">
+                    {translate('Email', isMarathi)}
                   </label>
                   <div className="phone-input-container">
-                    <FiUser className="phone-icon" />
+                    <FiMail className="phone-icon" />
                     <input
-                      id="vendor-userid"
-                      type="text"
+                      id="vendor-email"
+                      type="email"
                       className="phone-input"
-                      placeholder={translate('Enter your User ID', isMarathi)}
-                      value={vendorUserId}
-                      onChange={(e) => setVendorUserId(e.target.value)}
+                      placeholder={translate('Enter your email', isMarathi)}
+                      value={vendorEmail}
+                      onChange={(e) => setVendorEmail(e.target.value)}
                       autoComplete="username"
-                      aria-label={translate('User ID', isMarathi)}
+                      aria-label={translate('Email', isMarathi)}
                     />
                   </div>
                 </div>
@@ -354,7 +381,7 @@ function LoginPage() {
                 <button 
                   type="submit"
                   className="get-otp-button"
-                  disabled={!vendorUserId.trim() || !vendorPassword.trim() || isVendorLoggingIn}
+                  disabled={!vendorEmail.trim() || !vendorPassword.trim() || isVendorLoggingIn}
                   aria-label={translate('Login', isMarathi)}
                 >
                   {isVendorLoggingIn ? (
@@ -530,6 +557,15 @@ function LoginPage() {
         )}
         </div>
       </div>
+
+      {/* OTP Snackbar */}
+      <Snackbar
+        message={otpCode ? `Your OTP is: ${otpCode}` : 'OTP sent successfully'}
+        type="info"
+        isOpen={snackbarOpen}
+        onClose={() => setSnackbarOpen(false)}
+        duration={10000}
+      />
     </>
   )
 }

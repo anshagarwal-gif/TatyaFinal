@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +28,13 @@ public class AdminService {
     private final DroneRepository droneRepository;
     private final OtpRepository otpRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+
+    private String generateTemporaryPassword() {
+        // 10 chars, no ambiguous characters, good enough for temp password
+        String raw = UUID.randomUUID().toString().replace("-", "");
+        return raw.substring(0, 10);
+    }
 
     /**
      * Admin login authentication
@@ -238,11 +246,65 @@ public class AdminService {
         }
         
         Vendor vendor = vendorOpt.get();
+        Vendor.VerifiedStatus previousStatus = vendor.getVerifiedStatus();
+        log.info("Vendor current status: {}, requested action: {}", previousStatus, request.getAction());
+        
         vendor.setVerifiedStatus(request.getAction());
         
         // If approved, ensure user is active
         if (request.getAction() == Vendor.VerifiedStatus.VERIFIED) {
             vendor.getUser().setStatus(User.UserStatus.ACTIVE);
+
+            // If vendor is being approved for the first time, generate password and email credentials
+            if (previousStatus != Vendor.VerifiedStatus.VERIFIED) {
+                log.info("Vendor is being approved for the first time. Previous status: {}, New status: VERIFIED", previousStatus);
+                
+                // Check if vendor has email
+                if (vendor.getUser() == null) {
+                    log.error("Vendor {} has no associated User!", request.getVendorId());
+                    throw new RuntimeException("Vendor has no associated user");
+                }
+                
+                String vendorEmail = vendor.getUser().getEmail();
+                String vendorName = vendor.getUser().getFullName();
+                
+                if (vendorEmail == null || vendorEmail.isBlank()) {
+                    log.error("Vendor {} has no email address! Cannot send credentials email.", request.getVendorId());
+                    throw new RuntimeException("Vendor email is missing. Cannot send credentials.");
+                }
+                
+                log.info("Vendor email found: {}, fullName: {}", vendorEmail, vendorName);
+                
+                String tempPassword = generateTemporaryPassword();
+                vendor.getUser().setPasswordHash(passwordEncoder.encode(tempPassword));
+                vendorRepository.save(vendor);
+
+                log.info("Vendor approved. Credentials generated for vendorId={} email={}", 
+                        request.getVendorId(), vendorEmail);
+
+                log.info("About to call emailService.sendVendorApprovedCredentials() for email: {}", vendorEmail);
+                try {
+                    emailService.sendVendorApprovedCredentials(
+                            vendorEmail,
+                            vendorName,
+                            tempPassword
+                    );
+                    log.info("Email service call completed successfully");
+                } catch (Exception e) {
+                    // Do not rollback approval just because email failed.
+                    log.error("Failed to send vendor approval email to {}", vendorEmail, e);
+                    e.printStackTrace();
+                }
+
+                log.info("Vendor {} approved and credentials generated", request.getVendorId());
+                return;
+            } else {
+                log.info("Vendor was already VERIFIED (previousStatus={}). Approval confirmed, but credentials already exist.", previousStatus);
+                // Still save the status update
+                vendorRepository.save(vendor);
+                log.info("Vendor {} status confirmed as VERIFIED", request.getVendorId());
+                return;
+            }
         }
         
         vendorRepository.save(vendor);
@@ -348,6 +410,34 @@ public class AdminService {
                 allUsers.size());
         
         return users;
+    }
+
+    /**
+     * Get only customers (excluding vendors and admins)
+     */
+    public List<AdminUserResponse> getAllCustomers() {
+        log.info("Fetching all customers for admin");
+
+        List<User> customers = userRepository.findByRole(User.UserRole.CUSTOMER);
+
+        return customers.stream()
+                .filter(user -> user != null)
+                .map(user -> {
+                    AdminUserResponse response = AdminUserResponse.fromUser(user);
+
+                    // Fetch latest OTP for this customer's phone number
+                    try {
+                        Optional<Otp> latestOtp = otpRepository.findTopByPhoneNumberOrderByCreatedAtDesc(user.getPhone());
+                        response.setOtp(latestOtp.map(Otp::getOtpCode).orElse(null));
+                    } catch (Exception e) {
+                        log.debug("Could not fetch OTP for user {}: {}", user.getId(), e.getMessage());
+                        response.setOtp(null);
+                    }
+
+                    response.setLocation(null);
+                    return response;
+                })
+                .collect(Collectors.toList());
     }
 
     /**

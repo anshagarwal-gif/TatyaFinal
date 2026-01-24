@@ -14,6 +14,7 @@ import VendorDroneDetailsPage from './pages/VendorDroneDetailsPage'
 import VendorEquipmentPage from './pages/VendorEquipmentPage'
 import VendorDashboardPage from './pages/VendorDashboardPage'
 import VendorEditProfilePage from './pages/VendorEditProfilePage'
+import VendorKycPendingPage from './pages/VendorKycPendingPage'
 import MyFarmsPage from './pages/MyFarmsPage'
 import ClusterManagementPage from './pages/ClusterManagementPage'
 import NearbyClustersPage from './pages/NearbyClustersPage'
@@ -40,6 +41,7 @@ function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/vendor-onboarding" element={<VendorOnboardingPage />} />
         <Route path="/vendor-onboarding-form" element={<VendorOnboardingFormPage />} />
+        <Route path="/vendor-kyc-pending" element={<VendorKycPendingPage />} />
         <Route path="/vendor-equipment" element={<VendorEquipmentPage />} />
         <Route path="/vendor-availability" element={<VendorAvailabilityPage />} />
         <Route path="/vendor-location" element={<VendorLocationPage />} />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { FiDownload, FiEye, FiTrash2 } from 'react-icons/fi'
-import { getAdminUsers, deleteUser, exportUsers } from '../services/api'
+import { getAdminCustomers, deleteUser, exportUsers } from '../services/api'
 import '../styles/UsersManagementPage.css'
 
 function UsersManagementPage() {
@@ -11,7 +11,7 @@ function UsersManagementPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await getAdminUsers()
+        const response = await getAdminCustomers()
         if (response.success && response.data) {
           setUsers(response.data)
         }
@@ -34,7 +34,7 @@ function UsersManagementPage() {
       const response = await deleteUser(id)
       if (response.success) {
         // Refresh users list
-        const usersResponse = await getAdminUsers()
+        const usersResponse = await getAdminCustomers()
         if (usersResponse.success && usersResponse.data) {
           setUsers(usersResponse.data)
         }

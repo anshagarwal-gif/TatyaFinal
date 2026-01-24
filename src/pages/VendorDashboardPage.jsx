@@ -1,11 +1,61 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorDashboardPage.css'
-import { getVendorProfile } from '../services/api'
+import { getVendorById, getVendorProfile } from '../services/api'
 
 function VendorDashboardPage() {
   const [activeTab, setActiveTab] = useState('map') // 'map', 'details', 'profile'
   const navigate = useNavigate()
+  const [accessChecked, setAccessChecked] = useState(false)
+  const [hasAccess, setHasAccess] = useState(false)
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      const vendorId = localStorage.getItem('vendorId')
+      if (!vendorId) {
+        navigate('/', { replace: true })
+        return
+      }
+
+      try {
+        const response = await getVendorById(parseInt(vendorId))
+        const vendor = response?.data
+        if (vendor) {
+          localStorage.setItem('vendor', JSON.stringify(vendor))
+          if (vendor.verifiedStatus === 'VERIFIED') {
+            setHasAccess(true)
+          } else {
+            navigate('/vendor-kyc-pending', { replace: true })
+            return
+          }
+        } else {
+          navigate('/', { replace: true })
+          return
+        }
+      } catch (e) {
+        navigate('/vendor-kyc-pending', { replace: true })
+        return
+      } finally {
+        setAccessChecked(true)
+      }
+    }
+
+    checkAccess()
+  }, [navigate])
+
+  if (!accessChecked) {
+    return (
+      <div className="vendor-dashboard">
+        <div className="dashboard-content">
+          <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasAccess) {
+    return null
+  }
 
   return (
     <div className="vendor-dashboard">

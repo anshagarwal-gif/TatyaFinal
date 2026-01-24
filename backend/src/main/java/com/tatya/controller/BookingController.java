@@ -4,6 +4,8 @@ import com.tatya.dto.ApiResponse;
 import com.tatya.dto.BookingRequest;
 import com.tatya.dto.UpdateBookingRequest;
 import com.tatya.entity.Booking;
+import com.tatya.exception.VendorKycPendingException;
+import com.tatya.exception.VendorRejectedException;
 import com.tatya.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +58,9 @@ public class BookingController {
         try {
             List<Booking> bookings = bookingService.getBookingsByVendorId(vendorId);
             return ResponseEntity.ok(ApiResponse.success("Bookings retrieved successfully", bookings));
+        } catch (VendorKycPendingException | VendorRejectedException e) {
+            return ResponseEntity.status(403)
+                .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             log.error("Error fetching bookings for vendor {}", vendorId, e);
             return ResponseEntity.status(500)

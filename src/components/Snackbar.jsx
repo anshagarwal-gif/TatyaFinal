@@ -13,6 +13,11 @@ function Snackbar({ message, type = 'success', isOpen, onClose, duration = 3000 
 
   if (!isOpen) return null
 
+  // Parse OTP code from message if it contains "OTP is:"
+  const otpMatch = message.match(/OTP is: (\d+)/)
+  const displayMessage = otpMatch ? message.replace(/OTP is: (\d+)/, 'OTP is:') : message
+  const otpCode = otpMatch ? otpMatch[1] : null
+
   return (
     <div className={`snackbar snackbar-${type} ${isOpen ? 'snackbar-show' : ''}`}>
       <div className="snackbar-content">
@@ -33,7 +38,12 @@ function Snackbar({ message, type = 'success', isOpen, onClose, duration = 3000 
             </svg>
           )}
         </div>
-        <span className="snackbar-message">{message}</span>
+        <div className="snackbar-message-wrapper">
+          <span className="snackbar-message">{displayMessage}</span>
+          {otpCode && (
+            <span className="snackbar-otp-code">{otpCode}</span>
+          )}
+        </div>
         <button className="snackbar-close" onClick={onClose} aria-label="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>

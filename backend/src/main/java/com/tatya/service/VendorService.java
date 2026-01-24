@@ -4,6 +4,8 @@ import com.tatya.dto.UpdateVendorProfileRequest;
 import com.tatya.dto.VendorProfileResponse;
 import com.tatya.dto.VendorRegistrationRequest;
 import com.tatya.dto.VendorResponse;
+import com.tatya.exception.VendorKycPendingException;
+import com.tatya.exception.VendorRejectedException;
 import com.tatya.entity.Availability;
 import com.tatya.entity.Drone;
 import com.tatya.entity.User;
@@ -16,7 +18,7 @@ import com.tatya.repository.VendorBankAccountRepository;
 import com.tatya.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +37,19 @@ public class VendorService {
     private final VendorBankAccountRepository bankAccountRepository;
     private final AvailabilityRepository availabilityRepository;
     private final OtpService otpService;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
+
+    private void ensureVendorApproved(Vendor vendor) {
+        if (vendor == null) {
+            throw new RuntimeException("Vendor not found");
+        }
+        if (vendor.getVerifiedStatus() == Vendor.VerifiedStatus.REJECTED) {
+            throw new VendorRejectedException("Your KYC was rejected. Please contact support.");
+        }
+        if (vendor.getVerifiedStatus() != Vendor.VerifiedStatus.VERIFIED) {
+            throw new VendorKycPendingException("KYC under processing. Please wait for admin approval.");
+        }
+    }
 
     /**
      * Register a new vendor - saves vendor data and sends OTP
@@ -57,8 +71,10 @@ public class VendorService {
                 if (existingVendor.isPresent()) {
                     log.info("Vendor already exists with phone: {}", request.getPhoneNumber());
                     // Still send OTP for login
-                    otpService.generateOtp(request.getPhoneNumber());
-                    return VendorResponse.fromVendor(existingVendor.get());
+                    String otpCode = otpService.generateOtp(request.getPhoneNumber());
+                    VendorResponse response = VendorResponse.fromVendor(existingVendor.get());
+                    response.setOtpCode(otpCode); // Include OTP in response
+                    return response;
                 }
             } else {
                 throw new RuntimeException("User with this phone number already exists with a different role");
@@ -96,11 +112,13 @@ public class VendorService {
         vendor = vendorRepository.save(vendor);
         log.info("Created vendor with ID: {}", vendor.getVendorId());
 
-        // Send OTP
-        otpService.generateOtp(request.getPhoneNumber());
+        // Send OTP and get the code
+        String otpCode = otpService.generateOtp(request.getPhoneNumber());
         log.info("OTP sent to phone: {}", request.getPhoneNumber());
 
-        return VendorResponse.fromVendor(vendor);
+        VendorResponse response = VendorResponse.fromVendor(vendor);
+        response.setOtpCode(otpCode); // Include OTP in response for frontend snackbar
+        return response;
     }
 
     /**
@@ -129,6 +147,39 @@ public class VendorService {
         Vendor vendor = vendorOptional.get();
         log.info("Vendor login successful for vendor ID: {}", vendor.getVendorId());
 
+        return VendorResponse.fromVendor(vendor);
+    }
+
+    /**
+     * Vendor login using email + password. Only allowed after admin approval.
+     */
+    public VendorResponse loginWithPassword(String email, String password) {
+        String safeEmail = email != null ? email.trim() : "";
+        String safePassword = password != null ? password.trim() : "";
+
+        if (safeEmail.isEmpty() || safePassword.isEmpty()) {
+            throw new RuntimeException("Email and password are required");
+        }
+
+        User user = userRepository.findByEmailIgnoreCase(safeEmail)
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
+        if (user.getRole() != User.UserRole.VENDOR) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        if (user.getStatus() != User.UserStatus.ACTIVE) {
+            throw new RuntimeException("Vendor account is not active");
+        }
+
+        if (!passwordEncoder.matches(safePassword, user.getPasswordHash())) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        Vendor vendor = vendorRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new RuntimeException("Vendor not found"));
+
+        ensureVendorApproved(vendor);
         return VendorResponse.fromVendor(vendor);
     }
 
@@ -169,6 +220,7 @@ public class VendorService {
     public VendorProfileResponse getVendorProfile(Long vendorId) {
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() -> new RuntimeException("Vendor not found with ID: " + vendorId));
+        ensureVendorApproved(vendor);
 
         // Get first drone for this vendor
         Drone drone = droneRepository.findByVendor_VendorId(vendorId)
@@ -201,6 +253,7 @@ public class VendorService {
     public VendorProfileResponse updateVendorProfile(Long vendorId, UpdateVendorProfileRequest request) {
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() -> new RuntimeException("Vendor not found with ID: " + vendorId));
+        ensureVendorApproved(vendor);
 
         // Update user information
         User user = vendor.getUser();

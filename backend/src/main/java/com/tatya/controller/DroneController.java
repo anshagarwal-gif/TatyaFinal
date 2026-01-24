@@ -2,6 +2,8 @@ package com.tatya.controller;
 
 import com.tatya.dto.ApiResponse;
 import com.tatya.entity.Drone;
+import com.tatya.exception.VendorKycPendingException;
+import com.tatya.exception.VendorRejectedException;
 import com.tatya.service.DroneService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -100,6 +102,9 @@ public class DroneController {
         try {
             List<Drone> drones = droneService.getDronesByVendorId(vendorId);
             return ResponseEntity.ok(ApiResponse.success("Drones for vendor retrieved successfully", drones));
+        } catch (VendorKycPendingException | VendorRejectedException e) {
+            return ResponseEntity.status(403)
+                .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             log.error("Error fetching drones for vendor {}", vendorId, e);
             return ResponseEntity.status(500)

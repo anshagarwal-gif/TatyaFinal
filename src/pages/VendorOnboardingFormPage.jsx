@@ -4,6 +4,7 @@ import '../styles/VendorOnboardingFormPage.css'
 import { translate } from '../utils/translations'
 import { FiPhone, FiCheckCircle, FiEdit2, FiArrowLeft } from 'react-icons/fi'
 import { registerVendor, verifyVendorAndLogin, generateOtp } from '../services/api'
+import Snackbar from '../components/Snackbar'
 
 function VendorOnboardingFormPage() {
   const navigate = useNavigate()
@@ -12,6 +13,10 @@ function VendorOnboardingFormPage() {
   const [isVerifying, setIsVerifying] = useState(false)
   const [showOTP, setShowOTP] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  
+  // Snackbar state for OTP display
+  const [snackbarOpen, setSnackbarOpen] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
   
   // Phone verification state
   const [countryCode] = useState('+91')
@@ -111,12 +116,18 @@ function VendorOnboardingFormPage() {
     
     try {
       // Register vendor and send OTP
-      await registerVendor({
+      const response = await registerVendor({
         fullName: fullName.trim(),
         email: email.trim(),
         phoneNumber: phone,
         vendorType: selectedOption
       })
+      
+      // Show snackbar with OTP code if available
+      if (response.data && response.data.otpCode) {
+        setOtpCode(response.data.otpCode)
+        setSnackbarOpen(true)
+      }
       
       setIsGenerating(false)
       setShowOTP(true)
@@ -160,7 +171,14 @@ function VendorOnboardingFormPage() {
     
     try {
       const phone = phoneNumber.replace(/\D/g, '')
-      await generateOtp(phone)
+      const response = await generateOtp(phone)
+      
+      // Show snackbar with OTP code if available
+      if (response.data) {
+        setOtpCode(response.data)
+        setSnackbarOpen(true)
+      }
+      
       setIsGenerating(false)
     } catch (error) {
       setIsGenerating(false)
@@ -389,6 +407,15 @@ function VendorOnboardingFormPage() {
           </p>
         </div>
       </div>
+
+      {/* OTP Snackbar */}
+      <Snackbar
+        message={otpCode ? `Your OTP is: ${otpCode}` : 'OTP sent successfully'}
+        type="info"
+        isOpen={snackbarOpen}
+        onClose={() => setSnackbarOpen(false)}
+        duration={10000}
+      />
     </div>
   )
 }

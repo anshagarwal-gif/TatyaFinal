@@ -2,11 +2,14 @@ package com.tatya.service;
 
 import com.tatya.dto.BookingRequest;
 import com.tatya.entity.*;
+import com.tatya.exception.VendorKycPendingException;
+import com.tatya.exception.VendorRejectedException;
 import com.tatya.repository.BookingRepository;
 import com.tatya.repository.DroneRepository;
 import com.tatya.repository.UserRepository;
 import com.tatya.repository.AvailabilityRepository;
 import com.tatya.repository.DroneSpecificationRepository;
+import com.tatya.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ public class BookingService {
     private final UserRepository userRepository;
     private final AvailabilityRepository availabilityRepository;
     private final DroneSpecificationRepository droneSpecificationRepository;
+    private final VendorRepository vendorRepository;
     
     @Transactional
     public Booking createBooking(BookingRequest request) {
@@ -115,6 +119,14 @@ public class BookingService {
     }
     
     public List<Booking> getBookingsByVendorId(Long vendorId) {
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() -> new RuntimeException("Vendor not found with ID: " + vendorId));
+        if (vendor.getVerifiedStatus() == Vendor.VerifiedStatus.REJECTED) {
+            throw new VendorRejectedException("Your KYC was rejected. Please contact support.");
+        }
+        if (vendor.getVerifiedStatus() != Vendor.VerifiedStatus.VERIFIED) {
+            throw new VendorKycPendingException("KYC under processing. Please wait for admin approval.");
+        }
         return bookingRepository.findByVendor_VendorId(vendorId);
     }
     
