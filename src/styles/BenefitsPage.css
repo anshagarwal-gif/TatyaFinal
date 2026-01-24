@@ -13,7 +13,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 20px;
 }
 
 /* Main Title */
@@ -26,6 +26,80 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   letter-spacing: -0.3px;
   line-height: 1.3;
+}
+
+/* Benefits List Section */
+.benefits-list-section {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.benefits-list-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 24px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  text-align: left;
+}
+
+.benefits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.benefit-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.benefit-calendar-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.benefit-list-text {
+  font-size: 16px;
+  font-weight: 400;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  flex: 1;
+}
+
+.benefit-list-underline {
+  position: absolute;
+  bottom: -8px;
+  left: 36px;
+  right: 0;
+  height: 1px;
+  background: #4a4a4a;
+  width: 200px;
+}
+
+.benefits-list-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.see-terms-link {
+  font-size: 14px;
+  font-weight: 400;
+  color: #ffffff;
+  text-decoration: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  transition: opacity 0.2s;
+}
+
+.see-terms-link:hover {
+  opacity: 0.8;
 }
 
 .benefits-cards-section {
@@ -107,7 +181,7 @@
 
 .benefit-image {
   width: 100%;
-  height: 100%;
+  height: 80%;
   position: relative;
   display: flex;
   align-items: center;
@@ -173,6 +247,46 @@
 
 .continue-button:active {
   transform: translateY(0);
+}
+
+/* Bottom Image */
+.benefits-bottom-image {
+  width: 100%;
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.benefits-bottom-img {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}
+
+/* Bottom Text Section */
+.benefits-bottom-text {
+  width: 100%;
+  margin-top: 24px;
+  padding: 20px;
+  background: #000000;
+  border: 1px solid #0066ff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.benefits-bottom-text-content {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  margin: 0;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 }
 
 /* Language Toggle */
@@ -244,10 +358,83 @@
   opacity: 1;
 }
 
+/* Desktop Styles */
+@media (min-width: 769px) {
+  .benefits-page {
+    padding: 40px 60px;
+    padding-top: 60px;
+  }
+
+  .benefits-container {
+    max-width: 1200px;
+    gap: 40px;
+  }
+
+  .main-title {
+    font-size: 40px;
+  }
+
+  .benefits-cards-section {
+    gap: 24px;
+  }
+
+  .benefit-card {
+    padding: 32px;
+  }
+
+  .benefit-card-content {
+    gap: 24px;
+  }
+
+  .benefit-title {
+    font-size: 24px;
+  }
+
+  .benefit-description {
+    font-size: 16px;
+  }
+
+  .benefit-image-section {
+    width: 120px;
+    height: 120px;
+  }
+
+  .benefits-list-section {
+    padding: 32px;
+  }
+
+  .benefits-list-title {
+    font-size: 28px;
+    margin-bottom: 28px;
+  }
+
+  .benefit-list-text {
+    font-size: 18px;
+  }
+
+  .benefit-calendar-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .benefits-bottom-image {
+    margin-top: 40px;
+  }
+
+  .benefits-bottom-text {
+    margin-top: 32px;
+    padding: 24px;
+  }
+
+  .benefits-bottom-text-content {
+    font-size: 18px;
+  }
+}
+
+/* Mobile Styles - Keep Intact */
 @media (max-width: 768px) {
   .benefits-page {
     padding: 16px;
-    padding-top: 60px;
   }
 
   .main-title {
@@ -293,5 +480,18 @@
 
   .language-label {
     font-size: 13px;
+  }
+
+  .benefits-bottom-image {
+    margin-top: 24px;
+  }
+
+  .benefits-bottom-text {
+    margin-top: 20px;
+    padding: 16px;
+  }
+
+  .benefits-bottom-text-content {
+    font-size: 14px;
   }
 }

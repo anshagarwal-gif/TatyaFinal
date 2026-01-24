@@ -14,6 +14,7 @@ import otpOrangeText from '../assets/OTPOrangeText.png'
 import { FiPhone, FiArrowRight, FiEdit2, FiCheckCircle, FiUser, FiBriefcase, FiLock, FiMail } from 'react-icons/fi'
 import { generateOtp, verifyOtp, vendorLoginWithPassword } from '../services/api'
 import Snackbar from '../components/Snackbar'
+import BenefitsPage from './BenefitsPage'
 
 function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('')
@@ -146,7 +147,7 @@ function LoginPage() {
       const response = await verifyOtp(phoneNumber, otpValue)
       if (response.success) {
         // OTP verified successfully, navigate to benefits page (customer only)
-        navigate('/benefits')
+        navigate('/location')
       } else {
         // OTP verification failed - show clear error message
         setErrorMessage(response.message || 'Invalid OTP. Please check and try again.')
@@ -557,6 +558,7 @@ function LoginPage() {
         )}
         </div>
       </div>
+      <BenefitsPage />
 
       {/* OTP Snackbar */}
       <Snackbar
@@ -567,6 +569,7 @@ function LoginPage() {
         duration={10000}
       />
     </>
+    
   )
 }
 

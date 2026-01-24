@@ -5,6 +5,7 @@ import { translate } from '../utils/translations'
 import calendarImage from '../assets/Calender.jpg'
 import moneyImage from '../assets/Image2.jpg'
 import droneImage from '../assets/Image3.jpg'
+import benefitsPageBottomImage from '../assets/BenefitsPageBottom.jpg'
 
 function BenefitsPage() {
   const navigate = useNavigate()
@@ -56,9 +57,6 @@ function BenefitsPage() {
                   <p className="benefit-description">
                     {isMarathi ? benefit.descriptionMarathi : benefit.description}
                   </p>
-                  <button className="details-button">
-                    {translate('Details', isMarathi)}
-                  </button>
                 </div>
                 <div className="benefit-image-section">
                   {benefit.imageType === 'calendar' && (
@@ -146,11 +144,61 @@ function BenefitsPage() {
           ))}
         </div>
 
-        {/* Continue Button */}
-        <div className="benefits-actions">
-          <button className="continue-button" onClick={handleContinue}>
-            {translate('Continue', isMarathi)}
-          </button>
+        {/* Benefits List Section */}
+        <div className="benefits-list-section">
+          <h2 className="benefits-list-title">Benefits</h2>
+          <div className="benefits-list">
+            <div className="benefit-list-item">
+              <svg className="benefit-calendar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="4" width="18" height="18" rx="2" stroke="white" strokeWidth="2"/>
+                <line x1="8" y1="2" x2="8" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="16" y1="2" x2="16" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="3" y1="10" x2="21" y2="10" stroke="white" strokeWidth="2"/>
+              </svg>
+              <span className="benefit-list-text">सेवा आणि तारीख ठरवा</span>
+              <div className="benefit-list-underline"></div>
+            </div>
+            <div className="benefit-list-item">
+              <svg className="benefit-calendar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="4" width="18" height="18" rx="2" stroke="white" strokeWidth="2"/>
+                <line x1="8" y1="2" x2="8" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="16" y1="2" x2="16" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="3" y1="10" x2="21" y2="10" stroke="white" strokeWidth="2"/>
+              </svg>
+              <span className="benefit-list-text">आपल्या शेताचे ठिकाण सांगा</span>
+              <div className="benefit-list-underline"></div>
+            </div>
+            <div className="benefit-list-item">
+              <svg className="benefit-calendar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="4" width="18" height="18" rx="2" stroke="white" strokeWidth="2"/>
+                <line x1="8" y1="2" x2="8" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="16" y1="2" x2="16" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="3" y1="10" x2="21" y2="10" stroke="white" strokeWidth="2"/>
+              </svg>
+              <span className="benefit-list-text">काम झाल्यावरच पेमेंट</span>
+            </div>
+          </div>
+          <div className="benefits-list-footer">
+            <a href="#" className="see-terms-link">See terms</a>
+          </div>
+        </div>
+
+
+        {/* Bottom Image */}
+        <div className="benefits-bottom-image">
+          <img 
+            src={benefitsPageBottomImage}
+            alt="Benefits Page Bottom"
+            className="benefits-bottom-img"
+          />
+        </div>
+
+        {/* Bottom Text Section */}
+        <div className="benefits-bottom-text">
+          <p className="benefits-bottom-text-content">
+            Get rating on each Drone so you know what you are<br />
+            getting, Find experienced pilots, and select wisely.
+          </p>
         </div>
 
         {/* Language Toggle */}
