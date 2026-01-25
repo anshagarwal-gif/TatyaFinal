@@ -20,12 +20,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // Allow all requests (OTP-based auth)
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+            .cors() // 🔥 REQUIRED: enables CORS handling in Spring Security
+            .and()
+            .csrf().disable()
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll() // OTP-based auth
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            );
 
         return http.build();
     }
