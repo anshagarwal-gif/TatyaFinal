@@ -16,7 +16,6 @@ import java.util.List;
 @RequestMapping("/api/availability")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "http://localhost:5173")
 public class AvailabilityController {
     
     private final AvailabilityService availabilityService;

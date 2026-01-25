@@ -20,7 +20,6 @@ import java.util.Optional;
 @RequestMapping("/api/test")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*")
 public class PasswordTestController {
 
     private final UserRepository userRepository;

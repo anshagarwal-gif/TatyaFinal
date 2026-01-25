@@ -19,7 +19,6 @@ import java.util.List;
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "http://localhost:5173")
 public class BookingController {
     
     private final BookingService bookingService;
