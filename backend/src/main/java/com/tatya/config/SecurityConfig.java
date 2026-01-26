@@ -36,7 +36,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // Allow your frontend domain here:
-        config.setAllowedOrigins(List.of("https://taaran.app"));
+        config.setAllowedOrigins(List.of("https://taaran.app", "https://www.taaran.app"));
 
         // Allow HTTP methods used by your frontend
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
