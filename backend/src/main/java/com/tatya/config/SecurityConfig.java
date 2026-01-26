@@ -10,7 +10,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
-
+import org.springframework.security.config.Customizer;
 import java.util.List;
 
 @Configuration
@@ -19,17 +19,16 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
-                .cors() // Enable Spring Security CORS support
-                .and()
-                .csrf().disable() // Disable CSRF for stateless API
+                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Explicitly allow OPTIONS requests (preflight)
+                        // Allow preflight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Allow all other requests
-                        .anyRequest().permitAll())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                        // Allow all requests (change later if needed)
+                        .anyRequest().permitAll());
 
         return http.build();
     }
