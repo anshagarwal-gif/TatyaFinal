@@ -19,16 +19,15 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
-                .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors()
+                .and()
+                .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
-                        // Allow preflight requests
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Allow all requests (change later if needed)
-                        .anyRequest().permitAll());
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight
+                        .anyRequest().permitAll())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
