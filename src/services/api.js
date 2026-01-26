@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'https://taaran.app/api';
 
 /**
  * Generate OTP for a phone number
