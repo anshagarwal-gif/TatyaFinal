@@ -3,8 +3,8 @@ package com.tatya.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
@@ -12,22 +12,16 @@ import java.util.List;
 public class CorsConfig {
 
     @Bean
-    public CorsFilter corsFilter() {
+    public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        // 🔐 Required when using cookies / auth headers
         config.setAllowCredentials(true);
 
-        // ✅ Production-safe (works behind nginx / proxies)
         config.setAllowedOriginPatterns(List.of(
                 "https://taaran.app",
                 "https://www.taaran.app"));
 
-        // 🧾 Allow all headers from frontend
-        config.setAllowedHeaders(List.of("*"));
-
-        // 🔓 Allow common HTTP methods
         config.setAllowedMethods(List.of(
                 "GET",
                 "POST",
@@ -36,18 +30,18 @@ public class CorsConfig {
                 "OPTIONS",
                 "PATCH"));
 
-        // 📤 (Optional but recommended)
+        config.setAllowedHeaders(List.of("*"));
+
         config.setExposedHeaders(List.of(
                 "Authorization",
                 "Content-Type"));
 
-        // ⏱ Cache preflight response (seconds)
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration("/**", config);
 
-        return new CorsFilter(source);
+        return source;
     }
 }
