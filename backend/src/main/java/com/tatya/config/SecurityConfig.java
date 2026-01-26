@@ -21,11 +21,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors() // ✅ Spring Security CORS
-                .and()
+                // ❌ DO NOT enable CORS
+                // .cors()
+
+                // ❌ CSRF not needed for stateless APIs
                 .csrf().disable()
+
+                // ✅ Allow all requests (OTP-based auth)
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll())
+
+                // ✅ Stateless session
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
