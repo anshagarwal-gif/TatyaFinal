@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,9 +30,9 @@ public class AdminService {
     private final EmailService emailService;
 
     private String generateTemporaryPassword() {
-        // 10 chars, no ambiguous characters, good enough for temp password
-        String raw = UUID.randomUUID().toString().replace("-", "");
-        return raw.substring(0, 10);
+        // Generate a 4-digit numeric password (1000-9999) to be emailed to the vendor
+        int code = (int) (Math.random() * 9000) + 1000;
+        return String.valueOf(code);
     }
 
     /**
