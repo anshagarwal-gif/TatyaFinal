@@ -10,9 +10,3 @@ public class TatyaApplication {
         SpringApplication.run(TatyaApplication.class, args);
     }
 }
-
-
-
-
-
-

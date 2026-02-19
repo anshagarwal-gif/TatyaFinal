@@ -175,6 +175,31 @@ public class VendorOnboardingController {
     }
     
     /**
+     * Upload passport/profile photo
+     * POST /api/vendors/onboarding/upload-passport-photo
+     */
+    @PostMapping("/upload-passport-photo")
+    public ResponseEntity<ApiResponse<List<String>>> uploadPassportPhoto(
+            @RequestParam("vendorId") Long vendorId,
+            @RequestParam(value = "droneId", required = false) Long droneId,
+            @RequestParam("files") MultipartFile[] files) {
+        try {
+            List<String> filePaths = new ArrayList<>();
+            for (MultipartFile file : files) {
+                String filePath = fileUploadService.uploadFile(file, "vendors/" + vendorId + "/passport-photos");
+                onboardingService.saveDocument(vendorId, droneId, VendorDocument.DocumentType.PASSPORT_PHOTO,
+                    file.getOriginalFilename(), filePath, file.getSize(), file.getContentType());
+                filePaths.add(filePath);
+            }
+            return ResponseEntity.ok(ApiResponse.success("Passport photo uploaded successfully", filePaths));
+        } catch (Exception e) {
+            log.error("Error uploading passport photo", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+    
+    /**
      * Get saved onboarding data for a vendor
      * GET /api/vendors/onboarding/{vendorId}/data
      */

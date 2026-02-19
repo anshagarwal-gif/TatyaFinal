@@ -3,15 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
 import { saveOnboardingStep5, getOnboardingData } from '../services/api'
+import ProgressBar from '../components/ProgressBar'
 
 function VendorAvailabilityPage() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
     startDate: '',
-    endDate: '',
     slaReachTime: '',
     timeBatches: [],
-    availabilityStatus: ''
+    availabilityStatus: '',
+    maxAcresPerDay: '',
+    perAcreRate: ''
   })
   const [errors, setErrors] = useState({})
   const [isSaving, setIsSaving] = useState(false)
@@ -42,7 +44,6 @@ function VendorAvailabilityPage() {
             if (drone.availabilities && drone.availabilities.length > 0) {
               const firstAvailability = drone.availabilities[0]
               startDate = firstAvailability.startDate || ''
-              endDate = firstAvailability.endDate || ''
             }
             
             // Parse time batches from JSON string
@@ -63,10 +64,11 @@ function VendorAvailabilityPage() {
             setFormData(prev => ({
               ...prev,
               startDate: startDate,
-              endDate: endDate,
               slaReachTime: drone.slaReachTimeHours ? String(drone.slaReachTimeHours) : '',
               timeBatches: timeBatches || [],
-              availabilityStatus: drone.availabilityStatus || ''
+              availabilityStatus: drone.availabilityStatus || '',
+              maxAcresPerDay: drone.maxAcresPerDay ? String(drone.maxAcresPerDay) : '',
+              perAcreRate: drone.pricePerAcre ? String(drone.pricePerAcre) : ''
             }))
           }
         }
@@ -107,11 +109,8 @@ function VendorAvailabilityPage() {
     if (!formData.startDate.trim()) {
       newErrors.startDate = 'Please select start date'
     }
-    if (!formData.endDate.trim()) {
-      newErrors.endDate = 'Please select end date'
-    }
     if (!formData.slaReachTime.trim()) {
-      newErrors.slaReachTime = 'Please enter SLA reach time'
+      newErrors.slaReachTime = 'Please enter reach time'
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -139,10 +138,11 @@ function VendorAvailabilityPage() {
       const step5Data = {
         vendorId: parseInt(vendorId),
         startDate: formData.startDate,
-        endDate: formData.endDate,
         slaReachTime: formData.slaReachTime ? parseInt(formData.slaReachTime) : null,
         timeBatches: formData.timeBatches,
-        availabilityStatus: formData.availabilityStatus
+        availabilityStatus: formData.availabilityStatus,
+        maxAcresPerDay: formData.maxAcresPerDay ? parseInt(formData.maxAcresPerDay) : null,
+        perAcreRate: formData.perAcreRate ? parseFloat(formData.perAcreRate) : null
       }
 
       await saveOnboardingStep5(step5Data)
@@ -166,58 +166,71 @@ function VendorAvailabilityPage() {
 
   return (
     <div className="vendor-form-page">
+      {/* Progress Bar */}
+      <ProgressBar 
+        currentStep={5} 
+        totalSteps={6}
+        steps={['Equipment', 'Drone Details', 'Capacity', 'Location', 'Availability', 'Payouts']}
+      />
+
       {/* Header with Back Button */}
       <div className="form-header">
         <button className="back-button" onClick={handleBack} aria-label="Go back">
           <FiArrowLeft />
         </button>
-        <div className="progress-indicator">
-          <span className="progress-text">Step 5 of 6</span>
-        </div>
       </div>
 
       {/* Form Content */}
       <div className="form-content">
-        <h1 className="form-title">Availability & SLA</h1>
+        <h1 className="form-title">Availability</h1>
 
         <div className="form-fields">
-          <div className="date-row">
-            <div className="date-group">
-              <label className="date-label">Start Date *</label>
-              <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => handleInputChange('startDate', e.target.value)}
-                className="form-input"
-                min={new Date().toISOString().split('T')[0]}
-                style={{ marginTop: '8px' }}
-              />
-              {errors.startDate && <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>{errors.startDate}</span>}
-            </div>
-            <div className="date-group">
-              <label className="date-label">End Date *</label>
-              <input
-                type="date"
-                value={formData.endDate}
-                onChange={(e) => handleInputChange('endDate', e.target.value)}
-                className="form-input"
-                min={formData.startDate || new Date().toISOString().split('T')[0]}
-                style={{ marginTop: '8px' }}
-              />
-              {errors.endDate && <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>{errors.endDate}</span>}
-            </div>
+          <div className="form-group">
+            <label className="date-label">Start Date *</label>
+            <input
+              type="date"
+              value={formData.startDate}
+              onChange={(e) => handleInputChange('startDate', e.target.value)}
+              className="form-input"
+              min={new Date().toISOString().split('T')[0]}
+              style={{ marginTop: '8px' }}
+            />
+            {errors.startDate && <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>{errors.startDate}</span>}
           </div>
 
           <div className="form-group">
             <input
               type="number"
-              placeholder="SLA Reach Time (hours) *"
+              placeholder="Reach Time (hours) *"
               value={formData.slaReachTime}
               onChange={(e) => handleInputChange('slaReachTime', e.target.value)}
               className="form-input"
               min="0"
             />
             {errors.slaReachTime && <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '4px', display: 'block' }}>{errors.slaReachTime}</span>}
+          </div>
+
+          <div className="form-group">
+            <input
+              type="number"
+              placeholder="Max Acres Per Day"
+              value={formData.maxAcresPerDay}
+              onChange={(e) => handleInputChange('maxAcresPerDay', e.target.value)}
+              className="form-input"
+              min="0"
+            />
+          </div>
+
+          <div className="form-group">
+            <input
+              type="number"
+              placeholder="Per Acre Rate (₹)"
+              value={formData.perAcreRate}
+              onChange={(e) => handleInputChange('perAcreRate', e.target.value)}
+              className="form-input"
+              min="0"
+              step="0.01"
+            />
           </div>
 
           <div className="section-title">
@@ -258,7 +271,7 @@ function VendorAvailabilityPage() {
         </div>
 
         <div className="section-title">
-          <p>Calendar & SLA Clock</p>
+          <p>Calendar & Clock</p>
         </div>
 
         {errorMessage && (

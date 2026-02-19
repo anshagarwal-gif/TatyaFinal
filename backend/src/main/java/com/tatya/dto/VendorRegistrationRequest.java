@@ -13,6 +13,7 @@ public class VendorRegistrationRequest {
     
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
+    @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@gmail\\.com$", message = "Only @gmail.com email addresses are allowed")
     private String email;
     
     @NotBlank(message = "Phone number is required")

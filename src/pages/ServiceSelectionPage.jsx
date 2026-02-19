@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/ServiceSelectionPage.css'
 import { translate } from '../utils/translations'
+import { useLanguage } from '../contexts/LanguageContext'
 import { 
   FiStar, 
   FiMapPin, 
@@ -16,7 +17,7 @@ import { getAvailableDronesWithSpecifications } from '../services/api'
 
 function ServiceSelectionPage() {
   const navigate = useNavigate()
-  const [isMarathi, setIsMarathi] = useState(false)
+  const { isMarathi, toggleLanguage } = useLanguage()
   const [drones, setDrones] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -237,7 +238,7 @@ function ServiceSelectionPage() {
         {/* Language Toggle */}
         <button 
           className="language-toggle"
-          onClick={() => setIsMarathi(!isMarathi)}
+          onClick={toggleLanguage}
         >
           {isMarathi ? 'English' : 'मराठी'}
         </button>

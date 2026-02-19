@@ -56,6 +56,7 @@ public class VendorDocument {
         EQUIPMENT_DOCUMENT,
         LICENSE,
         CERTIFICATE,
+        PASSPORT_PHOTO,
         OTHER
     }
 }

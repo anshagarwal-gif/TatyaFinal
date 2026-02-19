@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
-import { saveOnboardingStep1, uploadEquipmentImages, uploadDocuments, getOnboardingData } from '../services/api'
+import { saveOnboardingStep1, uploadEquipmentImages, uploadDocuments, uploadPassportPhoto, getOnboardingData } from '../services/api'
+import ProgressBar from '../components/ProgressBar'
 
 function VendorEquipmentPage() {
   const navigate = useNavigate()
@@ -13,7 +14,8 @@ function VendorEquipmentPage() {
     yearOfMake: '',
     serialNo: '',
     uploadImages: null,
-    uploadDocuments: null
+    uploadDocuments: null,
+    uploadPassportPhoto: null
   })
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -110,6 +112,16 @@ function VendorEquipmentPage() {
         }
       }
 
+      // Upload passport/profile photo if provided
+      if (formData.uploadPassportPhoto && formData.uploadPassportPhoto.length > 0) {
+        try {
+          await uploadPassportPhoto(parseInt(vendorId), droneId, formData.uploadPassportPhoto)
+        } catch (error) {
+          console.error('Error uploading passport photo:', error)
+          // Continue even if passport photo upload fails
+        }
+      }
+
       // Store droneId for next steps
       if (droneId) {
         localStorage.setItem('droneId', droneId)
@@ -140,14 +152,18 @@ function VendorEquipmentPage() {
 
   return (
     <div className="vendor-form-page">
+      {/* Progress Bar */}
+      <ProgressBar 
+        currentStep={1} 
+        totalSteps={6}
+        steps={['Equipment', 'Drone Details', 'Capacity', 'Location', 'Availability', 'Payouts']}
+      />
+
       {/* Header with Back Button */}
       <div className="form-header">
         <button className="back-button" onClick={handleBack} aria-label="Go back">
           <FiArrowLeft />
         </button>
-        <div className="progress-indicator">
-          <span className="progress-text">Step 1 of 6</span>
-        </div>
       </div>
 
       {/* Form Content */}
@@ -246,6 +262,19 @@ function VendorEquipmentPage() {
               accept=".pdf,.doc,.docx"
               multiple
               onChange={(e) => handleInputChange('uploadDocuments', e.target.files || null)}
+              className="form-input"
+              style={{ padding: '12px' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#666' }}>
+              Upload Passport/Profile Photo (optional)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleInputChange('uploadPassportPhoto', e.target.files || null)}
               className="form-input"
               style={{ padding: '12px' }}
             />

@@ -2,14 +2,16 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/BenefitsPage.css'
 import { translate } from '../utils/translations'
+import { useLanguage } from '../contexts/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
 import calendarImage from '../assets/Calender.jpg'
 import moneyImage from '../assets/Image2.jpg'
 import droneImage from '../assets/Image3.jpg'
 import benefitsPageBottomImage from '../assets/BenefitsPageBottom.jpg'
 
 function BenefitsPage() {
+  const { isMarathi } = useLanguage()
   const navigate = useNavigate()
-  const [isMarathi, setIsMarathi] = useState(false)
 
   const benefits = [
     {
@@ -202,18 +204,7 @@ function BenefitsPage() {
         </div>
 
         {/* Language Toggle */}
-        <button 
-          type="button"
-          className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
-          onClick={() => setIsMarathi(!isMarathi)}
-          title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-          aria-pressed={isMarathi}
-          aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-        >
-          <span className="language-thumb" aria-hidden="true"></span>
-          <span className="language-label english">English</span>
-          <span className="language-label marathi">मराठी</span>
-        </button>
+        <LanguageToggle />
       </div>
     </div>
   )

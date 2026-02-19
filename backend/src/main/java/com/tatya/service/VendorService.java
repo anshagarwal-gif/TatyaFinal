@@ -81,8 +81,13 @@ public class VendorService {
             }
         }
 
+        // Validate email domain - only @gmail.com allowed
+        String email = request.getEmail();
+        if (email != null && !email.matches("^[a-zA-Z0-9._%+-]+@gmail\\.com$")) {
+            throw new RuntimeException("Only @gmail.com email addresses are allowed");
+        }
         // Check if email is already taken
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("Email already registered");
         }
 
@@ -159,6 +164,11 @@ public class VendorService {
 
         if (safeEmail.isEmpty() || safePassword.isEmpty()) {
             throw new RuntimeException("Email and password are required");
+        }
+
+        // Validate email domain - only @gmail.com allowed
+        if (!safeEmail.matches("^[a-zA-Z0-9._%+-]+@gmail\\.com$")) {
+            throw new RuntimeException("Only @gmail.com email addresses are allowed");
         }
 
         User user = userRepository.findByEmailIgnoreCase(safeEmail)
@@ -261,7 +271,12 @@ public class VendorService {
             user.setFullName(request.getFullName());
         }
         if (request.getEmail() != null) {
-            user.setEmail(request.getEmail());
+            // Validate email domain - only @gmail.com allowed
+            String email = request.getEmail();
+            if (!email.matches("^[a-zA-Z0-9._%+-]+@gmail\\.com$")) {
+                throw new RuntimeException("Only @gmail.com email addresses are allowed");
+            }
+            user.setEmail(email);
         }
         userRepository.save(user);
 

@@ -2,13 +2,17 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorOnboardingFormPage.css'
 import { translate } from '../utils/translations'
+import { useLanguage } from '../contexts/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
+import ProgressBar from '../components/ProgressBar'
+import PrimaryButton from '../components/PrimaryButton'
 import { FiPhone, FiCheckCircle, FiEdit2, FiArrowLeft } from 'react-icons/fi'
 import { registerVendor, verifyVendorAndLogin, generateOtp } from '../services/api'
 import Snackbar from '../components/Snackbar'
 
 function VendorOnboardingFormPage() {
   const navigate = useNavigate()
-  const [isMarathi, setIsMarathi] = useState(false)
+  const { isMarathi } = useLanguage()
   const [isGenerating, setIsGenerating] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [showOTP, setShowOTP] = useState(false)
@@ -194,19 +198,15 @@ function VendorOnboardingFormPage() {
 
   return (
     <div className="vendor-onboarding-form-page">
+      {/* Progress Bar */}
+      <ProgressBar 
+        currentStep={showOTP ? 2 : 1} 
+        totalSteps={2}
+        steps={['Phone Verification', 'Complete']}
+      />
+
       {/* Language Toggle Button */}
-      <button 
-        type="button"
-        className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
-        onClick={() => setIsMarathi(!isMarathi)}
-        title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-        aria-pressed={isMarathi}
-        aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-      >
-        <span className="language-thumb" aria-hidden="true"></span>
-        <span className="language-label english">English</span>
-        <span className="language-label marathi">मराठी</span>
-      </button>
+      <LanguageToggle />
 
       {/* Header */}
       <div className="form-header">
@@ -301,20 +301,14 @@ function VendorOnboardingFormPage() {
                 </div>
               )}
 
-              <button 
-                className="send-otp-button"
+              <PrimaryButton
                 onClick={handleSendOTP}
                 disabled={isGenerating || !fullName.trim() || !email.trim() || !validateEmail(email) || phoneNumber.replace(/\D/g, '').length < 10 || !selectedOption.trim()}
+                loading={isGenerating}
+                fullWidth
               >
-                {isGenerating ? (
-                  <>
-                    <div className="verifying-spinner" style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
-                    <span>{translate('Sending...', isMarathi)}</span>
-                  </>
-                ) : (
-                  translate('Send OTP', isMarathi)
-                )}
-              </button>
+                {isGenerating ? translate('Sending...', isMarathi) : translate('Send OTP', isMarathi)}
+              </PrimaryButton>
             </div>
           </div>
         ) : (
@@ -378,14 +372,15 @@ function VendorOnboardingFormPage() {
             )}
 
             <div className="otp-actions">
-              <button 
-                type="button"
-                className="resend-otp-button"
+              <PrimaryButton
                 onClick={handleResendOTP}
                 disabled={isVerifying || isGenerating}
+                loading={isGenerating}
+                fullWidth
+                variant="secondary"
               >
                 {translate('Resend OTP', isMarathi)}
-              </button>
+              </PrimaryButton>
               
               <button 
                 type="button"

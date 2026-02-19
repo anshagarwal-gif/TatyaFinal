@@ -88,7 +88,16 @@ public class Drone {
     @Column(name = "terrain_following")
     private Boolean terrainFollowing = false;
 
+    @Column(name = "obstacle_avoidance")
+    private Boolean obstacleAvoidance = false;
+
+    @Column(name = "tank_cleaning")
+    private Boolean tankCleaning = false;
+
     // Capacity & Coverage fields
+    @Column(name = "acre_target_per_day")
+    private Integer acreTargetPerDay;
+
     @Column(name = "max_acres_per_day")
     private Integer maxAcresPerDay;
 
@@ -126,6 +135,15 @@ public class Drone {
     @Column(name = "drone_warehouse", columnDefinition = "TEXT")
     private String droneWarehouse;
 
+    @Column(name = "has_generator")
+    private Boolean hasGenerator = false;
+
+    @Column(name = "generator_hp")
+    private Double generatorHp;
+
+    @Column(name = "charger_voltage")
+    private Double chargerVoltage;
+
     // Availability & SLA fields
     @Column(name = "sla_reach_time_hours")
     private Integer slaReachTimeHours;
@@ -135,6 +153,9 @@ public class Drone {
 
     @Column(name = "availability_status")
     private String availabilityStatus;
+
+    @Column(name = "battery_sets", columnDefinition = "TEXT")
+    private String batterySets; // JSON array of battery sets with id and capacity
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

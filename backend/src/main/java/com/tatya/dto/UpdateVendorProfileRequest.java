@@ -1,11 +1,13 @@
 package com.tatya.dto;
 
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
 public class UpdateVendorProfileRequest {
     // Personal Information
     private String fullName;
+    @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@gmail\\.com$", message = "Only @gmail.com email addresses are allowed")
     private String email;
     
     // Equipment Details

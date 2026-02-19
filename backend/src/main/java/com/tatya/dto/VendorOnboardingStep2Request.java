@@ -9,13 +9,12 @@ public class VendorOnboardingStep2Request {
     private String droneType;
     private Double tankSize;
     private Double sprayWidth;
-    private Integer batteryCapacity;
-    private Integer numberOfBatteries;
     private Integer flightTime;
     private Integer batterySwapTime;
     private String uin;
-    private String uaop;
     private String pilotLicense;
     private Boolean returnToHome;
     private Boolean terrainFollowing;
+    private Boolean obstacleAvoidance;
+    private Boolean tankCleaning;
 }

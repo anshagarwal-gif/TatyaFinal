@@ -8,7 +8,4 @@ public class VendorOnboardingStep4Request {
     private String baseLocation;
     private String coordinates;
     private String serviceAreas;
-    private Boolean hasChargingFacility;
-    private Integer numberOfSpareBatteries;
-    private String droneWarehouse;
 }

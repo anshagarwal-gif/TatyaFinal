@@ -76,15 +76,14 @@ public class VendorOnboardingService {
         drone.setDroneType(request.getDroneType());
         drone.setTankSizeLiters(request.getTankSize());
         drone.setSprayWidthMeters(request.getSprayWidth());
-        drone.setBatteryCapacityMah(request.getBatteryCapacity());
-        drone.setBatteryCount(request.getNumberOfBatteries());
         drone.setFlightTimeMinutes(request.getFlightTime());
         drone.setBatterySwapTimeMinutes(request.getBatterySwapTime());
         drone.setUin(request.getUin());
-        drone.setUaop(request.getUaop());
         drone.setPilotLicense(request.getPilotLicense());
         drone.setReturnToHome(request.getReturnToHome());
         drone.setTerrainFollowing(request.getTerrainFollowing());
+        drone.setObstacleAvoidance(request.getObstacleAvoidance());
+        drone.setTankCleaning(request.getTankCleaning());
         
         if (request.getTankSize() != null) {
             drone.setCapacityLiters(request.getTankSize());
@@ -102,10 +101,38 @@ public class VendorOnboardingService {
         
         Drone drone = getOrCreateDrone(request.getVendorId());
         
+        // Handle battery sets - new structure
+        if (request.getBatterySets() != null && !request.getBatterySets().isEmpty()) {
+            try {
+                drone.setBatterySets(objectMapper.writeValueAsString(request.getBatterySets()));
+                // Set first battery capacity for backward compatibility
+                if (request.getBatterySets().size() > 0 && request.getBatterySets().get(0).getCapacity() != null) {
+                    drone.setBatteryCapacityMah(request.getBatterySets().get(0).getCapacity());
+                }
+                // Set battery count as number of sets
+                drone.setBatteryCount(request.getBatterySets().size());
+            } catch (JsonProcessingException e) {
+                log.error("Error serializing battery sets", e);
+            }
+        } else {
+            // Fallback to old structure for backward compatibility
+            drone.setBatteryCapacityMah(request.getBatteryCapacity());
+            drone.setBatteryCount(request.getNumberOfBatteries());
+        }
+        
+        drone.setAcreTargetPerDay(request.getAcreTargetPerDay());
         drone.setMaxAcresPerDay(request.getMaxAcresPerDay());
         drone.setMinBookingAcres(request.getMinBookingAcres());
         drone.setServiceRadiusKm(request.getServiceRadius());
         drone.setLeadTimeDays(request.getLeadTime());
+        
+        // Storage Information fields
+        drone.setHasChargingFacility(request.getHasChargingFacility());
+        drone.setNumberOfSpareBatteries(request.getNumberOfSpareBatteries());
+        drone.setDroneWarehouse(request.getDroneWarehouse());
+        drone.setHasGenerator(request.getHasGenerator());
+        drone.setGeneratorHp(request.getGeneratorHp());
+        drone.setChargerVoltage(request.getChargerVoltage());
         
         // Convert lists to JSON strings
         if (request.getOperationalMonths() != null) {
@@ -141,9 +168,6 @@ public class VendorOnboardingService {
         drone.setBaseLocation(request.getBaseLocation());
         drone.setCoordinates(request.getCoordinates());
         drone.setServiceAreas(request.getServiceAreas());
-        drone.setHasChargingFacility(request.getHasChargingFacility());
-        drone.setNumberOfSpareBatteries(request.getNumberOfSpareBatteries());
-        drone.setDroneWarehouse(request.getDroneWarehouse());
         
         return droneRepository.save(drone);
     }
@@ -158,26 +182,28 @@ public class VendorOnboardingService {
         Drone drone = getOrCreateDrone(request.getVendorId());
         
         // Handle availability dates and create/update Availability records
-        if (request.getStartDate() != null && request.getEndDate() != null) {
+        if (request.getStartDate() != null) {
             List<Availability> existingAvailabilities = availabilityRepository.findByDrone_DroneId(drone.getDroneId());
             
-            // If no availability records exist, create them for the date range
+            // If no availability records exist, create them starting from start date
             if (existingAvailabilities.isEmpty()) {
-                log.info("No existing availability records found. Creating new records from {} to {}", 
-                    request.getStartDate(), request.getEndDate());
+                log.info("No existing availability records found. Creating new records from {}", 
+                    request.getStartDate());
                 
                 // Parse time batches to get time slots
                 List<TimeSlot> timeSlots = parseTimeBatches(request.getTimeBatches());
                 
-                // Create availability records for each day in the range
+                // Create availability records starting from start date (create for next 365 days)
                 LocalDate currentDate = request.getStartDate();
-                while (!currentDate.isAfter(request.getEndDate())) {
+                LocalDate endDate = currentDate.plusDays(365); // Default to 1 year ahead
+                
+                while (!currentDate.isAfter(endDate)) {
                     for (TimeSlot slot : timeSlots) {
                         Availability availability = new Availability();
                         availability.setDrone(drone);
                         availability.setAvailableDate(currentDate);
                         availability.setStartDate(request.getStartDate());
-                        availability.setEndDate(request.getEndDate());
+                        availability.setEndDate(endDate);
                         availability.setStartTime(slot.startTime);
                         availability.setEndTime(slot.endTime);
                         availability.setIsBooked(false);
@@ -185,34 +211,28 @@ public class VendorOnboardingService {
                     }
                     currentDate = currentDate.plusDays(1);
                 }
-                log.info("Created availability records for {} days with {} time slots each", 
-                    ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1, 
+                log.info("Created availability records from {} for {} days with {} time slots each", 
+                    request.getStartDate(),
+                    ChronoUnit.DAYS.between(request.getStartDate(), endDate) + 1, 
                     timeSlots.size());
             } else {
-                // Update existing availability records with start and end dates
-                log.info("Updating {} existing availability records with date range", existingAvailabilities.size());
+                // Update existing availability records with start date
+                log.info("Updating {} existing availability records with start date", existingAvailabilities.size());
                 for (Availability availability : existingAvailabilities) {
                     availability.setStartDate(request.getStartDate());
-                    availability.setEndDate(request.getEndDate());
+                    // Keep existing end date or set to 1 year from start date
+                    if (availability.getEndDate() == null || availability.getEndDate().isBefore(request.getStartDate())) {
+                        availability.setEndDate(request.getStartDate().plusDays(365));
+                    }
                     availabilityRepository.save(availability);
                 }
-            }
-        } else if (request.getStartDate() != null || request.getEndDate() != null) {
-            // Update existing records if only one date is provided
-            List<Availability> availabilities = availabilityRepository.findByDrone_DroneId(drone.getDroneId());
-            for (Availability availability : availabilities) {
-                if (request.getStartDate() != null) {
-                    availability.setStartDate(request.getStartDate());
-                }
-                if (request.getEndDate() != null) {
-                    availability.setEndDate(request.getEndDate());
-                }
-                availabilityRepository.save(availability);
             }
         }
         
         drone.setSlaReachTimeHours(request.getSlaReachTime());
         drone.setAvailabilityStatus(request.getAvailabilityStatus());
+        drone.setMaxAcresPerDay(request.getMaxAcresPerDay());
+        drone.setPricePerAcre(request.getPerAcreRate());
         
         if (request.getTimeBatches() != null) {
             try {

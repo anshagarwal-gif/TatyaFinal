@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { LanguageProvider } from './contexts/LanguageContext'
 import LoginPage from './pages/LoginPage'
 import BenefitsPage from './pages/BenefitsPage'
 import LocationPage from './pages/LocationPage'
@@ -29,25 +30,26 @@ import FinancePage from './pages/FinancePage'
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/benefits" element={<BenefitsPage />} />
-        <Route path="/location" element={<LocationPage />} />
-        <Route path="/my-farms" element={<MyFarmsPage />} />
-        <Route path="/cluster-management" element={<ClusterManagementPage />} />
-        <Route path="/nearby-clusters" element={<NearbyClustersPage />} />
-        <Route path="/booking" element={<BookingPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/vendor-onboarding" element={<VendorOnboardingPage />} />
-        <Route path="/vendor-onboarding-form" element={<VendorOnboardingFormPage />} />
-        <Route path="/vendor-kyc-pending" element={<VendorKycPendingPage />} />
-        <Route path="/vendor-equipment" element={<VendorEquipmentPage />} />
-        <Route path="/vendor-availability" element={<VendorAvailabilityPage />} />
-        <Route path="/vendor-location" element={<VendorLocationPage />} />
-        <Route path="/vendor-capacity" element={<VendorCapacityPage />} />
-        <Route path="/vendor-drone-details" element={<VendorDroneDetailsPage />} />    
-         <Route path="/vendor-payouts" element={<VendorPayoutsPage />} />
+    <LanguageProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/benefits" element={<BenefitsPage />} />
+          <Route path="/location" element={<LocationPage />} />
+          <Route path="/my-farms" element={<MyFarmsPage />} />
+          <Route path="/cluster-management" element={<ClusterManagementPage />} />
+          <Route path="/nearby-clusters" element={<NearbyClustersPage />} />
+          <Route path="/booking" element={<BookingPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/vendor-onboarding" element={<VendorOnboardingPage />} />
+          <Route path="/vendor-onboarding-form" element={<VendorOnboardingFormPage />} />
+          <Route path="/vendor-kyc-pending" element={<VendorKycPendingPage />} />
+          <Route path="/vendor-equipment" element={<VendorEquipmentPage />} />
+          <Route path="/vendor-availability" element={<VendorAvailabilityPage />} />
+          <Route path="/vendor-location" element={<VendorLocationPage />} />
+          <Route path="/vendor-capacity" element={<VendorCapacityPage />} />
+          <Route path="/vendor-drone-details" element={<VendorDroneDetailsPage />} />    
+           <Route path="/vendor-payouts" element={<VendorPayoutsPage />} />
         <Route path="/vendor-dashboard" element={<VendorDashboardPage />} />
         <Route path="/vendor-edit-profile" element={<VendorEditProfilePage />} />
         {/* Admin Panel Routes */}
@@ -62,6 +64,7 @@ function App() {
         </Route>
       </Routes>
     </Router>
+    </LanguageProvider>
   )
 }
 

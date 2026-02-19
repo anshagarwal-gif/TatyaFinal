@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
 import { saveOnboardingStep6, getOnboardingData } from '../services/api'
+import ProgressBar from '../components/ProgressBar'
 
 function VendorPayoutsPage() {
   const navigate = useNavigate()
@@ -126,14 +127,18 @@ function VendorPayoutsPage() {
 
   return (
     <div className="vendor-form-page">
+      {/* Progress Bar */}
+      <ProgressBar 
+        currentStep={6} 
+        totalSteps={6}
+        steps={['Equipment', 'Drone Details', 'Capacity', 'Location', 'Availability', 'Payouts']}
+      />
+
       {/* Header with Back Button */}
       <div className="form-header">
         <button className="back-button" onClick={handleBack} aria-label="Go back">
           <FiArrowLeft />
         </button>
-        <div className="progress-indicator">
-          <span className="progress-text">Step 6 of 6</span>
-        </div>
       </div>
 
       {/* Form Content */}

@@ -13,11 +13,13 @@ import {
 } from 'react-icons/fi'
 import '../styles/CheckoutPage.css'
 import { translate } from '../utils/translations'
+import { useLanguage } from '../contexts/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
 import { createPaymentOrder, verifyPayment, getRazorpayKey } from '../services/api'
 
 function CheckoutPage() {
+  const { isMarathi } = useLanguage()
   const [selectedInstruction, setSelectedInstruction] = useState('call')
-  const [isMarathi, setIsMarathi] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -202,18 +204,7 @@ function CheckoutPage() {
   return (
     <div className="checkout-page">
       {/* Language Toggle Button */}
-      <button 
-        type="button"
-        className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
-        onClick={() => setIsMarathi(!isMarathi)}
-        title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-        aria-pressed={isMarathi}
-        aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-      >
-        <span className="language-thumb" aria-hidden="true"></span>
-        <span className="language-label english">English</span>
-        <span className="language-label marathi">मराठी</span>
-      </button>
+      <LanguageToggle />
 
       {/* Header */}
       <div className="checkout-header">

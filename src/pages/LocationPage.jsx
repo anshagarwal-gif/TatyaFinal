@@ -6,6 +6,9 @@ import EXIF from 'exif-js'
 import 'leaflet/dist/leaflet.css'
 import '../styles/LocationPage.css'
 import { translate } from '../utils/translations'
+import { useLanguage } from '../contexts/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
+import PrimaryButton from '../components/PrimaryButton'
 import { 
   FiSearch, 
   FiMapPin, 
@@ -55,13 +58,13 @@ function MapClickHandler({ onMapClick }) {
 function LocationPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isMarathi } = useLanguage()
   const [userLocation, setUserLocation] = useState(null)
   const [mapCenter, setMapCenter] = useState([19.0760, 72.8777]) // Default: Mumbai
   const [mapZoom, setMapZoom] = useState(13)
   const [selectedLocation, setSelectedLocation] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [isMarathi, setIsMarathi] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
@@ -78,6 +81,7 @@ function LocationPage() {
   const [availableDrones, setAvailableDrones] = useState([])
   const [selectedDrone, setSelectedDrone] = useState(null)
   const [loadingDrones, setLoadingDrones] = useState(false)
+  const [isConfirmed, setIsConfirmed] = useState(false)
 
   // Check for drone from navigation state (from ServiceSelectionPage)
   useEffect(() => {
@@ -278,6 +282,11 @@ function LocationPage() {
         return
       }
       
+      if (!isConfirmed) {
+        setError(translate('Please confirm the location is correct first', isMarathi))
+        return
+      }
+      
       // Store location in localStorage for persistence
       const locationData = {
         coordinates: selectedLocation,
@@ -296,6 +305,13 @@ function LocationPage() {
       })
     } else {
       setError(translate('Please select a location first', isMarathi))
+    }
+  }
+
+  // Handle tick button click - just toggle confirmation
+  const handleTickConfirmation = () => {
+    if (selectedLocation && selectedDrone) {
+      setIsConfirmed(!isConfirmed)
     }
   }
 
@@ -427,18 +443,7 @@ function LocationPage() {
   return (
     <div className="location-page">
       {/* Language Toggle Button */}
-      <button 
-        type="button"
-        className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
-        onClick={() => setIsMarathi(!isMarathi)}
-        title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-        aria-pressed={isMarathi}
-        aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-      >
-        <span className="language-thumb" aria-hidden="true"></span>
-        <span className="language-label english">English</span>
-        <span className="language-label marathi">मराठी</span>
-      </button>
+      <LanguageToggle />
 
       {/* Back Button */}
       <button 
@@ -586,57 +591,99 @@ function LocationPage() {
         </MapContainer>
       </div>
 
-      {/* Location Input Options */}
-      <div className="location-options">
-        <div 
-          className="location-card" 
-          onClick={handlePhotoBasedLocation}
-          role="button"
-          tabIndex={0}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              handlePhotoBasedLocation()
-            }
-          }}
-        >
-          <div className="card-content">
-            <div className="card-text">
-              <h3 className="card-title">{translate('Photo based location', isMarathi)}</h3>
-              <p className="card-description">
-                {translate('Capture image of your farm to provide precise location', isMarathi)}
-              </p>
+      {/* Location Confirmation Question */}
+      {selectedLocation && (
+        <div className="location-confirmation-section">
+          <h3 className="confirmation-question">
+            {translate('Is the farm location correct?', isMarathi)}
+          </h3>
+          
+          {/* Tick Confirmation Button - Normal button that turns green when ticked */}
+          <button 
+            type="button"
+            className={`tick-confirmation-btn ${isConfirmed ? 'confirmed' : ''}`}
+            onClick={handleTickConfirmation}
+            disabled={!selectedLocation || !selectedDrone}
+            aria-label={translate('Yes, that\'s correct!', isMarathi)}
+          >
+            <div className={`confirm-checkbox ${isConfirmed ? 'checked' : ''}`}>
+              {isConfirmed && <FiCheck className="checkbox-tick" />}
             </div>
-            <div className="card-icon-wrapper">
-              <FiCamera className="card-icon" />
-            </div>
+            <span>{translate('Yes, that\'s correct!', isMarathi)}</span>
+          </button>
+
+          {/* Location Input Options */}
+          <div className="location-options">
+            <button 
+              className="location-option-btn" 
+              onClick={handlePhotoBasedLocation}
+              type="button"
+            >
+              <div className="option-content">
+                <span className="option-text">{translate('Upload from Gallery', isMarathi)}</span>
+                <div className="option-icon-wrapper">
+                  <FiImage className="option-icon" />
+                </div>
+              </div>
+            </button>
+
+            {/* Hidden file input for photo selection */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={handleFileSelect}
+              aria-label="Select photo"
+            />
+
+            <button 
+              className="location-option-btn"
+              type="button"
+              onClick={() => {
+                // Handle paste from Google Maps
+                navigator.clipboard.readText().then(text => {
+                  // Try to extract coordinates from clipboard
+                  const coordMatch = text.match(/(-?\d+\.\d+),\s*(-?\d+\.\d+)/)
+                  if (coordMatch) {
+                    const location = [parseFloat(coordMatch[1]), parseFloat(coordMatch[2])]
+                    setSelectedLocation(location)
+                    setMapCenter(location)
+                    setMapZoom(15)
+                    setSearchQuery(`Pasted: ${coordMatch[1]}, ${coordMatch[2]}`)
+                  } else {
+                    setError(translate('No valid coordinates found in clipboard', isMarathi))
+                  }
+                }).catch(err => {
+                  console.error('Failed to read clipboard:', err)
+                  setError(translate('Unable to access clipboard', isMarathi))
+                })
+              }}
+            >
+              <div className="option-content">
+                <span className="option-text">{translate('Paste from Google Maps', isMarathi)}</span>
+                <div className="option-icon-wrapper">
+                  <FiMapPin className="option-icon" />
+                </div>
+              </div>
+            </button>
+
+            <button 
+              className="location-option-btn"
+              type="button"
+              onClick={handlePhotoBasedLocation}
+            >
+              <div className="option-content">
+                <span className="option-text">{translate('Take Farm Photo', isMarathi)}</span>
+                <div className="option-icon-wrapper">
+                  <FiCamera className="option-icon" />
+                </div>
+              </div>
+            </button>
           </div>
         </div>
-
-        {/* Hidden file input for photo selection */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          style={{ display: 'none' }}
-          onChange={handleFileSelect}
-          aria-label="Select photo"
-        />
-
-        <div className="location-card">
-          <div className="card-content">
-            <div className="card-text">
-              <h3 className="card-title">{translate('Mark Farm Land', isMarathi)}</h3>
-              <p className="card-description">
-                {translate('Mark Co-ordinates to plot the complete farm.', isMarathi)}
-              </p>
-            </div>
-            <div className="card-icon-wrapper">
-              <FiMapPin className="card-icon" />
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Drone and Pilot Selection Cards */}
       {selectedLocation && (
@@ -783,17 +830,16 @@ function LocationPage() {
         </div>
       )}
 
-      {/* Confirm Button */}
-      <button 
-        type="button"
-        className={`confirm-button ${selectedLocation && selectedDrone ? 'active' : ''}`}
-        onClick={handleConfirmLocation}
-        disabled={!selectedLocation || !selectedDrone}
-        aria-label={translate('Confirm Location', isMarathi)}
-      >
-        <FiCheck className="confirm-icon" />
-        <span>{translate('Confirm Location', isMarathi)}</span>
-      </button>
+      {/* Confirm Location Button - Fixed at bottom */}
+      <div className="fixed-bottom-container">
+        <PrimaryButton
+          onClick={handleConfirmLocation}
+          disabled={!selectedLocation || !selectedDrone || !isConfirmed}
+          fullWidth
+        >
+          {translate('Confirm Location', isMarathi)}
+        </PrimaryButton>
+      </div>
 
       {/* Camera Modal */}
       {showCamera && (

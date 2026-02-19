@@ -71,6 +71,7 @@
   width: 100%;
   min-height: 100vh;
   background: white;
+  padding-top: 140px; /* Space for fixed progress bar */
   padding-bottom: 40px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
@@ -500,7 +501,10 @@
     align-items: center;
     justify-content: flex-start;
     min-height: 100vh;
-    padding: 40px 20px;
+    padding-top: 160px; /* More space for progress bar on desktop */
+    padding-bottom: 40px;
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
   .form-content-wrapper {
@@ -583,6 +587,7 @@
 /* Mobile Responsive - Small phones */
 @media (max-width: 480px) {
   .vendor-onboarding-form-page {
+    padding-top: 120px; /* Space for progress bar on mobile */
     padding-bottom: 30px;
   }
 

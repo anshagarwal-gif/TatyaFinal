@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/LoginPage.css'
 import { translate } from '../utils/translations'
+import { useLanguage } from '../contexts/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
 import tatyaLogo from '../assets/tatyalogo.png'
 import textImage from '../assets/NewSBlackTex.png'
 import firstBanner from '../assets/FirstBanner.png'
@@ -17,13 +19,13 @@ import Snackbar from '../components/Snackbar'
 import BenefitsPage from './BenefitsPage'
 
 function LoginPage() {
+  const { isMarathi } = useLanguage()
   const [phoneNumber, setPhoneNumber] = useState('')
   const [showOTP, setShowOTP] = useState(false)
   const [otp, setOtp] = useState(['', '', '', ''])
   const [isVerifying, setIsVerifying] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [isMarathi, setIsMarathi] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
   const [splashAnimationComplete, setSplashAnimationComplete] = useState(false)
   const [isVendorLogin, setIsVendorLogin] = useState(false)
@@ -265,18 +267,7 @@ function LoginPage() {
       {/* Main Login Page */}
       <div className={`login-page ${showSplash ? 'hidden' : 'visible'}`}>
         {/* Language Toggle Button */}
-        <button 
-          type="button"
-          className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
-          onClick={() => setIsMarathi(!isMarathi)}
-          title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-          aria-pressed={isMarathi}
-          aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-        >
-          <span className="language-thumb" aria-hidden="true"></span>
-          <span className="language-label english">English</span>
-          <span className="language-label marathi">मराठी</span>
-        </button>
+        <LanguageToggle />
 
       {/* Full Page Background Image */}
       <div className="login-background-image"></div>

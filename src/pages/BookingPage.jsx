@@ -18,6 +18,9 @@ import {
 import '../styles/BookingPage.css'
 import droneImage from '../assets/Drone.jpg'
 import { translate } from '../utils/translations'
+import { useLanguage } from '../contexts/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
+import PrimaryButton from '../components/PrimaryButton'
 import { 
   getDroneWithSpecifications, 
   getAvailableDates,
@@ -26,13 +29,13 @@ import {
 } from '../services/api'
 
 function BookingPage() {
+  const { isMarathi } = useLanguage()
   const [quantity, setQuantity] = useState(1)
   const [selectedUnit, setSelectedUnit] = useState('Acre')
   const [selectedDate, setSelectedDate] = useState('')
   const [confirmedLocation, setConfirmedLocation] = useState(null)
   const [locationAddress, setLocationAddress] = useState('')
   const [loadingAddress, setLoadingAddress] = useState(false)
-  const [isMarathi, setIsMarathi] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
@@ -372,18 +375,8 @@ function BookingPage() {
   return (
     <div className="booking-page">
       {/* Language Toggle Button */}
-      <button 
-        type="button"
-        className={`language-toggle ${isMarathi ? 'marathi-active' : 'english-active'}`}
-        onClick={() => setIsMarathi(!isMarathi)}
-        title={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-        aria-pressed={isMarathi}
-        aria-label={isMarathi ? 'Switch to English' : 'Switch to Marathi'}
-      >
-        <span className="language-thumb" aria-hidden="true"></span>
-        <span className="language-label english">English</span>
-        <span className="language-label marathi">मराठी</span>
-      </button>
+      <LanguageToggle />
+      
       {/* Back Button */}
       <button 
         className="back-button-top"
@@ -411,21 +404,39 @@ function BookingPage() {
       {/* Drone Information Card - Black Section */}
       <div className="drone-info-header-black">
         <div className="info-header">
-          <div className="drone-name-section">
-            <h2 className="drone-name">
-              {drone.droneModel || translate('Premium Crop Protection Drone', isMarathi)}
-            </h2>
+          <div className="drone-name-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ flex: 1 }}>
+              <h2 className="drone-name">
+                {drone.droneModel || translate('Premium Crop Protection Drone', isMarathi)}
+              </h2>
+              {drone.vendor?.user && (
+                <div className="rating">
+                  <span className="rating-value">
+                    {drone.vendor.ratingAvg ? Number(drone.vendor.ratingAvg).toFixed(1) : '4.3'}
+                  </span>
+                  <span className="star-icon">
+                    <FiStar />
+                  </span>
+                  <span className="rating-text">
+                    {translate('Rated by local farmers', isMarathi)}
+                  </span>
+                </div>
+              )}
+            </div>
             {drone.vendor?.user && (
-              <div className="rating">
-                <span className="rating-value">
-                  {drone.vendor.ratingAvg ? Number(drone.vendor.ratingAvg).toFixed(1) : '4.3'}
-                </span>
-                <span className="star-icon">
-                  <FiStar />
-                </span>
-                <span className="rating-text">
-                  {translate('Rated by local farmers', isMarathi)}
-                </span>
+              <div className="pilot-avatar" style={{ 
+                width: '40px', 
+                height: '40px', 
+                borderRadius: '50%', 
+                backgroundColor: '#f3f4f6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginLeft: '12px',
+                marginTop: '-8px',
+                flexShrink: 0
+              }}>
+                <FiUser style={{ fontSize: '20px', color: '#6b7280' }} />
               </div>
             )}
           </div>
@@ -437,69 +448,29 @@ function BookingPage() {
             </div>
           </div>
         </div>
+
+        {/* Drone Specifications - Moved to Black Section */}
+        <div className="drone-specs-black">
+          <h3 className="specs-title">{translate('Drone Specifications', isMarathi)}</h3>
+          <div className="specs-grid">
+            {serviceCards.map((card, index) => {
+              return (
+                <div key={index} className="spec-card-black">
+                  <div className="spec-icon-black">{card.icon}</div>
+                  <div className="spec-content">
+                    <div className="spec-value-black">{translate(card.value, isMarathi)}</div>
+                    <div className="spec-label-black">{translate(card.desc, isMarathi)}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
       {/* White Section - Slideshow and Rest of Content */}
       <div className="booking-content-white">
         <div className="booking-dark-section">
-
-          {/* Service Details Cards */}
-          <div className="service-cards-container">
-            {serviceCards.map((card, index) => {
-              return (
-                <div key={index} className="service-card">
-                  <div className="service-icon-text">{card.icon}</div>
-                  <div className="service-value">{translate(card.value, isMarathi)}</div>
-                  <div className="service-desc">{translate(card.desc, isMarathi)}</div>
-                </div>
-              )
-            })}
-          </div>
-
-
-          {/* Pilot/Vendor Information */}
-          {drone.vendor?.user && (
-            <div className="pilot-card" style={{ marginBottom: '24px' }}>
-              <div className="pilot-avatar">
-                <div className="avatar-placeholder">
-                  <FiUser />
-                </div>
-              </div>
-              <div className="pilot-info" style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                  <div className="pilot-name">
-                    {drone.vendor.user.fullName || translate('Vendor', isMarathi)}
-                  </div>
-                  {drone.vendor.verifiedStatus === 'VERIFIED' && (
-                    <span style={{ color: '#059669', fontSize: '0.75rem' }}>✓ Verified</span>
-                  )}
-                  {drone.vendor.ratingAvg && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.875rem' }}>
-                      <FiStar style={{ color: '#fbbf24', fill: '#fbbf24' }} />
-                      <span>{Number(drone.vendor.ratingAvg).toFixed(1)}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="pilot-details">
-                  {drone.vendor.serviceArea && (
-                    <div style={{ marginBottom: '4px' }}>
-                      <strong>{translate('Service Area:', isMarathi)}</strong> {drone.vendor.serviceArea}
-                    </div>
-                  )}
-                  {drone.vendor.experienceYears && (
-                    <div style={{ marginBottom: '4px' }}>
-                      <strong>{translate('Experience:', isMarathi)}</strong> {drone.vendor.experienceYears} {translate('years', isMarathi)}
-                    </div>
-                  )}
-                  {drone.vendor.licenseNo && (
-                    <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                      {translate('License:', isMarathi)} {drone.vendor.licenseNo}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Give us details Section */}
           <div className="details-section">
@@ -575,9 +546,6 @@ function BookingPage() {
           {/* Select Date Section */}
           <div className="date-section">
             <label className="date-label">
-              <span className="label-icon">
-                <FiCalendar />
-              </span>
               {translate('Select Booking Date', isMarathi)}
             </label>
             
@@ -689,25 +657,19 @@ function BookingPage() {
       </div>
 
       {/* Book Now Button */}
-      <button 
-        className={`book-now-button ${!selectedDate || isBooking ? 'disabled' : ''}`}
-        onClick={handleBookNow}
-        disabled={!selectedDate || isBooking}
-      >
-        {isBooking ? (
-          <>
-            <FiLoader className="spinner" style={{ animation: 'spin 1s linear infinite', marginRight: '8px' }} />
-            <span>{translate('Creating Booking...', isMarathi)}</span>
-          </>
-        ) : (
-          <>
-            <span className="button-icon">
-              <FiArrowRightCircle />
-            </span>
-            <span>{translate('Book Now', isMarathi)} - ₹{totalPrice.toLocaleString('en-IN')}</span>
-          </>
-        )}
-      </button>
+      <div className="fixed-bottom-container">
+        <PrimaryButton
+          onClick={handleBookNow}
+          disabled={!selectedDate || isBooking}
+          loading={isBooking}
+          fullWidth
+        >
+          {isBooking 
+            ? translate('Creating Booking...', isMarathi)
+            : `${translate('Book Now', isMarathi)} - ₹${totalPrice.toLocaleString('en-IN')}`
+          }
+        </PrimaryButton>
+      </div>
     </div>
   )
 }

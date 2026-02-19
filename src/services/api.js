@@ -1070,6 +1070,42 @@ export const uploadDocuments = async (vendorId, droneId, files) => {
   }
 };
 
+/**
+ * Upload passport/profile photo
+ * @param {number} vendorId - Vendor ID
+ * @param {number} droneId - Drone ID (optional)
+ * @param {FileList} files - Image files
+ * @returns {Promise<{success: boolean, message: string, data: Array}>}
+ */
+export const uploadPassportPhoto = async (vendorId, droneId, files) => {
+  try {
+    const formData = new FormData();
+    formData.append('vendorId', vendorId);
+    if (droneId) {
+      formData.append('droneId', droneId);
+    }
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i]);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/vendors/onboarding/upload-passport-photo`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to upload passport photo');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error uploading passport photo:', error);
+    throw error;
+  }
+};
+
 // ==================== Vendor Profile APIs ====================
 
 /**

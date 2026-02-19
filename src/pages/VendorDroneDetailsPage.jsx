@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
 import { saveOnboardingStep2, getOnboardingData } from '../services/api'
+import ProgressBar from '../components/ProgressBar'
 
 function VendorDroneDetailsPage() {
   const navigate = useNavigate()
@@ -11,15 +12,14 @@ function VendorDroneDetailsPage() {
     droneType: 'Spraying',
     tankSize: '',
     sprayWidth: '',
-    batteryCapacity: '',
-    numberOfBatteries: '',
     flightTime: '',
     batterySwapTime: '',
     uin: '',
-    uaop: '',
     pilotLicense: '',
     returnToHome: false,
-    terrainFollowing: false
+    terrainFollowing: false,
+    obstacleAvoidance: false,
+    tankCleaning: false
   })
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -44,15 +44,14 @@ function VendorDroneDetailsPage() {
             droneType: drone.droneType || 'Spraying',
             tankSize: drone.tankSizeLiters ? String(drone.tankSizeLiters) : '',
             sprayWidth: drone.sprayWidthMeters ? String(drone.sprayWidthMeters) : '',
-            batteryCapacity: drone.batteryCapacityMah ? String(drone.batteryCapacityMah) : '',
-            numberOfBatteries: drone.batteryCount ? String(drone.batteryCount) : '',
             flightTime: drone.flightTimeMinutes ? String(drone.flightTimeMinutes) : '',
             batterySwapTime: drone.batterySwapTimeMinutes ? String(drone.batterySwapTimeMinutes) : '',
             uin: drone.uin || '',
-            uaop: drone.uaop || '',
             pilotLicense: drone.pilotLicense || '',
             returnToHome: drone.returnToHome || false,
-            terrainFollowing: drone.terrainFollowing || false
+            terrainFollowing: drone.terrainFollowing || false,
+            obstacleAvoidance: drone.obstacleAvoidance || false,
+            tankCleaning: drone.tankCleaning || false
           }))
         }
       } catch (error) {
@@ -100,15 +99,14 @@ function VendorDroneDetailsPage() {
         droneType: formData.droneType,
         tankSize: formData.tankSize ? parseFloat(formData.tankSize) : null,
         sprayWidth: formData.sprayWidth ? parseFloat(formData.sprayWidth) : null,
-        batteryCapacity: formData.batteryCapacity ? parseInt(formData.batteryCapacity) : null,
-        numberOfBatteries: formData.numberOfBatteries ? parseInt(formData.numberOfBatteries) : null,
         flightTime: formData.flightTime ? parseInt(formData.flightTime) : null,
         batterySwapTime: formData.batterySwapTime ? parseInt(formData.batterySwapTime) : null,
         uin: formData.uin || null,
-        uaop: formData.uaop || null,
         pilotLicense: formData.pilotLicense || null,
         returnToHome: formData.returnToHome,
-        terrainFollowing: formData.terrainFollowing
+        terrainFollowing: formData.terrainFollowing,
+        obstacleAvoidance: formData.obstacleAvoidance,
+        tankCleaning: formData.tankCleaning
       }
 
       await saveOnboardingStep2(step2Data)
@@ -132,14 +130,18 @@ function VendorDroneDetailsPage() {
 
   return (
     <div className="vendor-form-page">
+      {/* Progress Bar */}
+      <ProgressBar 
+        currentStep={2} 
+        totalSteps={6}
+        steps={['Equipment', 'Drone Details', 'Capacity', 'Location', 'Availability', 'Payouts']}
+      />
+
       {/* Header with Back Button */}
       <div className="form-header">
         <button className="back-button" onClick={handleBack} aria-label="Go back">
           <FiArrowLeft />
         </button>
-        <div className="progress-indicator">
-          <span className="progress-text">Step 2 of 6</span>
-        </div>
       </div>
 
       {/* Form Content */}
@@ -202,52 +204,6 @@ function VendorDroneDetailsPage() {
           </div>
 
           <div className="form-group">
-            <select
-              value={formData.batteryCapacity}
-              onChange={(e) => handleInputChange('batteryCapacity', e.target.value)}
-              className="form-input"
-              style={{ 
-                appearance: 'none',
-                backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23333\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 20px center',
-                paddingRight: '40px',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="">Select Battery Capacity</option>
-              <option value="36000">36,000 mAh</option>
-              <option value="40000">40,000 mAh</option>
-              <option value="44000">44,000 mAh</option>
-              <option value="50000">50,000 mAh</option>
-              <option value="60000">60,000 mAh</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <select
-              value={formData.numberOfBatteries}
-              onChange={(e) => handleInputChange('numberOfBatteries', e.target.value)}
-              className="form-input"
-              style={{ 
-                appearance: 'none',
-                backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23333\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 20px center',
-                paddingRight: '40px',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="">Number of Batteries</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-            </select>
-          </div>
-
-          <div className="form-group">
             <input
               type="number"
               placeholder="Flight Time (min)"
@@ -275,16 +231,6 @@ function VendorDroneDetailsPage() {
               placeholder="UIN (optional)"
               value={formData.uin}
               onChange={(e) => handleInputChange('uin', e.target.value)}
-              className="form-input"
-            />
-          </div>
-
-          <div className="form-group">
-            <input
-              type="text"
-              placeholder="UAOP (optional)"
-              value={formData.uaop}
-              onChange={(e) => handleInputChange('uaop', e.target.value)}
               className="form-input"
             />
           </div>
@@ -322,6 +268,28 @@ function VendorDroneDetailsPage() {
                 onChange={() => handleCheckboxChange('terrainFollowing')}
               />
               <span className="checkbox-label">Terrain Following</span>
+            </label>
+          </div>
+
+          <div className="checkbox-group">
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={formData.obstacleAvoidance}
+                onChange={() => handleCheckboxChange('obstacleAvoidance')}
+              />
+              <span className="checkbox-label">Obstacle Avoidance</span>
+            </label>
+          </div>
+
+          <div className="checkbox-group">
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={formData.tankCleaning}
+                onChange={() => handleCheckboxChange('tankCleaning')}
+              />
+              <span className="checkbox-label">Tank Cleaning</span>
             </label>
           </div>
         </div>

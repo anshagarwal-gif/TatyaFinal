@@ -5,6 +5,8 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  padding-top: 140px; /* Space for fixed progress bar */
+  box-sizing: border-box;
 }
 
 /* Header with Back Button */
@@ -329,6 +331,7 @@
     max-width: 400px;
     margin: 0 auto;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+    padding-top: 160px; /* More space for progress bar on desktop */
   }
   
   .form-content {
@@ -338,6 +341,10 @@
 
 /* Small mobile adjustments */
 @media (max-width: 375px) {
+  .vendor-form-page {
+    padding-top: 120px; /* Less space on small mobile */
+  }
+
   .form-content {
     padding: 20px 20px 40px;
   }
@@ -361,5 +368,63 @@
 
   .checkbox-item-inline .checkbox-label {
     font-size: 13px;
+  }
+}
+
+/* Modern Battery Dropdown Styling */
+.modern-battery-dropdown {
+  position: relative;
+  background-size: 16px 16px;
+  background-position: right 18px center;
+}
+
+/* Style optgroups for better visual separation */
+.modern-battery-dropdown optgroup {
+  font-weight: 700;
+  font-size: 12px;
+  color: #555;
+  padding: 10px 0 6px 0;
+  background: #f5f5f5;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.modern-battery-dropdown optgroup:first-of-type {
+  margin-top: 0;
+}
+
+.modern-battery-dropdown optgroup option {
+  font-weight: 400;
+  font-size: 15px;
+  color: #333;
+  padding: 10px 20px;
+  background: #fff;
+  transition: background-color 0.2s ease;
+}
+
+.modern-battery-dropdown optgroup option:hover,
+.modern-battery-dropdown optgroup option:focus {
+  background: #e8f4f8;
+  color: #0066cc;
+}
+
+.modern-battery-dropdown optgroup option:checked {
+  background: #e8f4f8;
+  color: #0066cc;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .modern-battery-dropdown {
+    font-size: 15px;
+  }
+  
+  .modern-battery-dropdown optgroup {
+    font-size: 11px;
+  }
+  
+  .modern-battery-dropdown optgroup option {
+    font-size: 14px;
+    padding: 8px 16px;
   }
 }
