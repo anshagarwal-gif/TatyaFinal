@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import ClusterMap from '../components/ClusterMap';
-import { API_BASE_URL } from '../services/api';
 
 const ClusterManagementPage = () => {
     const [clusters, setClusters] = useState([]);
@@ -13,7 +12,7 @@ const ClusterManagementPage = () => {
 
     const fetchClusters = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/clusters`);
+            const response = await fetch('http://localhost:8080/api/clusters');
             if (response.ok) {
                 const data = await response.json();
                 setClusters(data);
@@ -26,7 +25,7 @@ const ClusterManagementPage = () => {
     const generateClusters = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/clusters/generate`, {
+            const response = await fetch('http://localhost:8080/api/clusters/generate', {
                 method: 'POST'
             });
             if (response.ok) {
