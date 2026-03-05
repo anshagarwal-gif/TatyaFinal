@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorDashboardPage.css'
-import { getVendorById, getVendorProfile } from '../services/api'
+import { getVendorById, getVendorProfile, getVendorDashboardStats, getVendorDashboardChart, getVendorDashboardBookings, getVendorDashboardDaySummary } from '../services/api'
 
 function VendorDashboardPage() {
   const [activeTab, setActiveTab] = useState('map') // 'map', 'details', 'profile'
@@ -101,16 +101,16 @@ function VendorDashboardPage() {
 // Map View Component with Data
 function MapViewWithData() {
   const [profile, setProfile] = useState(null)
+  const [stats, setStats] = useState(null)
+  const [chart, setChart] = useState(null)
+  const [chartPeriod, setChartPeriod] = useState('week')
   const [loading, setLoading] = useState(true)
+  const vendorId = localStorage.getItem('vendorId')
 
   useEffect(() => {
     const fetchProfile = async () => {
+      if (!vendorId) { setLoading(false); return }
       try {
-        const vendorId = localStorage.getItem('vendorId')
-        if (!vendorId) {
-          setLoading(false)
-          return
-        }
         const response = await getVendorProfile(parseInt(vendorId))
         setProfile(response.data)
       } catch (error) {
@@ -120,7 +120,33 @@ function MapViewWithData() {
       }
     }
     fetchProfile()
-  }, [])
+  }, [vendorId])
+
+  useEffect(() => {
+    if (!vendorId) return
+    const fetchStats = async () => {
+      try {
+        const res = await getVendorDashboardStats(parseInt(vendorId))
+        setStats(res.data)
+      } catch (e) {
+        console.error('Error fetching dashboard stats:', e)
+      }
+    }
+    fetchStats()
+  }, [vendorId])
+
+  useEffect(() => {
+    if (!vendorId) return
+    const fetchChart = async () => {
+      try {
+        const res = await getVendorDashboardChart(parseInt(vendorId), chartPeriod)
+        setChart(res.data)
+      } catch (e) {
+        console.error('Error fetching chart:', e)
+      }
+    }
+    fetchChart()
+  }, [vendorId, chartPeriod])
 
   if (loading) {
     return (
@@ -131,6 +157,14 @@ function MapViewWithData() {
   }
 
   const vendorName = profile?.fullName?.split(' ')[0] || 'Vendor'
+  const formatCurrency = (n) => {
+    if (n == null) return '0'
+    const num = typeof n === 'number' ? n : parseFloat(n)
+    return isNaN(num) ? '0' : num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+  const earningsChange = stats?.earningsChangePercent != null
+  const changePositive = earningsChange && stats.earningsChangePercent >= 0
+  const maxChartVal = chart?.values?.length ? Math.max(...chart.values.map((v) => Number(v)), 1) : 1
 
   return (
     <div className="map-view">
@@ -155,11 +189,19 @@ function MapViewWithData() {
           </div>
           <div className="total-earning">
             <span className="currency">₹</span>
-            <span className="amount">186,889.56</span>
+            <span className="amount">{formatCurrency(stats?.totalEarningsThisMonth)}</span>
           </div>
           <div className="earnings-change">
-            <span className="change-indicator positive">+12.5%</span>
-            <span className="change-text">from last month</span>
+            {earningsChange ? (
+              <>
+                <span className={`change-indicator ${changePositive ? 'positive' : 'negative'}`}>
+                  {changePositive ? '+' : ''}{stats.earningsChangePercent.toFixed(1)}%
+                </span>
+                <span className="change-text">from last month</span>
+              </>
+            ) : (
+              <span className="change-text">No previous month data</span>
+            )}
           </div>
         </div>
       </div>
@@ -172,11 +214,10 @@ function MapViewWithData() {
             </svg>
           </div>
           <div className="stat-content">
-            <div className="stat-value">4.8</div>
+            <div className="stat-value">{stats?.rating != null ? Number(stats.rating).toFixed(1) : '—'}</div>
             <div className="stat-label">Rating</div>
           </div>
         </div>
-        
         <div className="stat-card">
           <div className="stat-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -184,11 +225,10 @@ function MapViewWithData() {
             </svg>
           </div>
           <div className="stat-content">
-            <div className="stat-value">127</div>
+            <div className="stat-value">{stats?.jobsCompleted ?? '—'}</div>
             <div className="stat-label">Jobs Completed</div>
           </div>
         </div>
-        
         <div className="stat-card">
           <div className="stat-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -196,7 +236,7 @@ function MapViewWithData() {
             </svg>
           </div>
           <div className="stat-content">
-            <div className="stat-value">98%</div>
+            <div className="stat-value">{stats?.successRate != null ? `${Number(stats.successRate).toFixed(0)}%` : '—'}</div>
             <div className="stat-label">Success Rate</div>
           </div>
         </div>
@@ -220,11 +260,11 @@ function MapViewWithData() {
       <div className="chart-container">
         <div className="chart-header">
           <div className="chart-title">
-            <h4>Weekly Performance</h4>
-            <span className="chart-subtitle">Acres covered this week</span>
+            <h4>{chartPeriod === 'year' ? 'Yearly' : chartPeriod === 'month' ? 'Monthly' : 'Weekly'} Performance</h4>
+            <span className="chart-subtitle">Acres covered</span>
           </div>
           <div className="chart-period">
-            <select className="period-select">
+            <select className="period-select" value={chartPeriod} onChange={(e) => setChartPeriod(e.target.value)}>
               <option value="week">This Week</option>
               <option value="month">This Month</option>
               <option value="year">This Year</option>
@@ -233,32 +273,30 @@ function MapViewWithData() {
         </div>
         <div className="bar-chart">
           <div className="chart-bars">
-            <div className="bar" style={{height: '40%'}} data-value="12"></div>
-            <div className="bar" style={{height: '60%'}} data-value="18"></div>
-            <div className="bar" style={{height: '80%'}} data-value="24"></div>
-            <div className="bar active" style={{height: '100%'}} data-value="30"></div>
-            <div className="bar" style={{height: '90%'}} data-value="27"></div>
-            <div className="bar" style={{height: '70%'}} data-value="21"></div>
-            <div className="bar" style={{height: '85%'}} data-value="25"></div>
+            {chart?.labels?.length ? chart.values.map((val, i) => {
+              const n = Number(val)
+              const pct = maxChartVal > 0 ? Math.min(100, (n / maxChartVal) * 100) : 0
+              return (
+                <div key={i} className="bar" style={{ height: `${pct}%` }} data-value={n} />
+              )
+            }) : (
+              <div className="bar" style={{ height: '0%' }} data-value="0" />
+            )}
           </div>
           <div className="chart-labels">
-            <span>Sun</span>
-            <span>Mon</span>
-            <span>Tue</span>
-            <span>Wed</span>
-            <span>Thu</span>
-            <span>Fri</span>
-            <span>Sat</span>
+            {chart?.labels?.length ? chart.labels.map((l, i) => <span key={i}>{l}</span>) : (
+              ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => <span key={i}>{d}</span>)
+            )}
           </div>
         </div>
         <div className="chart-summary">
           <div className="summary-item">
             <span className="summary-label">Total Acres</span>
-            <span className="summary-value">157</span>
+            <span className="summary-value">{chart?.totalAcres != null ? Number(chart.totalAcres).toFixed(0) : '0'}</span>
           </div>
           <div className="summary-item">
             <span className="summary-label">Avg per Day</span>
-            <span className="summary-value">22.4</span>
+            <span className="summary-value">{chart?.avgPerDay != null ? Number(chart.avgPerDay).toFixed(1) : '0'}</span>
           </div>
         </div>
       </div>
@@ -297,6 +335,78 @@ function MapViewWithData() {
 
 // Details View Component
 function DetailsView() {
+  const vendorId = localStorage.getItem('vendorId')
+  const today = new Date().toISOString().slice(0, 10)
+  const [selectedDate, setSelectedDate] = useState(today)
+  const [summary, setSummary] = useState(null)
+  const [bookings, setBookings] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!vendorId) return
+    setLoading(true)
+    const load = async () => {
+      try {
+        const [sumRes, bookRes] = await Promise.all([
+          getVendorDashboardDaySummary(parseInt(vendorId), selectedDate),
+          getVendorDashboardBookings(parseInt(vendorId), selectedDate)
+        ])
+        setSummary(sumRes.data)
+        setBookings(bookRes.data || [])
+      } catch (e) {
+        console.error('Error loading schedule:', e)
+        setSummary(null)
+        setBookings([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [vendorId, selectedDate])
+
+  const dateDisplay = selectedDate ? new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+  const progress = summary?.progressPercent != null ? Math.min(100, Math.round(summary.progressPercent)) : 0
+
+  // Group bookings by time slot for display
+  const getHour = (b) => {
+    if (!b.startTime) return 0
+    if (typeof b.startTime === 'string') return parseInt(b.startTime.slice(0, 2), 10) || 0
+    return b.startTime.hour ?? 0
+  }
+  const morning = bookings.filter((b) => getHour(b) < 12)
+  const evening = bookings.filter((b) => getHour(b) >= 12)
+
+  const formatTime = (t) => {
+    if (!t) return '—'
+    if (typeof t === 'string') return t.slice(0, 5)
+    if (typeof t === 'object' && t.hour != null) return `${String(t.hour).padStart(2, '0')}:${String(t.minute ?? 0).padStart(2, '0')}`
+    return '—'
+  }
+
+  const renderBookingItem = (b) => (
+    <div key={b.bookingId} className="booking-item">
+      <div className="booking-info">
+        <div className="booking-main">
+          <span className="acres">{Number(b.farmAreaAcres || 0).toFixed(1)} Acres</span>
+          <span className="crop-type">{b.serviceType || 'Booking'}</span>
+        </div>
+        <div className="booking-location">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+          <span>{b.locationDisplay || '—'}</span>
+        </div>
+      </div>
+      <div className="booking-actions">
+        <button className="action-btn-small" aria-label="Edit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <div className="details-view">
       <div className="details-header">
@@ -310,198 +420,102 @@ function DetailsView() {
 
       <div className="date-selector">
         <div className="date-header">
-          <h3>March 2024</h3>
-          <button className="date-nav-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M7 10l5 5 5-5z"/>
-            </svg>
-          </button>
+          <h3>{dateDisplay || 'Select date'}</h3>
+          <input
+            type="date"
+            className="date-nav-btn"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            style={{ border: 'none', background: 'transparent', fontSize: '1rem', cursor: 'pointer' }}
+          />
         </div>
         <div className="date-tabs">
-          <button className="date-tab">Today</button>
-          <button className="date-tab active">Tomorrow</button>
-          <button className="date-tab">This Week</button>
+          <button type="button" className={`date-tab ${selectedDate === today ? 'active' : ''}`} onClick={() => setSelectedDate(today)}>Today</button>
+          <button type="button" className="date-tab" onClick={() => setSelectedDate(new Date(Date.now() + 86400000).toISOString().slice(0, 10))}>Tomorrow</button>
         </div>
       </div>
 
-      <div className="calendar-section">
-        <div className="calendar-grid">
-          <div className="calendar-days">
-            <span>Sun</span>
-            <span>Mon</span>
-            <span>Tue</span>
-            <span>Wed</span>
-            <span>Thu</span>
-            <span>Fri</span>
-            <span>Sat</span>
-          </div>
-          <div className="calendar-dates">
-            <span>12</span>
-            <span>13</span>
-            <span>14</span>
-            <span className="selected">15</span>
-            <span>16</span>
-            <span>17</span>
-            <span>18</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="daily-summary">
-        <div className="summary-card">
-          <div className="summary-header">
-            <h4>Today's Summary</h4>
-            <span className="date-text">March 15, 2024</span>
-          </div>
-          <div className="progress-section">
-            <div className="progress-info">
-              <span className="progress-label">Daily Progress</span>
-              <span className="progress-text">60% Complete</span>
-            </div>
-            <div className="progress-bar">
-              <div className="progress-fill" style={{width: '60%'}}></div>
-            </div>
-          </div>
-          <div className="summary-stats">
-            <div className="summary-stat">
-              <span className="stat-number">15</span>
-              <span className="stat-label">Acres Planned</span>
-            </div>
-            <div className="summary-stat">
-              <span className="stat-number">9</span>
-              <span className="stat-label">Completed</span>
-            </div>
-            <div className="summary-stat">
-              <span className="stat-number">6</span>
-              <span className="stat-label">Remaining</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="schedule-section">
-        <div className="schedule-header">
-          <h4>Today's Schedule</h4>
-          <button className="add-booking-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-            </svg>
-            Add Booking
-          </button>
-        </div>
-
-        <div className="schedule-timeline">
-          <div className="schedule-item morning">
-            <div className="time-badge">
-              <div className="time-info">
-                <span className="period">Morning Session</span>
-                <span className="time">08:00 - 10:00</span>
+      {loading ? (
+        <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>
+      ) : (
+        <>
+          <div className="daily-summary">
+            <div className="summary-card">
+              <div className="summary-header">
+                <h4>Summary</h4>
+                <span className="date-text">{dateDisplay}</span>
               </div>
-              <span className="duration">2h</span>
-            </div>
-            <div className="bookings">
-              <div className="booking-item">
-                <div className="booking-info">
-                  <div className="booking-main">
-                    <span className="acres">3 Acres</span>
-                    <span className="crop-type">Wheat Field</span>
-                  </div>
-                  <div className="booking-location">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                    </svg>
-                    <span>Pune, Maharashtra</span>
-                  </div>
+              <div className="progress-section">
+                <div className="progress-info">
+                  <span className="progress-label">Daily Progress</span>
+                  <span className="progress-text">{progress}% Complete</span>
                 </div>
-                <div className="booking-actions">
-                  <button className="action-btn-small">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                    </svg>
-                  </button>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${progress}%` }} />
                 </div>
               </div>
-              
-              <div className="booking-item">
-                <div className="booking-info">
-                  <div className="booking-main">
-                    <span className="acres">2 Acres</span>
-                    <span className="crop-type">Cotton Field</span>
-                  </div>
-                  <div className="booking-location">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                    </svg>
-                    <span>Nashik, Maharashtra</span>
-                  </div>
+              <div className="summary-stats">
+                <div className="summary-stat">
+                  <span className="stat-number">{summary?.acresPlanned != null ? Number(summary.acresPlanned).toFixed(0) : '0'}</span>
+                  <span className="stat-label">Acres Planned</span>
                 </div>
-                <div className="booking-actions">
-                  <button className="action-btn-small">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                    </svg>
-                  </button>
+                <div className="summary-stat">
+                  <span className="stat-number">{summary?.acresCompleted != null ? Number(summary.acresCompleted).toFixed(0) : '0'}</span>
+                  <span className="stat-label">Completed</span>
                 </div>
-              </div>
-
-              <div className="booking-item">
-                <div className="booking-info">
-                  <div className="booking-main">
-                    <span className="acres">3 Acres</span>
-                    <span className="crop-type">Rice Field</span>
-                  </div>
-                  <div className="booking-location">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                    </svg>
-                    <span>Satara, Maharashtra</span>
-                  </div>
-                </div>
-                <div className="booking-actions">
-                  <button className="action-btn-small">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                    </svg>
-                  </button>
+                <div className="summary-stat">
+                  <span className="stat-number">{summary?.acresRemaining != null ? Number(summary.acresRemaining).toFixed(0) : '0'}</span>
+                  <span className="stat-label">Remaining</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="schedule-item evening">
-            <div className="time-badge">
-              <div className="time-info">
-                <span className="period">Evening Session</span>
-                <span className="time">18:00 - 19:00</span>
-              </div>
-              <span className="duration">1h</span>
+          <div className="schedule-section">
+            <div className="schedule-header">
+              <h4>Schedule</h4>
+              <button type="button" className="add-booking-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                Add Booking
+              </button>
             </div>
-            <div className="bookings">
-              <div className="booking-item">
-                <div className="booking-info">
-                  <div className="booking-main">
-                    <span className="acres">7 Acres</span>
-                    <span className="crop-type">Sugarcane Field</span>
+
+            <div className="schedule-timeline">
+              {morning.length > 0 && (
+                <div className="schedule-item morning">
+                  <div className="time-badge">
+                    <div className="time-info">
+                      <span className="period">Morning</span>
+                      <span className="time">
+                        {morning.length ? `${formatTime(morning[0].startTime)} - ${formatTime(morning[morning.length - 1].endTime)}` : '—'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="booking-location">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                    </svg>
-                    <span>Kolhapur, Maharashtra</span>
+                  <div className="bookings">{morning.map(renderBookingItem)}</div>
+                </div>
+              )}
+              {evening.length > 0 && (
+                <div className="schedule-item evening">
+                  <div className="time-badge">
+                    <div className="time-info">
+                      <span className="period">Afternoon / Evening</span>
+                      <span className="time">
+                        {evening.length ? `${formatTime(evening[0].startTime)} - ${formatTime(evening[evening.length - 1].endTime)}` : '—'}
+                      </span>
+                    </div>
                   </div>
+                  <div className="bookings">{evening.map(renderBookingItem)}</div>
                 </div>
-                <div className="booking-actions">
-                  <button className="action-btn-small">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
+              )}
+              {bookings.length === 0 && !loading && (
+                <p style={{ padding: '1rem', color: '#666' }}>No bookings for this date.</p>
+              )}
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   )
 }

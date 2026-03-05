@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorFormsPage.css'
 import { FiArrowLeft } from 'react-icons/fi'
-import { saveOnboardingStep6, getOnboardingData } from '../services/api'
+import { saveOnboardingStep6, submitForApproval, getOnboardingData } from '../services/api'
 import ProgressBar from '../components/ProgressBar'
 
 function VendorPayoutsPage() {
@@ -106,7 +106,9 @@ function VendorPayoutsPage() {
       }
 
       await saveOnboardingStep6(step6Data)
-      alert('Account created successfully! Your account is pending approval.')
+      await submitForApproval(parseInt(vendorId))
+      setIsSaving(false)
+      alert('Onboarding submitted successfully! Your account is pending admin approval.')
       navigate('/vendor-kyc-pending')
     } catch (error) {
       setErrorMessage(error.message || 'Failed to save. Please try again.')

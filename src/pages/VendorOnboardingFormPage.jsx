@@ -101,16 +101,20 @@ function VendorOnboardingFormPage() {
       setErrorMessage('Please enter a valid email address')
       return
     }
-    
+    if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(email.trim())) {
+      setErrorMessage('Only Gmail addresses are allowed (e.g. you@gmail.com)')
+      return
+    }
+
     // Validate select option
     if (!selectedOption.trim()) {
       setErrorMessage('Please select an option')
       return
     }
 
-    // Validate phone number
-    const phone = phoneNumber.replace(/\D/g, '')
-    if (phone.length < 10) {
+    const digitsOnly = phoneNumber.replace(/\D/g, '')
+    const phone = digitsOnly.length > 10 ? digitsOnly.slice(-10) : digitsOnly
+    if (phone.length !== 10) {
       setErrorMessage('Please enter a valid 10-digit phone number')
       return
     }
@@ -119,7 +123,6 @@ function VendorOnboardingFormPage() {
     setErrorMessage('')
     
     try {
-      // Register vendor and send OTP
       const response = await registerVendor({
         fullName: fullName.trim(),
         email: email.trim(),
@@ -149,18 +152,21 @@ function VendorOnboardingFormPage() {
     setErrorMessage('')
     
     try {
-      const phone = phoneNumber.replace(/\D/g, '')
+      const digitsOnly = phoneNumber.replace(/\D/g, '')
+      const phone = digitsOnly.length > 10 ? digitsOnly.slice(-10) : digitsOnly
       const response = await verifyVendorAndLogin(phone, otpValue)
-      
-      // Store vendor data in localStorage for later use
-      if (response.data) {
-        localStorage.setItem('vendor', JSON.stringify(response.data))
-        localStorage.setItem('vendorId', response.data.vendorId)
-        localStorage.setItem('userId', response.data.userId)
+
+      if (!response.data || response.data.vendorId == null) {
+        setIsVerifying(false)
+        setErrorMessage('Login succeeded but no vendor ID received. Please try again or contact support.')
+        return
       }
-      
+
+      localStorage.setItem('vendor', JSON.stringify(response.data))
+      localStorage.setItem('vendorId', String(response.data.vendorId))
+      localStorage.setItem('userId', String(response.data.userId ?? ''))
+
       setIsVerifying(false)
-      // Navigate to first step in onboarding sequence: Equipment Basics
       navigate('/vendor-equipment')
     } catch (error) {
       setIsVerifying(false)
