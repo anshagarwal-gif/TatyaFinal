@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ClusterMap from '../components/ClusterMap';
+import { API_BASE_URL } from '../services/api';
 
 const MyFarmsPage = () => {
     const [farms, setFarms] = useState([]);
@@ -17,7 +18,7 @@ const MyFarmsPage = () => {
 
     const fetchFarms = async () => {
         try {
-            const response = await fetch(`http://localhost:8080/api/farms/user/${userId}`);
+            const response = await fetch(`${API_BASE_URL}/farms/user/${userId}`);
             if (response.ok) {
                 const data = await response.json();
                 setFarms(data);
@@ -46,7 +47,7 @@ const MyFarmsPage = () => {
                 latitude: selectedLocation.lat,
                 longitude: selectedLocation.lng
             };
-            const response = await fetch(`http://localhost:8080/api/farms?userId=${userId}`, {
+            const response = await fetch(`${API_BASE_URL}/farms?userId=${userId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ClusterMap from '../components/ClusterMap';
+import { API_BASE_URL } from '../services/api';
 
 const NearbyClustersPage = () => {
     const [clusters, setClusters] = useState([]);
@@ -10,7 +11,7 @@ const NearbyClustersPage = () => {
 
     const fetchActiveClusters = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/clusters/active');
+            const response = await fetch(`${API_BASE_URL}/clusters/active`);
             if (response.ok) {
                 const data = await response.json();
                 setClusters(data);

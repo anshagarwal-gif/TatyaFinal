@@ -41,8 +41,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(
-                List.of("https://taaran.app", "https://www.taaran.app", "https://tatya.app", "https://www.tatya.app"));
+        config.setAllowedOriginPatterns(List.of(
+                "https://tatya.app",
+                "https://www.tatya.app",
+                "http://tatya.app",
+                "http://www.tatya.app"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
