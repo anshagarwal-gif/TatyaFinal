@@ -1,10 +1,10 @@
 package com.tatya.service;
 
+import com.tatya.entity.Booking;
 import com.tatya.entity.Cluster;
-import com.tatya.entity.Farm;
 import java.math.BigDecimal;
+import com.tatya.repository.BookingRepository;
 import com.tatya.repository.ClusterRepository;
-import com.tatya.repository.FarmRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,41 +19,43 @@ public class FarmCoverageService {
 
     private static final double RADIUS_M = 5000.0; // 5km radius
     private static final double CONNECTION_DIST_M = 2 * RADIUS_M; // If circles overlap (centers closer than 2R)
+    private static final double CLUSTER_RADIUS_M = 5000.0; // Max distance any node may be from the cluster centre
     private static final double EARTH_R = 6371000.0;
 
-    private final FarmRepository farmRepository;
+    private final BookingRepository bookingRepository;
     private final ClusterRepository clusterRepository;
 
     /**
-     * Generates clusters from unassigned farms.
+     * Generates clusters from ACCEPTED booking locations.
+     * Only bookings with status ACCEPTED are used as clustering nodes.
      * Step 1-9 of the flow.
      */
     @Transactional
     public List<Cluster> generateClusters() {
-        // 1. Get all farms (In real app, filter those not already in an ACTIVE cluster)
-        List<Farm> allFarms = farmRepository.findAll();
+        // 1. Get all ACCEPTED bookings — only confirmed orders drive clustering
+        List<Booking> acceptedBookings = bookingRepository.findByStatus(Booking.BookingStatus.ACCEPTED);
 
-        if (allFarms.isEmpty()) {
+        if (acceptedBookings.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // 2. Build Adjacency Graph (Graph of Farms)
-        // Two farms are connected if distance(f1, f2) <= CONNECTION_DIST_M
-        Map<Long, List<Farm>> adjacencyList = new HashMap<>();
-        for (Farm f : allFarms) {
-            adjacencyList.put(f.getId(), new ArrayList<>());
+        // 2. Build Adjacency Graph (Graph of Booking Locations)
+        // Two booking locations are connected if distance(b1, b2) <= CONNECTION_DIST_M
+        Map<Long, List<Booking>> adjacencyList = new HashMap<>();
+        for (Booking b : acceptedBookings) {
+            adjacencyList.put(b.getBookingId(), new ArrayList<>());
         }
 
-        for (int i = 0; i < allFarms.size(); i++) {
-            for (int j = i + 1; j < allFarms.size(); j++) {
-                Farm f1 = allFarms.get(i);
-                Farm f2 = allFarms.get(j);
+        for (int i = 0; i < acceptedBookings.size(); i++) {
+            for (int j = i + 1; j < acceptedBookings.size(); j++) {
+                Booking b1 = acceptedBookings.get(i);
+                Booking b2 = acceptedBookings.get(j);
                 double dist = haversineM(
-                        f1.getLatitude().doubleValue(), f1.getLongitude().doubleValue(),
-                        f2.getLatitude().doubleValue(), f2.getLongitude().doubleValue());
+                        b1.getLocationLat().doubleValue(), b1.getLocationLong().doubleValue(),
+                        b2.getLocationLat().doubleValue(), b2.getLocationLong().doubleValue());
                 if (dist <= CONNECTION_DIST_M) {
-                    adjacencyList.get(f1.getId()).add(f2);
-                    adjacencyList.get(f2.getId()).add(f1);
+                    adjacencyList.get(b1.getBookingId()).add(b2);
+                    adjacencyList.get(b2.getBookingId()).add(b1);
                 }
             }
         }
@@ -62,15 +64,15 @@ public class FarmCoverageService {
         Set<Long> visited = new HashSet<>();
         List<Cluster> newClusters = new ArrayList<>();
 
-        for (Farm farm : allFarms) {
-            if (!visited.contains(farm.getId())) {
-                List<Farm> component = new ArrayList<>();
-                bfs(farm, adjacencyList, visited, component);
+        for (Booking booking : acceptedBookings) {
+            if (!visited.contains(booking.getBookingId())) {
+                List<Booking> component = new ArrayList<>();
+                bfs(booking, adjacencyList, visited, component);
 
-                // 4. Validate Cluster Size & Area (Step 6 + New 10-acre rule)
+                // 4. Validate Cluster Size & Area (Step 6 + 10-acre rule)
                 if (component.size() >= 1) {
                     BigDecimal totalArea = component.stream()
-                            .map(f -> f.getAreaAcres() != null ? f.getAreaAcres() : BigDecimal.ZERO)
+                            .map(b -> b.getFarmAreaAcres() != null ? b.getFarmAreaAcres() : BigDecimal.ZERO)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                     if (totalArea.compareTo(BigDecimal.valueOf(10)) <= 0) {
@@ -90,39 +92,86 @@ public class FarmCoverageService {
         return clusterRepository.saveAll(newClusters);
     }
 
-    private void bfs(Farm startNode, Map<Long, List<Farm>> graph, Set<Long> visited, List<Farm> component) {
-        Queue<Farm> queue = new LinkedList<>();
+    /**
+     * Radius-constrained BFS.
+     *
+     * Standard BFS is extended with one extra gate before a neighbor is accepted:
+     * haversine(neighbor, clusterCentre) <= CLUSTER_RADIUS_M (5 km)
+     *
+     * If a neighbor fails this check it is NOT marked visited, so the outer loop
+     * in generateClusters() will pick it up as a fresh seed and start a new,
+     * spatially compact cluster from it. This breaks the chain-clustering effect
+     * where Farm1--Farm2--Farm3 (each pair <=10 km apart) would otherwise all
+     * land in a single component even if Farm1 and Farm3 are 16 km apart.
+     *
+     * The cluster centre is maintained as a running incremental average so it
+     * reflects the true centroid of all accepted nodes at every step.
+     */
+    private void bfs(Booking startNode, Map<Long, List<Booking>> graph, Set<Long> visited, List<Booking> component) {
+        Queue<Booking> queue = new LinkedList<>();
+
+        // Seed: mark visited and add to component immediately
+        visited.add(startNode.getBookingId());
+        component.add(startNode);
         queue.add(startNode);
-        visited.add(startNode.getId());
+
+        // Cluster centre starts at the seed location
+        double centerLat = startNode.getLocationLat().doubleValue();
+        double centerLon = startNode.getLocationLong().doubleValue();
 
         while (!queue.isEmpty()) {
-            Farm current = queue.poll();
-            component.add(current);
+            Booking current = queue.poll();
 
-            for (Farm neighbor : graph.get(current.getId())) {
-                if (!visited.contains(neighbor.getId())) {
-                    visited.add(neighbor.getId());
-                    queue.add(neighbor);
+            for (Booking neighbor : graph.get(current.getBookingId())) {
+                if (visited.contains(neighbor.getBookingId())) {
+                    continue;
                 }
+
+                // Radius gate:
+                // 1. If component is just the seed (size == 1), accept the direct neighbor
+                // because their edge is <= 10km (guaranteeing their mutual center is <= 5km
+                // from both).
+                // 2. Once the cluster is formed (size > 1), strictly prevent long chains by
+                // requiring all new additions to be within CLUSTER_RADIUS_M (5km) of the
+                // running center.
+                double distToCenter = haversineM(
+                        neighbor.getLocationLat().doubleValue(), neighbor.getLocationLong().doubleValue(),
+                        centerLat, centerLon);
+
+                if (component.size() == 1 || distToCenter <= CLUSTER_RADIUS_M) {
+                    // Accept: mark visited, add to component, enqueue
+                    visited.add(neighbor.getBookingId());
+                    component.add(neighbor);
+                    queue.add(neighbor);
+
+                    // Update cluster centre using incremental running average
+                    // newCenter = oldCenter + (newPoint - oldCenter) / newSize
+                    int n = component.size();
+                    centerLat = centerLat + (neighbor.getLocationLat().doubleValue() - centerLat) / n;
+                    centerLon = centerLon + (neighbor.getLocationLong().doubleValue() - centerLon) / n;
+                }
+                // Rejected neighbor: do NOT mark visited — it will seed its own cluster
             }
         }
     }
 
-    private Cluster createClusterFromComponent(List<Farm> farms) {
+    private Cluster createClusterFromComponent(List<Booking> bookings) {
         Cluster cluster = new Cluster();
 
         // Step 7: Name (Auto-generated)
-        String name = "Cluster-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase() + "-" + farms.size()
-                + "Farms";
+        String name = "Cluster-" + UUID.randomUUID().toString().substring(0, 4).toUpperCase() + "-" + bookings.size()
+                + "Bookings";
         cluster.setName(name);
 
         cluster.setStatus(Cluster.ClusterStatus.PENDING);
-        cluster.setFarms(new HashSet<>(farms));
+        // Farms left empty — cluster is now keyed to booking locations, not Farm FK
+        // rows
+        cluster.setFarms(new HashSet<>());
 
-        // Calculate Center
-        if (!farms.isEmpty()) {
-            double avgLat = farms.stream().mapToDouble(f -> f.getLatitude().doubleValue()).average().orElse(0.0);
-            double avgLon = farms.stream().mapToDouble(f -> f.getLongitude().doubleValue()).average().orElse(0.0);
+        // Calculate Center from booking locations
+        if (!bookings.isEmpty()) {
+            double avgLat = bookings.stream().mapToDouble(b -> b.getLocationLat().doubleValue()).average().orElse(0.0);
+            double avgLon = bookings.stream().mapToDouble(b -> b.getLocationLong().doubleValue()).average().orElse(0.0);
             cluster.setCenterLatitude(BigDecimal.valueOf(avgLat));
             cluster.setCenterLongitude(BigDecimal.valueOf(avgLon));
         }
@@ -137,10 +186,10 @@ public class FarmCoverageService {
         return cluster;
     }
 
-    private List<Cluster> splitComponentIntoClusters(List<Farm> component, Map<Long, List<Farm>> adjacencyList) {
+    private List<Cluster> splitComponentIntoClusters(List<Booking> component, Map<Long, List<Booking>> adjacencyList) {
         List<Cluster> result = new ArrayList<>();
-        Set<Long> unassignedIds = component.stream().map(Farm::getId).collect(Collectors.toSet());
-        Map<Long, Farm> farmMap = component.stream().collect(Collectors.toMap(Farm::getId, f -> f));
+        Set<Long> unassignedIds = component.stream().map(Booking::getBookingId).collect(Collectors.toSet());
+        Map<Long, Booking> bookingMap = component.stream().collect(Collectors.toMap(Booking::getBookingId, b -> b));
 
         int safetyCounter = 0;
         final int MAX_ITERATIONS = 5000;
@@ -152,26 +201,27 @@ public class FarmCoverageService {
             }
 
             Long seedId = unassignedIds.iterator().next();
-            Farm seed = farmMap.get(seedId);
+            Booking seed = bookingMap.get(seedId);
 
-            List<Farm> clusterFarms = new ArrayList<>();
-            clusterFarms.add(seed);
+            List<Booking> clusterBookings = new ArrayList<>();
+            clusterBookings.add(seed);
             unassignedIds.remove(seedId);
 
-            BigDecimal currentArea = seed.getAreaAcres() != null ? seed.getAreaAcres() : BigDecimal.ZERO;
+            BigDecimal currentArea = seed.getFarmAreaAcres() != null ? seed.getFarmAreaAcres() : BigDecimal.ZERO;
 
             boolean addedAnything = true;
             while (addedAnything && currentArea.compareTo(BigDecimal.valueOf(10)) < 0) {
                 addedAnything = false;
 
-                Farm bestCandidate = null;
+                Booking bestCandidate = null;
 
-                for (Farm member : clusterFarms) {
-                    List<Farm> neighbors = adjacencyList.get(member.getId());
+                for (Booking member : clusterBookings) {
+                    List<Booking> neighbors = adjacencyList.get(member.getBookingId());
                     if (neighbors != null) {
-                        for (Farm n : neighbors) {
-                            if (unassignedIds.contains(n.getId())) {
-                                BigDecimal nArea = n.getAreaAcres() != null ? n.getAreaAcres() : BigDecimal.ZERO;
+                        for (Booking n : neighbors) {
+                            if (unassignedIds.contains(n.getBookingId())) {
+                                BigDecimal nArea = n.getFarmAreaAcres() != null ? n.getFarmAreaAcres()
+                                        : BigDecimal.ZERO;
                                 if (currentArea.add(nArea).compareTo(BigDecimal.valueOf(10)) <= 0) {
                                     bestCandidate = n;
                                     break;
@@ -184,16 +234,16 @@ public class FarmCoverageService {
                 }
 
                 if (bestCandidate != null) {
-                    clusterFarms.add(bestCandidate);
-                    BigDecimal nArea = bestCandidate.getAreaAcres() != null ? bestCandidate.getAreaAcres()
+                    clusterBookings.add(bestCandidate);
+                    BigDecimal nArea = bestCandidate.getFarmAreaAcres() != null ? bestCandidate.getFarmAreaAcres()
                             : BigDecimal.ZERO;
                     currentArea = currentArea.add(nArea);
-                    unassignedIds.remove(bestCandidate.getId());
+                    unassignedIds.remove(bestCandidate.getBookingId());
                     addedAnything = true;
                 }
             }
-            if (!clusterFarms.isEmpty()) {
-                result.add(createClusterFromComponent(clusterFarms));
+            if (!clusterBookings.isEmpty()) {
+                result.add(createClusterFromComponent(clusterBookings));
             }
         }
         return result;

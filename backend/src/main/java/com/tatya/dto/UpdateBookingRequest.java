@@ -1,5 +1,6 @@
 package com.tatya.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -21,8 +22,12 @@ public class UpdateBookingRequest {
     
     private BigDecimal farmAreaAcres;
     
-    @NotNull(message = "Total cost is required")
+    // Kept for backwards compatibility. Server will override this with the computed value.
     private BigDecimal totalCost;
+    
+    @NotNull(message = "Number of days is required")
+    @Min(value = 1, message = "Number of days must be at least 1")
+    private Integer numberOfDays;
     
     private Integer quantity;
     
