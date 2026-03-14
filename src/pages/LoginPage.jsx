@@ -151,7 +151,7 @@ function LoginPage() {
       const response = await verifyOtp(phoneNumber, otpValue)
       if (response.success) {
         // OTP verified successfully, navigate to benefits page (customer only)
-        navigate('/location')
+        navigate('/home')
       } else {
         // OTP verification failed - show clear error message
         setErrorMessage(response.message || 'Invalid OTP. Please check and try again.')
