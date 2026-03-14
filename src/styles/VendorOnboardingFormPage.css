@@ -413,7 +413,22 @@
 /* Footer */
 .form-footer {
   margin-top: 40px;
-  text-align: left;
+  text-align: center;
+}
+
+.vendor-form-terms-text {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.vendor-form-terms-link {
+  color: #10b981;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.vendor-form-terms-link:hover {
+  text-decoration: underline;
 }
 
 .footer-text {

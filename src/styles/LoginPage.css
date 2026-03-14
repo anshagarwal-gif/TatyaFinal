@@ -760,6 +760,39 @@
   gap: 12px;
 }
 
+.login-terms-text {
+  margin-top: 18px;
+  font-size: 10px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.login-terms-link {
+  color: #10b981;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.login-terms-link:hover {
+  text-decoration: underline;
+}
+
+.login-terms-checkbox {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.login-terms-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.login-terms-input {
+  margin-top: 2px;
+}
+
 .resend-otp-button,
 .change-number-button {
   width: 100%;

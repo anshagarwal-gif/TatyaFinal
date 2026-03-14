@@ -187,6 +187,23 @@ export const translations = {
   'Near You': 'तुमच्या जवळ',
   'Expert Pilot': 'तज्ञ पायलट',
   'Get ratings on each drone, see what you\'re getting, find the best options, and make informed decisions.': 'प्रत्येक ड्रोनवर रेटिंग मिळवा, तुम्हाला काय मिळत आहे ते पहा, सर्वोत्तम पर्याय शोधा आणि माहितीपूर्ण निर्णय घ्या.',
+  
+  // Terms & Conditions
+  'By continuing, you agree to Tatya\'s': 'पुढे जाऊन, आपण टाट्याच्या',
+  'Terms & Conditions': 'अटी व शर्ती',
+  
+  // Tatya Home Page
+  'Home': 'मुख्यपृष्ठ',
+  'Select Service': 'सेवा निवडा',
+  'Popular': 'लोकप्रिय',
+  'Spraying': 'फवारणी',
+  'Sowing': 'पेरणी',
+  'Harvest': 'कापणी',
+  'Machine': 'यंत्रसामग्री',
+  'Storage': 'स्टोरेज',
+  'Book': 'बुक करा',
+  'Nothing here': 'इथे काहीही नाही',
+  'Add Equipment': 'उपकरण जोडा',
 }
 
 // Translation function

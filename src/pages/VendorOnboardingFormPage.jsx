@@ -9,6 +9,7 @@ import PrimaryButton from '../components/PrimaryButton'
 import { FiPhone, FiCheckCircle, FiEdit2, FiArrowLeft } from 'react-icons/fi'
 import { registerVendor, verifyVendorAndLogin, generateOtp } from '../services/api'
 import Snackbar from '../components/Snackbar'
+import tatyaTermsPdf from '../assets/TatyaTermsandConditions.pdf'
 
 function VendorOnboardingFormPage() {
   const navigate = useNavigate()
@@ -303,7 +304,14 @@ function VendorOnboardingFormPage() {
 
               <PrimaryButton
                 onClick={handleSendOTP}
-                disabled={isGenerating || !fullName.trim() || !email.trim() || !validateEmail(email) || phoneNumber.replace(/\D/g, '').length < 10 || !selectedOption.trim()}
+                disabled={
+                  isGenerating ||
+                  !fullName.trim() ||
+                  !email.trim() ||
+                  !validateEmail(email) ||
+                  phoneNumber.replace(/\D/g, '').length < 10 ||
+                  !selectedOption.trim()
+                }
                 loading={isGenerating}
                 fullWidth
               >
@@ -395,11 +403,19 @@ function VendorOnboardingFormPage() {
           </div>
         )}
 
-        {/* Footer */}
+        {/* Terms and Conditions (no checkbox, not mandatory) */}
         <div className="form-footer">
-          <p className="footer-text">
-            {translate('By continuing, you agree to Tatya\'s', isMarathi)} <span className="footer-link">{translate('Terms & Privacy Policy.', isMarathi)}</span>
-          </p>
+          <div className="vendor-form-terms-text">
+            {translate("By continuing, you agree to Tatya's", isMarathi)}{' '}
+            <a
+              href={tatyaTermsPdf}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="vendor-form-terms-link"
+            >
+              {translate('Terms & Conditions', isMarathi)}
+            </a>
+          </div>
         </div>
       </div>
 

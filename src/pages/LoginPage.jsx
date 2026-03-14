@@ -17,6 +17,7 @@ import { FiPhone, FiArrowRight, FiEdit2, FiCheckCircle, FiUser, FiBriefcase, FiL
 import { generateOtp, verifyOtp, vendorLoginWithPassword } from '../services/api'
 import Snackbar from '../components/Snackbar'
 import BenefitsPage from './BenefitsPage'
+import tatyaTermsPdf from '../assets/TatyaTermsandConditions.pdf'
 
 function LoginPage() {
   const { isMarathi } = useLanguage()
@@ -38,6 +39,8 @@ function LoginPage() {
   const [otpCode, setOtpCode] = useState('')
   const otpInputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)]
   const navigate = useNavigate()
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [acceptedVendorTerms, setAcceptedVendorTerms] = useState(false)
 
   useEffect(() => {
     if (showOTP) {
@@ -76,7 +79,6 @@ function LoginPage() {
     try {
       const response = await generateOtp(phoneNumber)
       if (response.success) {
-        // Show snackbar with OTP code if available
         if (response.data) {
           setOtpCode(response.data)
           setSnackbarOpen(true)
@@ -191,6 +193,7 @@ function LoginPage() {
       setErrorMessage('Please enter your password')
       return
     }
+
 
     setIsVendorLoggingIn(true)
     setErrorMessage('')
@@ -373,7 +376,11 @@ function LoginPage() {
                 <button 
                   type="submit"
                   className="get-otp-button"
-                  disabled={!vendorEmail.trim() || !vendorPassword.trim() || isVendorLoggingIn}
+                  disabled={
+                    !vendorEmail.trim() ||
+                    !vendorPassword.trim() ||
+                    isVendorLoggingIn
+                  }
                   aria-label={translate('Login', isMarathi)}
                 >
                   {isVendorLoggingIn ? (
@@ -389,6 +396,19 @@ function LoginPage() {
                   )}
                 </button>
 
+                {/* Vendor Terms and Conditions text (no checkbox) */}
+                <div className="login-terms-text">
+                  {translate("By continuing, you agree to Tatya's", isMarathi)}{' '}
+                  <a
+                    href={tatyaTermsPdf}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="login-terms-link"
+                  >
+                    {translate('Terms & Conditions', isMarathi)}
+                  </a>
+                </div>
+
                 <button 
                   type="button"
                   className="vendor-register-button"
@@ -399,7 +419,7 @@ function LoginPage() {
                 </button>
               </form>
             ) : (
-              // Customer Login Form - Phone Number and OTP (unchanged)
+              // Customer Login Form - Phone Number and OTP
               <>
                 <div className="form-group">
                   <label className="form-label" htmlFor="phone-input">
@@ -433,13 +453,14 @@ function LoginPage() {
                   )}
                 </div>
 
-                <button 
-                  type="button"
-                  className="get-otp-button"
-                  onClick={handleGetOTP}
-                  disabled={phoneNumber.length < 10 || isGenerating}
-                  aria-label={translate('Get OTP', isMarathi)}
-                >
+                <div className="get-otp-with-terms">
+                  <button 
+                    type="button"
+                    className="get-otp-button"
+                    onClick={handleGetOTP}
+                    disabled={phoneNumber.length < 10 || isGenerating}
+                    aria-label={translate('Get OTP', isMarathi)}
+                  >
                   {isGenerating ? (
                     <>
                       <div className="verifying-spinner" style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
@@ -450,8 +471,22 @@ function LoginPage() {
                       <span>{translate('Get OTP', isMarathi)}</span>
                       <FiArrowRight className="button-icon-right" />
                     </>
-                  )}
-                </button>
+                    )}
+                  </button>
+                </div>
+
+                {/* Terms and Conditions text for customer login (no checkbox) */}
+                <div className="login-terms-text">
+                  {translate("By continuing, you agree to Tatya's", isMarathi)}{' '}
+                  <a
+                    href={tatyaTermsPdf}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="login-terms-link"
+                  >
+                    {translate('Terms & Conditions', isMarathi)}
+                  </a>
+                </div>
               </>
             )}
           </>
@@ -545,6 +580,21 @@ function LoginPage() {
                 <span>{translate('Change Number', isMarathi)}</span>
               </button>
             </div>
+
+            {/* Terms text always visible for customers, even on OTP step */}
+            {!isVendorLogin && (
+              <div className="login-terms-text">
+                {translate("By continuing, you agree to Tatya's", isMarathi)}{' '}
+                <a
+                  href={tatyaTermsPdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="login-terms-link"
+                >
+                  {translate('Terms & Conditions', isMarathi)}
+                </a>
+              </div>
+            )}
           </div>
         )}
         </div>

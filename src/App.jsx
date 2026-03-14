@@ -19,6 +19,7 @@ import VendorKycPendingPage from './pages/VendorKycPendingPage'
 import MyFarmsPage from './pages/MyFarmsPage'
 import ClusterManagementPage from './pages/ClusterManagementPage'
 import NearbyClustersPage from './pages/NearbyClustersPage'
+import TatyaHomePage from './pages/TatyaHomePage'
 // Admin Panel Imports
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminLayout from './components/AdminLayout'
@@ -35,6 +36,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/benefits" element={<BenefitsPage />} />
+          <Route path="/home" element={<TatyaHomePage />} />
           <Route path="/location" element={<LocationPage />} />
           <Route path="/my-farms" element={<MyFarmsPage />} />
           <Route path="/cluster-management" element={<ClusterManagementPage />} />
