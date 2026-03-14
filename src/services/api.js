@@ -710,16 +710,22 @@ export const registerVendor = async (vendorData) => {
  */
 export const verifyVendorAndLogin = async (phoneNumber, otpCode) => {
   try {
+    const digitsOnly = String(phoneNumber).replace(/\D/g, '');
+    const phone = digitsOnly.length > 10 ? digitsOnly.slice(-10) : digitsOnly;
+    if (phone.length !== 10) {
+      throw new Error('Phone number must be 10 digits');
+    }
+
     const response = await fetch(`${API_BASE_URL}/vendors/verify-and-login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ phoneNumber, otpCode }),
+      body: JSON.stringify({ phoneNumber: phone, otpCode }),
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.message || 'Failed to verify OTP and login');
     }
@@ -999,6 +1005,34 @@ export const saveOnboardingStep6 = async (step6Data) => {
 };
 
 /**
+ * Submit vendor for admin approval. Call after step 6 is saved.
+ * @param {number} vendorId - Vendor ID
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const submitForApproval = async (vendorId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/onboarding/submit-for-approval`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ vendorId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to submit for approval');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error submitting for approval:', error);
+    throw error;
+  }
+};
+
+/**
  * Upload equipment images
  * @param {number} vendorId - Vendor ID
  * @param {number} droneId - Drone ID (optional)
@@ -1071,10 +1105,10 @@ export const uploadDocuments = async (vendorId, droneId, files) => {
 };
 
 /**
- * Upload passport/profile photo
+ * Upload passport photo
  * @param {number} vendorId - Vendor ID
  * @param {number} droneId - Drone ID (optional)
- * @param {FileList} files - Image files
+ * @param {FileList|File[]} files - Passport photo file(s)
  * @returns {Promise<{success: boolean, message: string, data: Array}>}
  */
 export const uploadPassportPhoto = async (vendorId, droneId, files) => {
@@ -1084,8 +1118,9 @@ export const uploadPassportPhoto = async (vendorId, droneId, files) => {
     if (droneId) {
       formData.append('droneId', droneId);
     }
-    for (let i = 0; i < files.length; i++) {
-      formData.append('files', files[i]);
+    const fileList = Array.isArray(files) ? files : (files && files.length ? Array.from(files) : []);
+    for (let i = 0; i < fileList.length; i++) {
+      formData.append('files', fileList[i]);
     }
 
     const response = await fetch(`${API_BASE_URL}/vendors/onboarding/upload-passport-photo`, {
@@ -1094,7 +1129,7 @@ export const uploadPassportPhoto = async (vendorId, droneId, files) => {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.message || 'Failed to upload passport photo');
     }
@@ -1117,7 +1152,7 @@ export const getVendorProfile = async (vendorId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/vendors/${vendorId}/profile`);
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.message || 'Failed to fetch vendor profile');
     }
@@ -1127,6 +1162,59 @@ export const getVendorProfile = async (vendorId) => {
     console.error('Error fetching vendor profile:', error);
     throw error;
   }
+};
+
+// ==================== Vendor Dashboard APIs ====================
+
+/**
+ * Get vendor dashboard stats (earnings, rating, jobs completed, success rate)
+ * @param {number} vendorId
+ * @returns {Promise<{success: boolean, data: Object}>}
+ */
+export const getVendorDashboardStats = async (vendorId) => {
+  const response = await fetch(`${API_BASE_URL}/vendors/${vendorId}/dashboard/stats`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch dashboard stats');
+  return data;
+};
+
+/**
+ * Get vendor dashboard chart data (acres by period)
+ * @param {number} vendorId
+ * @param {string} period - 'week' | 'month' | 'year'
+ * @returns {Promise<{success: boolean, data: { period, labels, values, totalAcres, avgPerDay }}>}
+ */
+export const getVendorDashboardChart = async (vendorId, period = 'week') => {
+  const response = await fetch(`${API_BASE_URL}/vendors/${vendorId}/dashboard/chart?period=${encodeURIComponent(period)}`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch chart data');
+  return data;
+};
+
+/**
+ * Get vendor bookings for a date
+ * @param {number} vendorId
+ * @param {string} date - ISO date 'YYYY-MM-DD'
+ * @returns {Promise<{success: boolean, data: Array}>}
+ */
+export const getVendorDashboardBookings = async (vendorId, date) => {
+  const response = await fetch(`${API_BASE_URL}/vendors/${vendorId}/dashboard/bookings?date=${encodeURIComponent(date)}`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch bookings');
+  return data;
+};
+
+/**
+ * Get vendor day summary (acres planned, completed, remaining, progress)
+ * @param {number} vendorId
+ * @param {string} date - ISO date 'YYYY-MM-DD'
+ * @returns {Promise<{success: boolean, data: Object}>}
+ */
+export const getVendorDashboardDaySummary = async (vendorId, date) => {
+  const response = await fetch(`${API_BASE_URL}/vendors/${vendorId}/dashboard/day-summary?date=${encodeURIComponent(date)}`);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to fetch day summary');
+  return data;
 };
 
 /**

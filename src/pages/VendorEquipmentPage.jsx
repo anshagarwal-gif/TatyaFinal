@@ -27,6 +27,7 @@ function VendorEquipmentPage() {
       const vendorId = localStorage.getItem('vendorId')
       if (!vendorId) {
         setIsLoading(false)
+        navigate('/vendor-onboarding-form', { replace: true })
         return
       }
 
@@ -127,7 +128,7 @@ function VendorEquipmentPage() {
         localStorage.setItem('droneId', droneId)
       }
 
-      // Navigate to next step
+      setIsSaving(false)
       navigate('/vendor-drone-details')
     } catch (error) {
       setErrorMessage(error.message || 'Failed to save. Please try again.')

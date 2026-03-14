@@ -445,4 +445,31 @@ public class VendorOnboardingService {
         drone.setStatus(Drone.DroneStatus.AVAILABLE);
         return droneRepository.save(drone);
     }
+
+    /**
+     * Submit vendor for admin approval. Call this after all onboarding steps are saved.
+     * Validates that onboarding is complete (drone + bank account) and vendor is PENDING.
+     */
+    public void submitForApproval(Long vendorId) {
+        log.info("Submitting vendor {} for approval", vendorId);
+
+        Vendor vendor = vendorRepository.findById(vendorId)
+            .orElseThrow(() -> new RuntimeException("Vendor not found"));
+
+        if (vendor.getVerifiedStatus() != Vendor.VerifiedStatus.PENDING) {
+            throw new RuntimeException("Vendor is already " + vendor.getVerifiedStatus() + ". Cannot submit for approval.");
+        }
+
+        boolean hasDrone = droneRepository.findByVendor_VendorId(vendorId).stream().findFirst().isPresent();
+        if (!hasDrone) {
+            throw new RuntimeException("Onboarding incomplete. Please complete all steps (equipment and drone details) before submitting for approval.");
+        }
+
+        boolean hasBankAccount = bankAccountRepository.findByVendor_VendorIdAndIsActiveTrue(vendorId).isPresent();
+        if (!hasBankAccount) {
+            throw new RuntimeException("Onboarding incomplete. Please complete the payouts step before submitting for approval.");
+        }
+
+        log.info("Vendor {} submitted for approval successfully", vendorId);
+    }
 }

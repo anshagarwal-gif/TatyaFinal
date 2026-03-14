@@ -123,6 +123,23 @@ public class VendorOnboardingController {
                 .body(ApiResponse.error(e.getMessage()));
         }
     }
+
+    /**
+     * Submit vendor for admin approval. Call after all onboarding steps (1–6) are saved.
+     * POST /api/vendors/onboarding/submit-for-approval
+     */
+    @PostMapping("/submit-for-approval")
+    public ResponseEntity<ApiResponse<String>> submitForApproval(@Valid @RequestBody SubmitForApprovalRequest request) {
+        try {
+            onboardingService.submitForApproval(request.getVendorId());
+            return ResponseEntity.ok(ApiResponse.success(
+                "Onboarding submitted for approval. Admin will review your profile shortly.", "submitted"));
+        } catch (Exception e) {
+            log.error("Error submitting vendor for approval", e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(e.getMessage()));
+        }
+    }
     
     /**
      * Upload equipment images
