@@ -51,21 +51,6 @@ function LoginPage() {
     }
   }, [showOTP])
 
-  // Splash screen animation effect
-  // useEffect(() => {
-  //   const splashTimer = setTimeout(() => {
-  //     setSplashAnimationComplete(true)
-  //   }, 2000) // Logo animation duration
-
-  //   const hideTimer = setTimeout(() => {
-  //     setShowSplash(false)
-  //   }, 2500) // Total splash duration
-
-  //   return () => {
-  //     clearTimeout(splashTimer)
-  //     clearTimeout(hideTimer)
-  //   }
-  // }, [])
 
   const handleGetOTP = async () => {
     if (phoneNumber.length < 10) {

@@ -149,7 +149,6 @@ function BookingPage() {
           ]
           setServiceCards(updatedCards)
 
-
           // Fetch available dates and limit to 1 week (7 days)
           const datesResponse = await getAvailableDates(selectedDroneId)
           if (datesResponse.success && datesResponse.data) {
