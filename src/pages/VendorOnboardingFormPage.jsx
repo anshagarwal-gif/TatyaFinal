@@ -1,0 +1,441 @@
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import '../styles/VendorOnboardingFormPage.css'
+import { translate } from '../utils/translations'
+import { useLanguage } from '../contexts/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
+import ProgressBar from '../components/ProgressBar'
+import PrimaryButton from '../components/PrimaryButton'
+import { FiPhone, FiCheckCircle, FiEdit2, FiArrowLeft } from 'react-icons/fi'
+import { registerVendor, verifyVendorAndLogin, generateOtp } from '../services/api'
+import Snackbar from '../components/Snackbar'
+import tatyaTermsPdf from '../assets/TatyaTermsandConditions.pdf'
+
+function VendorOnboardingFormPage() {
+  const navigate = useNavigate()
+  const { isMarathi } = useLanguage()
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [showOTP, setShowOTP] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  
+  // Snackbar state for OTP display
+  const [snackbarOpen, setSnackbarOpen] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  
+  // Phone verification state
+  const [countryCode] = useState('+91')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [otp, setOtp] = useState(['', '', '', ''])
+  const otpInputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)]
+  
+  // Sign up state - original fields
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [selectedOption, setSelectedOption] = useState('')
+
+  useEffect(() => {
+    if (showOTP) {
+      const focusTimer = setTimeout(() => {
+        otpInputRefs[0].current?.focus()
+      }, 50)
+      return () => clearTimeout(focusTimer)
+    }
+  }, [showOTP])
+
+  const handleOTPChange = (index, value) => {
+    if (value && !/^\d$/.test(value)) return
+
+    const newOtp = [...otp]
+    newOtp[index] = value
+    setOtp(newOtp)
+
+    if (value && index < 3) {
+      otpInputRefs[index + 1].current?.focus()
+    }
+
+    if (newOtp.every(digit => digit !== '') && newOtp.join('').length === 4) {
+      handleVerifyOTP(newOtp.join(''))
+    }
+  }
+
+  const handleOTPKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputRefs[index - 1].current?.focus()
+    }
+  }
+
+  const handlePaste = (e) => {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData('text').trim()
+    if (/^\d{4}$/.test(pastedData)) {
+      const digits = pastedData.split('')
+      setOtp(digits)
+      otpInputRefs[3].current?.focus()
+      setTimeout(() => {
+        handleVerifyOTP(pastedData)
+      }, 100)
+    }
+  }
+
+  // Email validation function
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
+  // Single OTP send function - validate original fields
+  const handleSendOTP = async () => {
+    // Validate name
+    if (!fullName.trim()) {
+      setErrorMessage('Please enter your full name')
+      return
+    }
+    
+    // Validate email
+    if (!email.trim()) {
+      setErrorMessage('Please enter your email address')
+      return
+    }
+    
+    if (!validateEmail(email)) {
+      setErrorMessage('Please enter a valid email address')
+      return
+    }
+    if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(email.trim())) {
+      setErrorMessage('Only Gmail addresses are allowed (e.g. you@gmail.com)')
+      return
+    }
+
+    // Validate select option
+    if (!selectedOption.trim()) {
+      setErrorMessage('Please select an option')
+      return
+    }
+
+    const digitsOnly = phoneNumber.replace(/\D/g, '')
+    const phone = digitsOnly.length > 10 ? digitsOnly.slice(-10) : digitsOnly
+    if (phone.length !== 10) {
+      setErrorMessage('Please enter a valid 10-digit phone number')
+      return
+    }
+
+    setIsGenerating(true)
+    setErrorMessage('')
+    
+    try {
+      const response = await registerVendor({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phoneNumber: phone,
+        vendorType: selectedOption
+      })
+      
+      // Show snackbar with OTP code if available
+      if (response.data && response.data.otpCode) {
+        setOtpCode(response.data.otpCode)
+        setSnackbarOpen(true)
+      }
+      
+      setIsGenerating(false)
+      setShowOTP(true)
+    } catch (error) {
+      setIsGenerating(false)
+      setErrorMessage(error.message || 'Failed to register. Please try again.')
+    }
+  }
+
+  // Single OTP verification function
+  const handleVerifyOTP = async (otpValue) => {
+    if (otpValue.length !== 4) return
+
+    setIsVerifying(true)
+    setErrorMessage('')
+    
+    try {
+      const digitsOnly = phoneNumber.replace(/\D/g, '')
+      const phone = digitsOnly.length > 10 ? digitsOnly.slice(-10) : digitsOnly
+      const response = await verifyVendorAndLogin(phone, otpValue)
+
+      if (!response.data || response.data.vendorId == null) {
+        setIsVerifying(false)
+        setErrorMessage('Login succeeded but no vendor ID received. Please try again or contact support.')
+        return
+      }
+
+      localStorage.setItem('vendor', JSON.stringify(response.data))
+      localStorage.setItem('vendorId', String(response.data.vendorId))
+      localStorage.setItem('userId', String(response.data.userId ?? ''))
+
+      setIsVerifying(false)
+      navigate('/vendor-equipment')
+    } catch (error) {
+      setIsVerifying(false)
+      setErrorMessage(error.message || 'Invalid OTP. Please try again.')
+    }
+  }
+
+  const handleResendOTP = async () => {
+    setIsGenerating(true)
+    setErrorMessage('')
+    setOtp(['', '', '', ''])
+    
+    try {
+      const phone = phoneNumber.replace(/\D/g, '')
+      const response = await generateOtp(phone)
+      
+      // Show snackbar with OTP code if available
+      if (response.data) {
+        setOtpCode(response.data)
+        setSnackbarOpen(true)
+      }
+      
+      setIsGenerating(false)
+    } catch (error) {
+      setIsGenerating(false)
+      setErrorMessage(error.message || 'Failed to resend OTP. Please try again.')
+    }
+  }
+
+  const handleChangeNumber = () => {
+    setShowOTP(false)
+    setOtp(['', '', '', ''])
+    setErrorMessage('')
+  }
+
+  return (
+    <div className="vendor-onboarding-form-page">
+      {/* Progress Bar */}
+      <ProgressBar 
+        currentStep={showOTP ? 2 : 1} 
+        totalSteps={2}
+        steps={['Phone Verification', 'Complete']}
+      />
+
+      {/* Language Toggle Button */}
+      <LanguageToggle />
+
+      {/* Header */}
+      <div className="form-header">
+        <button className="back-button" onClick={() => navigate(-1)} aria-label="Go back">
+          <FiArrowLeft />
+        </button>
+      </div>
+
+      {/* Main Content */}
+      <div className="form-content-wrapper">
+        {/* Title Section */}
+        <div className="title-section">
+          <h1 className="main-title">Tatya Mitra</h1>
+          <p className="main-subtitle">Smart Farming. Simplified by Tatya.</p>
+        </div>
+
+        {!showOTP ? (
+          <div className="verification-section">
+            <h2 className="signup-title">{translate('Create My Tatya Account', isMarathi)}</h2>
+            
+            <div className="signup-form">
+              <input
+                type="text"
+                className="form-input"
+                placeholder={translate('Full Name', isMarathi)}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+              
+              <input
+                type="email"
+                className="form-input"
+                placeholder={translate('Email Address', isMarathi)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              
+              <div className="phone-input-group">
+                <input
+                  type="text"
+                  className="country-code-input"
+                  value={countryCode}
+                  readOnly
+                />
+                <input
+                  type="tel"
+                  className="phone-input"
+                  placeholder="(999) 111-0000"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                  maxLength="10"
+                />
+              </div>
+              
+              <select
+                className="form-input form-select"
+                value={selectedOption}
+                onChange={(e) => setSelectedOption(e.target.value)}
+              >
+                <option value="" disabled>
+                  {translate('What Defines you the best?', isMarathi)}
+                </option>
+                <option value="Individual Equipment Owner">
+                  {translate('Individual Equipment Owner', isMarathi)}
+                </option>
+                <option value="Company Appointed Operator">
+                  {translate('Company Appointed Operator', isMarathi)}
+                </option>
+                <option value="Custom Hiring Center (Individual)">
+                  {translate('Custom Hiring Center (Individual)', isMarathi)}
+                </option>
+                <option value="Custom Hiring Center (FPC)">
+                  {translate('Custom Hiring Center (FPC)', isMarathi)}
+                </option>
+                <option value="Chemical Company">
+                  {translate('Chemical Company', isMarathi)}
+                </option>
+                <option value="Krishi Seva Kendra (Chemical Shop)">
+                  {translate('Krishi Seva Kendra (Chemical Shop)', isMarathi)}
+                </option>
+              </select>
+
+              {errorMessage && (
+                <p className="error-message" style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem', textAlign: 'center' }}>
+                  {errorMessage}
+                </p>
+              )}
+
+              {isGenerating && (
+                <div className="loading-spinner">
+                  <div className="spinner"></div>
+                </div>
+              )}
+
+              <PrimaryButton
+                onClick={handleSendOTP}
+                disabled={
+                  isGenerating ||
+                  !fullName.trim() ||
+                  !email.trim() ||
+                  !validateEmail(email) ||
+                  phoneNumber.replace(/\D/g, '').length < 10 ||
+                  !selectedOption.trim()
+                }
+                loading={isGenerating}
+                fullWidth
+              >
+                {isGenerating ? translate('Sending...', isMarathi) : translate('Send OTP', isMarathi)}
+              </PrimaryButton>
+            </div>
+          </div>
+        ) : (
+          /* OTP Verification Section - shown after sending OTP */
+          <div className="otp-verification-section">
+            <div className="otp-header">
+              <div className="otp-title-wrapper">
+                <FiCheckCircle className="otp-success-icon" />
+                <h2 className="otp-title">{translate('Enter OTP', isMarathi)}</h2>
+              </div>
+              <p className="otp-subtitle">
+                {translate('We\'ve sent a 4-digit code to', isMarathi)}<br />
+                <span className="otp-phone">+91 {phoneNumber}</span>
+              </p>
+            </div>
+
+            <div className="otp-input-group">
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={otpInputRefs[index]}
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                  className="otp-input"
+                  maxLength="1"
+                  value={digit}
+                  onChange={(e) => handleOTPChange(index, e.target.value)}
+                  onKeyDown={(e) => handleOTPKeyDown(index, e)}
+                  onPaste={index === 0 ? handlePaste : undefined}
+                  disabled={isVerifying}
+                />
+              ))}
+            </div>
+
+            {errorMessage && showOTP && (
+              <div className="otp-error-message">
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                  style={{ marginRight: '8px', flexShrink: 0 }}
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>{errorMessage}</span>
+              </div>
+            )}
+            
+            {isVerifying && (
+              <div className="otp-verifying">
+                <div className="verifying-spinner"></div>
+                <span>{translate('Verifying...', isMarathi)}</span>
+              </div>
+            )}
+
+            <div className="otp-actions">
+              <PrimaryButton
+                onClick={handleResendOTP}
+                disabled={isVerifying || isGenerating}
+                loading={isGenerating}
+                fullWidth
+                variant="secondary"
+              >
+                {translate('Resend OTP', isMarathi)}
+              </PrimaryButton>
+              
+              <button 
+                type="button"
+                className="change-number-button"
+                onClick={handleChangeNumber}
+                disabled={isVerifying}
+              >
+                <FiEdit2 className="button-icon-left" />
+                <span>{translate('Change Number', isMarathi)}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Terms and Conditions (no checkbox, not mandatory) */}
+        <div className="form-footer">
+          <div className="vendor-form-terms-text">
+            {translate("By continuing, you agree to Tatya's", isMarathi)}{' '}
+            <a
+              href={tatyaTermsPdf}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="vendor-form-terms-link"
+            >
+              {translate('Terms & Conditions', isMarathi)}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* OTP Snackbar */}
+      <Snackbar
+        message={otpCode ? `Your OTP is: ${otpCode}` : 'OTP sent successfully'}
+        type="info"
+        isOpen={snackbarOpen}
+        onClose={() => setSnackbarOpen(false)}
+        duration={10000}
+      />
+    </div>
+  )
+}
+
+export default VendorOnboardingFormPage
+

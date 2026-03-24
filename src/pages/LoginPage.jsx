@@ -1,0 +1,622 @@
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import '../styles/LoginPage.css'
+import { translate } from '../utils/translations'
+import { useLanguage } from '../contexts/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
+import tatyaLogo from '../assets/tatyalogoNew.jpeg'
+import textImage from '../assets/NewSBlackTex.png'
+import firstBanner from '../assets/FirstBanner.png'
+import whiteText from '../assets/WhiteText.png'
+import greenText from '../assets/GreenText.png'
+import otpMan from '../assets/OTPMan.png'
+import otpBlackText from '../assets/OTPBlackText.png'
+import otpBlackSubtext from '../assets/OTPBlackSubtext.png'
+import otpOrangeText from '../assets/OTPOrangeText.png'
+import { FiPhone, FiArrowRight, FiEdit2, FiCheckCircle, FiUser, FiBriefcase, FiLock, FiMail } from 'react-icons/fi'
+import { generateOtp, verifyOtp, vendorLoginWithPassword } from '../services/api'
+import Snackbar from '../components/Snackbar'
+import BenefitsPage from './BenefitsPage'
+import tatyaTermsPdf from '../assets/TatyaTermsandConditions.pdf'
+
+function LoginPage() {
+  const { isMarathi } = useLanguage()
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [showOTP, setShowOTP] = useState(false)
+  const [otp, setOtp] = useState(['', '', '', ''])
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  // const [showSplash, setShowSplash] = useState(true)
+  // const [splashAnimationComplete, setSplashAnimationComplete] = useState(false)
+  const [isVendorLogin, setIsVendorLogin] = useState(false)
+  // Vendor login states
+  const [vendorEmail, setVendorEmail] = useState('')
+  const [vendorPassword, setVendorPassword] = useState('')
+  const [isVendorLoggingIn, setIsVendorLoggingIn] = useState(false)
+  // Snackbar state for OTP display
+  const [snackbarOpen, setSnackbarOpen] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  const otpInputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)]
+  const navigate = useNavigate()
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [acceptedVendorTerms, setAcceptedVendorTerms] = useState(false)
+
+  useEffect(() => {
+    if (showOTP) {
+      const focusTimer = setTimeout(() => {
+        otpInputRefs[0].current?.focus()
+      }, 50)
+      return () => clearTimeout(focusTimer)
+    }
+  }, [showOTP])
+
+  // Splash screen animation effect
+  // useEffect(() => {
+  //   const splashTimer = setTimeout(() => {
+  //     setSplashAnimationComplete(true)
+  //   }, 2000) // Logo animation duration
+
+  //   const hideTimer = setTimeout(() => {
+  //     setShowSplash(false)
+  //   }, 2500) // Total splash duration
+
+  //   return () => {
+  //     clearTimeout(splashTimer)
+  //     clearTimeout(hideTimer)
+  //   }
+  // }, [])
+
+  const handleGetOTP = async () => {
+    if (phoneNumber.length < 10) {
+      setErrorMessage('Please enter a valid 10-digit phone number')
+      return
+    }
+
+    setIsGenerating(true)
+    setErrorMessage('')
+    
+    try {
+      const response = await generateOtp(phoneNumber)
+      if (response.success) {
+        if (response.data) {
+          setOtpCode(response.data)
+          setSnackbarOpen(true)
+        }
+        setShowOTP(true)
+      } else {
+        setErrorMessage(response.message || 'Failed to generate OTP')
+      }
+    } catch (error) {
+      console.error('Error generating OTP:', error)
+      setErrorMessage(error.message || 'Failed to generate OTP. Please try again.')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handlePhoneKeyPress = (e) => {
+    if (e.key === 'Enter' && phoneNumber.length >= 10) {
+      handleGetOTP()
+    }
+  }
+
+  const handleOTPChange = (index, value) => {
+    // Only allow digits
+    if (value && !/^\d$/.test(value)) return
+
+    const newOtp = [...otp]
+    newOtp[index] = value
+    setOtp(newOtp)
+
+    // Auto-focus next input
+    if (value && index < 3) {
+      otpInputRefs[index + 1].current?.focus()
+    }
+
+    // Auto-verify when all 4 digits are entered
+    if (newOtp.every(digit => digit !== '') && newOtp.join('').length === 4) {
+      handleVerifyOTP(newOtp.join(''))
+    }
+  }
+
+  const handleOTPKeyDown = (index, e) => {
+    // Handle backspace
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputRefs[index - 1].current?.focus()
+    }
+  }
+
+  const handlePaste = (e) => {
+    e.preventDefault()
+    const pastedData = e.clipboardData.getData('text').trim()
+    if (/^\d{4}$/.test(pastedData)) {
+      const digits = pastedData.split('')
+      setOtp(digits)
+      otpInputRefs[3].current?.focus()
+      // Auto-verify after paste
+      setTimeout(() => {
+        handleVerifyOTP(pastedData)
+      }, 100)
+    }
+  }
+
+  const handleVerifyOTP = async (otpValue) => {
+    if (otpValue.length !== 4) return
+
+    setIsVerifying(true)
+    setErrorMessage('')
+    
+    try {
+      const response = await verifyOtp(phoneNumber, otpValue)
+      if (response.success) {
+        // OTP verified successfully, navigate to benefits page (customer only)
+        navigate('/home')
+      } else {
+        // OTP verification failed - show clear error message
+        setErrorMessage(response.message || 'Invalid OTP. Please check and try again.')
+        setOtp(['', '', '', ''])
+        // Focus on first input after a short delay
+        setTimeout(() => {
+          otpInputRefs[0].current?.focus()
+        }, 100)
+      }
+    } catch (error) {
+      console.error('Error verifying OTP:', error)
+      // Check if it's a wrong OTP error or network error
+      const errorMsg = error.message || 'Failed to verify OTP'
+      if (errorMsg.includes('Invalid') || errorMsg.includes('incorrect') || errorMsg.includes('wrong') || errorMsg.includes('expired')) {
+        setErrorMessage('Invalid or expired OTP. Please try again or request a new code.')
+      } else {
+        setErrorMessage('Failed to verify OTP. Please check your connection and try again.')
+      }
+      setOtp(['', '', '', ''])
+      // Focus on first input after a short delay
+      setTimeout(() => {
+        otpInputRefs[0].current?.focus()
+      }, 100)
+    } finally {
+      setIsVerifying(false)
+    }
+  }
+
+  // Vendor login handler - calls backend (email + password)
+  const handleVendorLogin = async (e) => {
+    e.preventDefault()
+    
+    if (!vendorEmail.trim()) {
+      setErrorMessage('Please enter your email')
+      return
+    }
+    
+    if (!vendorPassword.trim()) {
+      setErrorMessage('Please enter your password')
+      return
+    }
+
+
+    setIsVendorLoggingIn(true)
+    setErrorMessage('')
+    
+    try {
+      const response = await vendorLoginWithPassword({
+        email: vendorEmail.trim(),
+        password: vendorPassword.trim(),
+      })
+
+      const vendor = response?.data
+      if (vendor) {
+        localStorage.setItem('vendor', JSON.stringify(vendor))
+        localStorage.setItem('vendorId', vendor.vendorId)
+        localStorage.setItem('userId', vendor.userId)
+      }
+
+      setIsVendorLoggingIn(false)
+
+      if (vendor?.verifiedStatus !== 'VERIFIED') {
+        navigate('/vendor-kyc-pending')
+        return
+      }
+
+      navigate('/vendor-dashboard')
+    } catch (error) {
+      setIsVendorLoggingIn(false)
+      setErrorMessage(error.message || 'Login failed. Please try again.')
+    }
+  }
+
+  // Reset vendor form when switching to customer
+  useEffect(() => {
+    if (!isVendorLogin) {
+      setVendorEmail('')
+      setVendorPassword('')
+      setErrorMessage('')
+    }
+  }, [isVendorLogin])
+
+
+  return (
+    <>
+      {/* Splash Screen */}
+      {/* {showSplash && (
+        <div className="splash-screen">
+          <div className="splash-hero">
+            <img
+              src={firstBanner}
+              alt="Tatya Drone with Farmer"
+              className="splash-hero-image"
+            />
+          </div>
+          <div className="splash-bottom">
+            <img 
+              src={tatyaLogo} 
+              alt="Tatya Logo" 
+              className="splash-logo-mark"
+            />
+            <img
+              src={whiteText}
+              alt="Tatya Marathi Tagline White"
+              className="splash-white-text"
+            />
+            <img
+              src={greenText}
+              alt="Tatya Marathi Tagline Green"
+              className="splash-green-text"
+            />
+          </div>
+        </div>
+      )} */}
+
+      {/* Main Login Page */}
+      <div className="login-page visible">
+
+      {/* Full Page Background Image */}
+      <div className="login-background-image"></div>
+      <div className="login-background-overlay"></div>
+
+      {/* Logo and Branding Section */}
+      <div className="login-logo-section">
+        <div className="logo-container">
+          <img 
+            src={tatyaLogo} 
+            alt="Tatya Logo" 
+            className="tatya-logo"
+          />
+        </div>
+        {/* <div className="branding-text">
+          <img 
+            src={textImage} 
+            alt="Branding Text" 
+            className="branding-text-image"
+          />
+        </div> */}
+      </div>
+
+      {/* Login Form Panel - OTP Section Only */}
+      <div className="login-panel">
+          {/* Language Toggle Button */}
+          <div className="login-card-toggle-wrapper">
+            <LanguageToggle />
+          </div>
+
+        <h1 className="login-title">
+          {isVendorLogin ? translate('Vendor Login', isMarathi) : translate('Login', isMarathi)}
+        </h1>
+        
+        {/* Login Type Toggle */}
+        {!showOTP && (
+          <div className="login-type-toggle">
+            <button 
+              type="button"
+              className={`login-type-btn ${!isVendorLogin ? 'active' : ''}`}
+              onClick={() => setIsVendorLogin(false)}
+              aria-pressed={!isVendorLogin}
+            >
+              <FiUser className="login-type-icon" />
+              <span>{translate('Customer', isMarathi)}</span>
+            </button>
+            <button 
+              type="button"
+              className={`login-type-btn ${isVendorLogin ? 'active' : ''}`}
+              onClick={() => setIsVendorLogin(true)}
+              aria-pressed={isVendorLogin}
+            >
+              <FiBriefcase className="login-type-icon" />
+              <span>{translate('Vendor', isMarathi)}</span>
+            </button>
+          </div>
+        )}
+        
+        {!showOTP ? (
+          <>
+            {isVendorLogin ? (
+              // Vendor Login Form - User ID and Password
+              <form onSubmit={handleVendorLogin}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="vendor-email">
+                    {translate('Email', isMarathi)}
+                  </label>
+                  <div className="phone-input-container">
+                    <FiMail className="phone-icon" />
+                    <input
+                      id="vendor-email"
+                      type="email"
+                      className="phone-input"
+                      placeholder={translate('Enter your email', isMarathi)}
+                      value={vendorEmail}
+                      onChange={(e) => setVendorEmail(e.target.value)}
+                      autoComplete="username"
+                      aria-label={translate('Email', isMarathi)}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="vendor-password">
+                    {translate('Password', isMarathi)}
+                  </label>
+                  <div className="phone-input-container">
+                    <FiLock className="phone-icon" />
+                    <input
+                      id="vendor-password"
+                      type="password"
+                      className="phone-input"
+                      placeholder={translate('Enter your password', isMarathi)}
+                      value={vendorPassword}
+                      onChange={(e) => setVendorPassword(e.target.value)}
+                      autoComplete="current-password"
+                      aria-label={translate('Password', isMarathi)}
+                    />
+                  </div>
+                </div>
+
+                {errorMessage && (
+                  <p className="error-message" style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                    {errorMessage}
+                  </p>
+                )}
+
+                <button 
+                  type="submit"
+                  className="get-otp-button"
+                  disabled={
+                    !vendorEmail.trim() ||
+                    !vendorPassword.trim() ||
+                    isVendorLoggingIn
+                  }
+                  aria-label={translate('Login', isMarathi)}
+                >
+                  {isVendorLoggingIn ? (
+                    <>
+                      <div className="verifying-spinner" style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
+                      <span>{translate('Logging in...', isMarathi)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{translate('Login', isMarathi)}</span>
+                      <FiArrowRight className="button-icon-right" />
+                    </>
+                  )}
+                </button>
+
+                {/* Vendor Terms and Conditions text (no checkbox) */}
+                <div className="login-terms-text">
+                  {translate("By continuing, you agree to Tatya's", isMarathi)}{' '}
+                  <a
+                    href={tatyaTermsPdf}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="login-terms-link"
+                  >
+                    {translate('Terms & Conditions', isMarathi)}
+                  </a>
+                </div>
+
+                <button 
+                  type="button"
+                  className="vendor-register-button"
+                  onClick={() => navigate('/vendor-onboarding')}
+                  aria-label={translate('New Vendor? Register Here', isMarathi)}
+                >
+                  {translate('New Vendor? Register Here', isMarathi)}
+                </button>
+              </form>
+            ) : (
+              // Customer Login Form - Phone Number and OTP
+              <>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="phone-input">
+                    {translate('Phone Number', isMarathi)}
+                  </label>
+                  <div className="phone-input-container">
+                    <span className="country-code">+91</span>
+                    <FiPhone className="phone-icon" />
+                    <input
+                      id="phone-input"
+                      type="tel"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      autoComplete="tel-national"
+                      className="phone-input"
+                      placeholder={translate('Enter your phone number', isMarathi)}
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                      onKeyPress={handlePhoneKeyPress}
+                      maxLength="10"
+                      aria-label={translate('Phone Number', isMarathi)}
+                    />
+                  </div>
+                  {phoneNumber.length > 0 && phoneNumber.length < 10 && (
+                    <p className="phone-hint">{translate('Enter 10-digit phone number', isMarathi)}</p>
+                  )}
+                  {errorMessage && !showOTP && (
+                    <p className="error-message" style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                      {errorMessage}
+                    </p>
+                  )}
+                </div>
+
+                <div className="get-otp-with-terms">
+                  <button 
+                    type="button"
+                    className="get-otp-button"
+                    onClick={handleGetOTP}
+                    disabled={phoneNumber.length < 10 || isGenerating}
+                    aria-label={translate('Get OTP', isMarathi)}
+                  >
+                  {isGenerating ? (
+                    <>
+                      <div className="verifying-spinner" style={{ width: '16px', height: '16px', marginRight: '8px' }}></div>
+                      <span>{translate('Sending...', isMarathi)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{translate('Get OTP', isMarathi)}</span>
+                      <FiArrowRight className="button-icon-right" />
+                    </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Terms and Conditions text for customer login (no checkbox) */}
+                <div className="login-terms-text">
+                  {translate("By continuing, you agree to Tatya's", isMarathi)}{' '}
+                  <a
+                    href={tatyaTermsPdf}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="login-terms-link"
+                  >
+                    {translate('Terms & Conditions', isMarathi)}
+                  </a>
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          <div className="otp-container">
+            <div className="otp-header">
+              <div className="otp-title-wrapper">
+                <FiCheckCircle className="otp-success-icon" />
+                <h2 className="otp-title">{translate('Enter OTP', isMarathi)}</h2>
+              </div>
+              <p className="otp-subtitle">
+                {translate('We\'ve sent a 4-digit code to', isMarathi)}<br />
+                <span className="otp-phone">+91 {phoneNumber}</span>
+              </p>
+            </div>
+
+            {/* OTP Illustration Block */}
+            <div className="otp-illustration-card">
+              <div className="otp-text-stack">
+                <img src={otpBlackText} alt="OTP Title" className="otp-text-line primary" />
+                <img src={otpBlackSubtext} alt="OTP Subtext" className="otp-text-line secondary" />
+                <img src={otpOrangeText} alt="OTP Hint" className="otp-text-line accent" />
+              </div>
+              <div className="otp-man-wrapper">
+                <img src={otpMan} alt="Mascot waiting" className="otp-man" />
+              </div>
+            </div>
+
+            <div className="otp-input-group">
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={otpInputRefs[index]}
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                  className="otp-input"
+                  maxLength="1"
+                  value={digit}
+                  onChange={(e) => handleOTPChange(index, e.target.value)}
+                  onKeyDown={(e) => handleOTPKeyDown(index, e)}
+                  onPaste={index === 0 ? handlePaste : undefined}
+                  disabled={isVerifying}
+                />
+              ))}
+            </div>
+
+            {errorMessage && showOTP && (
+              <div className="otp-error-message">
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2"
+                  style={{ marginRight: '8px', flexShrink: 0 }}
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span>{errorMessage}</span>
+              </div>
+            )}
+            
+            {isVerifying && (
+              <div className="otp-verifying">
+                <div className="verifying-spinner"></div>
+                <span>{translate('Verifying...', isMarathi)}</span>
+              </div>
+            )}
+
+            <div className="otp-actions">
+              <button 
+                type="button"
+                className="change-number-button"
+                onClick={() => {
+                  setShowOTP(false)
+                  setOtp(['', '', '', ''])
+                  setPhoneNumber('')
+                  setErrorMessage('')
+                  setIsGenerating(false)
+                  setIsVerifying(false)
+                }}
+                disabled={isVerifying}
+                aria-label={translate('Change Number', isMarathi)}
+              >
+                <FiEdit2 className="button-icon-left" />
+                <span>{translate('Change Number', isMarathi)}</span>
+              </button>
+            </div>
+
+            {/* Terms text always visible for customers, even on OTP step */}
+            {!isVendorLogin && (
+              <div className="login-terms-text">
+                {translate("By continuing, you agree to Tatya's", isMarathi)}{' '}
+                <a
+                  href={tatyaTermsPdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="login-terms-link"
+                >
+                  {translate('Terms & Conditions', isMarathi)}
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+        </div>
+      </div>
+      <BenefitsPage />
+
+      {/* OTP Snackbar */}
+      <Snackbar
+        message={otpCode ? `Your OTP is: ${otpCode}` : 'OTP sent successfully'}
+        type="info"
+        isOpen={snackbarOpen}
+        onClose={() => setSnackbarOpen(false)}
+        duration={10000}
+      />
+    </>
+    
+  )
+}
+
+export default LoginPage
+
+

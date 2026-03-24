@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@100..900&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-serif: "Cormorant Garamond", serif;
+  --font-sans: "Inter", sans-serif;
+  
+  --color-earth-50: #fdfcfb;
+  --color-earth-100: #f7f3f0;
+  --color-earth-200: #eee5de;
+  --color-earth-300: #e0d1c5;
+  --color-earth-400: #c9b2a1;
+  --color-earth-500: #b1927d;
+  --color-earth-600: #9c7b66;
+  --color-earth-700: #826554;
+  --color-earth-800: #6d5447;
+  --color-earth-900: #5b463c;
+  
+  --color-leaf-50: #f4f7f2;
+  --color-leaf-100: #e6ede1;
+  --color-leaf-200: #d1ddc7;
+  --color-leaf-300: #b2c5a2;
+  --color-leaf-400: #8da678;
+  --color-leaf-500: #6d8956;
+  --color-leaf-600: #546c43;
+  --color-leaf-700: #435637;
+  --color-leaf-800: #38472f;
+  --color-leaf-900: #313d2a;
+}
+
+@layer components {
+  /* Main Chatbot Window */
+  .chatbot-container {
+    background-color: var(--color-earth-50) !important;
+    border: 1px solid var(--color-earth-200) !important;
+    /* Design Shadow from Image 2 */
+    box-shadow: 0 20px 80px -15px rgba(0, 0, 0, 0.2), 0 10px 30px -10px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Fixed Plus Menu Alignment & Shadow */
+  .plus-menu-modal {
+    background-color: white !important;
+    border: 1px solid var(--color-earth-200) !important;
+    border-radius: 1.5rem !important;
+    /* High depth shadow to separate from main window */
+    box-shadow: 0 15px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    padding: 0.75rem !important;
+  }
+
+  /* Alignment fix for menu items */
+  .menu-action-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important; /* Perfect spacing between icon and text */
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 1rem !important;
+    transition: background-color 0.2s !important;
+  }
+
+  .menu-action-item:hover {
+    background-color: var(--color-leaf-50) !important;
+  }
+
+  /* Assistant Message Bubble Shadow */
+  .bubble-assistant {
+    background-color: white !important;
+    border: 1px solid var(--color-earth-100) !important;
+    box-shadow: 0 2px 5px -1px rgba(0, 0, 0, 0.05) !important;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-earth-100 text-earth-900 font-sans;
+  }
+  
+  h1, h2, h3, h4 {
+    @apply font-serif;
+  }
+}
+
+.markdown-body {
+  @apply prose max-w-none;
+}
+
+.markdown-body p {
+  @apply mb-4 leading-relaxed;
+}
+
+.markdown-body ul {
+  @apply list-disc pl-5 mb-4 space-y-2;
+}
+
+.markdown-body ol {
+  @apply list-decimal pl-5 mb-4 space-y-2;
+}
+
+.markdown-body strong {
+  @apply font-semibold text-leaf-800;
+}
+
+.markdown-body h3 {
+  @apply text-xl font-semibold mt-6 mb-3 text-leaf-700;
+}

@@ -1,0 +1,213 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import '../styles/BenefitsPage.css'
+import { translate } from '../utils/translations'
+import { useLanguage } from '../contexts/LanguageContext'
+import LanguageToggle from '../components/LanguageToggle'
+import calendarImage from '../assets/Calender.jpg'
+import moneyImage from '../assets/Image2.jpg'
+import droneImage from '../assets/Image3.jpg'
+import benefitsPageBottomImage from '../assets/BenefitsPageBottom.jpg'
+
+function BenefitsPage() {
+  const { isMarathi } = useLanguage()
+  const navigate = useNavigate()
+
+  const benefits = [
+    {
+      title: 'Quick Booking',
+      titleMarathi: 'त्वरित बुकिंग',
+      description: 'Register your number and just tell us when to come, in one click, for life.',
+      descriptionMarathi: 'आपला नंबर नोंदवा आणि फक्त आम्हाला सांगा की कधी यायचे, एका क्लिकमध्ये, आयुष्यभरासाठी.',
+      imageType: 'calendar' // Calendar with clock
+    },
+    {
+      title: 'Discounting',
+      titleMarathi: 'सवलत',
+      description: 'Government and CSR funds directed towards discounts for you.',
+      descriptionMarathi: 'सरकार आणि CSR निधी आपल्यासाठी सवलतींकडे निर्देशित.',
+      imageType: 'money' // Money bag with coins and percentage tag
+    },
+    {
+      title: 'Equipment on time',
+      titleMarathi: 'वेळेवर उपकरणे',
+      description: 'Machineries comes to your farm directly, as fast as possible.',
+      descriptionMarathi: 'यंत्रसामग्री आपल्या शेतावर थेट येते, शक्य तितक्या वेगाने.',
+      imageType: 'drone' // Green drone
+    }
+  ]
+
+  const handleContinue = () => {
+    navigate('/location')
+  }
+
+  return (
+    <div className="benefits-page">
+      <div className="benefits-container">
+        {/* Main Title */}
+        <h1 className="main-title">{translate('What\'s in for you?', isMarathi)}</h1>
+
+        {/* Benefits Cards Section */}
+        <div className="benefits-cards-section">
+          {benefits.map((benefit, index) => (
+            <div key={index} className="benefit-card">
+              <div className="benefit-card-content">
+                <div className="benefit-text-section">
+                  <h3 className="benefit-title">
+                    {isMarathi ? benefit.titleMarathi : benefit.title}
+                  </h3>
+                  <p className="benefit-description">
+                    {isMarathi ? benefit.descriptionMarathi : benefit.description}
+                  </p>
+                </div>
+                <div className="benefit-image-section">
+                  {benefit.imageType === 'calendar' && (
+                    <div className="benefit-image calendar-image">
+                      <img 
+                        src= {calendarImage}
+                        alt="Calendar"
+                        className="calendar-img"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.nextSibling.style.display = 'flex'
+                        }}
+                      />
+                      <div className="image-placeholder calendar-placeholder">
+                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="15" y="20" width="50" height="50" rx="4" fill="#FF6B35"/>
+                          <rect x="20" y="30" width="8" height="8" rx="1" fill="white" opacity="0.8"/>
+                          <rect x="32" y="30" width="8" height="8" rx="1" fill="white" opacity="0.8"/>
+                          <rect x="44" y="30" width="8" height="8" rx="1" fill="white" opacity="0.8"/>
+                          <rect x="20" y="42" width="8" height="8" rx="1" fill="white" opacity="0.8"/>
+                          <rect x="32" y="42" width="8" height="8" rx="1" fill="white" opacity="0.8"/>
+                          <circle cx="50" cy="55" r="8" fill="#000000"/>
+                          <line x1="50" y1="51" x2="50" y2="55" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                          <line x1="50" y1="55" x2="53" y2="55" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+                  {benefit.imageType === 'money' && (
+                    <div className="benefit-image money-image">
+                      <img 
+                        src= {moneyImage}
+                        alt="Money"
+                        className="money-img"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.nextSibling.style.display = 'flex'
+                        }}
+                      />
+                      <div className="image-placeholder money-placeholder">
+                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          {/* Money Bag */}
+                          <path d="M40 20C35 20 30 22 28 26L25 35C24 38 25 42 28 44L32 48C35 50 40 50 43 48L47 44C50 42 51 38 50 35L47 26C45 22 45 20 40 20Z" fill="white" stroke="#22C55E" strokeWidth="2"/>
+                          <path d="M28 26L32 30L36 26" stroke="#22C55E" strokeWidth="2" strokeLinecap="round"/>
+                          {/* Rupee Symbol */}
+                          <text x="40" y="38" textAnchor="middle" fill="#22C55E" fontSize="20" fontWeight="bold" fontFamily="Arial">₹</text>
+                          {/* Coins */}
+                          <circle cx="28" cy="58" r="5" fill="#F59E0B"/>
+                          <circle cx="38" cy="60" r="5" fill="#F59E0B"/>
+                          <circle cx="48" cy="58" r="5" fill="#F59E0B"/>
+                          {/* Percentage Tag */}
+                          <rect x="52" y="22" width="14" height="14" rx="2" fill="#FF6B35"/>
+                          <text x="59" y="32" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">%</text>
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+                  {benefit.imageType === 'drone' && (
+                    <div className="benefit-image drone-image">
+                      <img 
+                        src= {droneImage}
+                        alt="Drone"
+                        className="drone-img"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.nextSibling.style.display = 'flex'
+                        }}
+                      />
+                      <div className="image-placeholder drone-placeholder">
+                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <ellipse cx="40" cy="45" rx="25" ry="15" fill="#16A34A"/>
+                          <ellipse cx="40" cy="42" rx="20" ry="12" fill="#22C55E"/>
+                          <circle cx="30" cy="30" r="6" fill="#16A34A"/>
+                          <circle cx="50" cy="30" r="6" fill="#16A34A"/>
+                          <circle cx="30" cy="60" r="6" fill="#16A34A"/>
+                          <circle cx="50" cy="60" r="6" fill="#16A34A"/>
+                          <circle cx="40" cy="42" r="4" fill="#1F2937"/>
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Benefits List Section */}
+        <div className="benefits-list-section">
+          <h2 className="benefits-list-title">Benefits</h2>
+          <div className="benefits-list">
+            <div className="benefit-list-item">
+              <svg className="benefit-calendar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="4" width="18" height="18" rx="2" stroke="white" strokeWidth="2"/>
+                <line x1="8" y1="2" x2="8" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="16" y1="2" x2="16" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="3" y1="10" x2="21" y2="10" stroke="white" strokeWidth="2"/>
+              </svg>
+              <span className="benefit-list-text">सेवा आणि तारीख ठरवा</span>
+              <div className="benefit-list-underline"></div>
+            </div>
+            <div className="benefit-list-item">
+              <svg className="benefit-calendar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="4" width="18" height="18" rx="2" stroke="white" strokeWidth="2"/>
+                <line x1="8" y1="2" x2="8" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="16" y1="2" x2="16" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="3" y1="10" x2="21" y2="10" stroke="white" strokeWidth="2"/>
+              </svg>
+              <span className="benefit-list-text">आपल्या शेताचे ठिकाण सांगा</span>
+              <div className="benefit-list-underline"></div>
+            </div>
+            <div className="benefit-list-item">
+              <svg className="benefit-calendar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="4" width="18" height="18" rx="2" stroke="white" strokeWidth="2"/>
+                <line x1="8" y1="2" x2="8" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="16" y1="2" x2="16" y2="6" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="3" y1="10" x2="21" y2="10" stroke="white" strokeWidth="2"/>
+              </svg>
+              <span className="benefit-list-text">काम झाल्यावरच पेमेंट</span>
+            </div>
+          </div>
+          <div className="benefits-list-footer">
+            <a href="#" className="see-terms-link">See terms</a>
+          </div>
+        </div>
+
+
+        {/* Bottom Image */}
+        <div className="benefits-bottom-image">
+          <img 
+            src={benefitsPageBottomImage}
+            alt="Benefits Page Bottom"
+            className="benefits-bottom-img"
+          />
+        </div>
+
+        {/* Bottom Text Section */}
+        <div className="benefits-bottom-text">
+          <p className="benefits-bottom-text-content">
+            Get rating on each Drone so you know what you are<br />
+            getting, Find experienced pilots, and select wisely.
+          </p>
+        </div>
+
+        {/* Language Toggle */}
+        {/* <LanguageToggle /> */}
+      </div>
+    </div>
+  )
+}
+
+export default BenefitsPage

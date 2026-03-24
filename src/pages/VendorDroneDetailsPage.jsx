@@ -1,0 +1,317 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import '../styles/VendorFormsPage.css'
+import { FiArrowLeft } from 'react-icons/fi'
+import { saveOnboardingStep2, getOnboardingData } from '../services/api'
+import ProgressBar from '../components/ProgressBar'
+
+function VendorDroneDetailsPage() {
+  const navigate = useNavigate()
+  const [formData, setFormData] = useState({
+    droneName: '',
+    droneType: 'Spraying',
+    tankSize: '',
+    sprayWidth: '',
+    flightTime: '',
+    batterySwapTime: '',
+    uin: '',
+    pilotLicense: '',
+    returnToHome: false,
+    terrainFollowing: false,
+    obstacleAvoidance: false,
+    tankCleaning: false
+  })
+  const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  // Load saved data when component mounts
+  useEffect(() => {
+    const loadSavedData = async () => {
+      const vendorId = localStorage.getItem('vendorId')
+      if (!vendorId) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const response = await getOnboardingData(parseInt(vendorId))
+        if (response.success && response.data && response.data.drone) {
+          const drone = response.data.drone
+          setFormData(prev => ({
+            ...prev,
+            droneName: drone.droneName || '',
+            droneType: drone.droneType || 'Spraying',
+            tankSize: drone.tankSizeLiters ? String(drone.tankSizeLiters) : '',
+            sprayWidth: drone.sprayWidthMeters ? String(drone.sprayWidthMeters) : '',
+            flightTime: drone.flightTimeMinutes ? String(drone.flightTimeMinutes) : '',
+            batterySwapTime: drone.batterySwapTimeMinutes ? String(drone.batterySwapTimeMinutes) : '',
+            uin: drone.uin || '',
+            pilotLicense: drone.pilotLicense || '',
+            returnToHome: drone.returnToHome || false,
+            terrainFollowing: drone.terrainFollowing || false,
+            obstacleAvoidance: drone.obstacleAvoidance || false,
+            tankCleaning: drone.tankCleaning || false
+          }))
+        }
+      } catch (error) {
+        console.error('Error loading saved data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSavedData()
+  }, [])
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleCheckboxChange = (field) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }))
+  }
+
+  const handleBack = () => {
+    navigate('/vendor-equipment')
+  }
+
+  const handleSubmit = async () => {
+    const vendorId = localStorage.getItem('vendorId')
+    if (!vendorId) {
+      setErrorMessage('Please complete registration first')
+      return
+    }
+
+    setIsSaving(true)
+    setErrorMessage('')
+
+    try {
+      const step2Data = {
+        vendorId: parseInt(vendorId),
+        droneName: formData.droneName,
+        droneType: formData.droneType,
+        tankSize: formData.tankSize ? parseFloat(formData.tankSize) : null,
+        sprayWidth: formData.sprayWidth ? parseFloat(formData.sprayWidth) : null,
+        flightTime: formData.flightTime ? parseInt(formData.flightTime) : null,
+        batterySwapTime: formData.batterySwapTime ? parseInt(formData.batterySwapTime) : null,
+        uin: formData.uin || null,
+        pilotLicense: formData.pilotLicense || null,
+        returnToHome: formData.returnToHome,
+        terrainFollowing: formData.terrainFollowing,
+        obstacleAvoidance: formData.obstacleAvoidance,
+        tankCleaning: formData.tankCleaning
+      }
+
+      await saveOnboardingStep2(step2Data)
+      navigate('/vendor-capacity')
+    } catch (error) {
+      setErrorMessage(error.message || 'Failed to save. Please try again.')
+      setIsSaving(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="vendor-form-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="spinner" style={{ width: '40px', height: '40px', margin: '0 auto' }}></div>
+          <p style={{ marginTop: '16px' }}>Loading saved data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="vendor-form-page">
+      {/* Progress Bar */}
+      <ProgressBar 
+        currentStep={2} 
+        totalSteps={6}
+        steps={['Equipment', 'Drone Details', 'Capacity', 'Location', 'Availability', 'Payouts']}
+      />
+
+      {/* Header with Back Button */}
+      <div className="form-header">
+        <button className="back-button" onClick={handleBack} aria-label="Go back">
+          <FiArrowLeft />
+        </button>
+      </div>
+
+      {/* Form Content */}
+      <div className="form-content">
+        <h1 className="form-title">Drone-Specific Details</h1>
+
+        <div className="form-fields">
+          <div className="form-group">
+            <input
+              type="text"
+              placeholder="Drone Name"
+              value={formData.droneName}
+              onChange={(e) => handleInputChange('droneName', e.target.value)}
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <select
+              value={formData.droneType}
+              onChange={(e) => handleInputChange('droneType', e.target.value)}
+              className="form-input"
+              style={{ 
+                appearance: 'none',
+                backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'%23333\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 20px center',
+                paddingRight: '40px',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="Spraying">Spraying</option>
+              <option value="Surveillance">Surveillance</option>
+              <option value="Logistic">Logistic</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <input
+              type="number"
+              placeholder="Tank Size (Liters)"
+              value={formData.tankSize}
+              onChange={(e) => handleInputChange('tankSize', e.target.value)}
+              className="form-input"
+              min="0"
+              step="0.1"
+            />
+          </div>
+
+          <div className="form-group">
+            <input
+              type="number"
+              placeholder="Spray Width (m)"
+              value={formData.sprayWidth}
+              onChange={(e) => handleInputChange('sprayWidth', e.target.value)}
+              className="form-input"
+              min="0"
+              step="0.1"
+            />
+          </div>
+
+          <div className="form-group">
+            <input
+              type="number"
+              placeholder="Flight Time (min)"
+              value={formData.flightTime}
+              onChange={(e) => handleInputChange('flightTime', e.target.value)}
+              className="form-input"
+              min="0"
+            />
+          </div>
+
+          <div className="form-group">
+            <input
+              type="number"
+              placeholder="Battery Swap Time (min)"
+              value={formData.batterySwapTime}
+              onChange={(e) => handleInputChange('batterySwapTime', e.target.value)}
+              className="form-input"
+              min="0"
+            />
+          </div>
+
+          <div className="form-group">
+            <input
+              type="text"
+              placeholder="UIN (optional)"
+              value={formData.uin}
+              onChange={(e) => handleInputChange('uin', e.target.value)}
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <input
+              type="text"
+              placeholder="Pilot License (optional)"
+              value={formData.pilotLicense}
+              onChange={(e) => handleInputChange('pilotLicense', e.target.value)}
+              className="form-input"
+            />
+          </div>
+
+          <div className="section-title">
+            <h3>Safety Features</h3>
+          </div>
+
+          <div className="checkbox-group">
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={formData.returnToHome}
+                onChange={() => handleCheckboxChange('returnToHome')}
+              />
+              <span className="checkbox-label">Return To Home (RTH)</span>
+            </label>
+          </div>
+
+          <div className="checkbox-group">
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={formData.terrainFollowing}
+                onChange={() => handleCheckboxChange('terrainFollowing')}
+              />
+              <span className="checkbox-label">Terrain Following</span>
+            </label>
+          </div>
+
+          <div className="checkbox-group">
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={formData.obstacleAvoidance}
+                onChange={() => handleCheckboxChange('obstacleAvoidance')}
+              />
+              <span className="checkbox-label">Obstacle Avoidance</span>
+            </label>
+          </div>
+
+          <div className="checkbox-group">
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={formData.tankCleaning}
+                onChange={() => handleCheckboxChange('tankCleaning')}
+              />
+              <span className="checkbox-label">Tank Cleaning</span>
+            </label>
+          </div>
+        </div>
+
+        {errorMessage && (
+          <div style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '1rem', textAlign: 'center' }}>
+            {errorMessage}
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <button 
+          className="submit-button"
+          onClick={handleSubmit}
+          disabled={isSaving}
+        >
+          {isSaving ? 'Saving...' : 'Continue'}
+        </button>
+
+      </div>
+    </div>
+  )
+}
+
+export default VendorDroneDetailsPage

@@ -1,0 +1,76 @@
+.vendor-kyc-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #0b1220 0%, #0f1d3a 45%, #12264f 100%);
+}
+
+.vendor-kyc-card {
+  width: 100%;
+  max-width: 520px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  padding: 28px;
+  color: #fff;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+}
+
+.vendor-kyc-title {
+  margin: 0 0 10px;
+  font-size: 24px;
+  letter-spacing: 0.2px;
+}
+
+.vendor-kyc-subtitle {
+  margin: 0 0 18px;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+.vendor-kyc-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vendor-kyc-btn {
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-weight: 600;
+  transition: transform 0.06s ease, opacity 0.2s ease;
+}
+
+.vendor-kyc-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.vendor-kyc-btn:active {
+  transform: translateY(1px);
+}
+
+.vendor-kyc-btn.primary {
+  background: #22c55e;
+  color: #07230f;
+}
+
+.vendor-kyc-btn.secondary {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.vendor-kyc-message {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  line-height: 1.4;
+}
+
