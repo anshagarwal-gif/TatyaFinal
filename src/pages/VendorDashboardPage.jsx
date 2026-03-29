@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/VendorDashboardPage.css'
 import { getVendorById, getVendorProfile, getVendorDashboardStats, getVendorDashboardChart, getVendorDashboardBookings, getVendorDashboardDaySummary } from '../services/api'
+import { clearVendorSession } from '../utils/authSession'
 
 function VendorDashboardPage() {
   const [activeTab, setActiveTab] = useState('map') // 'map', 'details', 'profile'
@@ -43,6 +44,11 @@ function VendorDashboardPage() {
     checkAccess()
   }, [navigate])
 
+  const handleLogout = () => {
+    clearVendorSession()
+    navigate('/', { replace: true })
+  }
+
   if (!accessChecked) {
     return (
       <div className="vendor-dashboard">
@@ -59,6 +65,11 @@ function VendorDashboardPage() {
 
   return (
     <div className="vendor-dashboard">
+      <div className="vendor-dashboard-appbar">
+        <button type="button" className="vendor-dashboard-logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
       {/* Main Content */}
       <div className="dashboard-content">
         {activeTab === 'map' && <MapViewWithData />}

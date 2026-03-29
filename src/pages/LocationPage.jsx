@@ -98,25 +98,24 @@ function LocationPage() {
     }
   }, [location.state])
 
-  // Fetch available drones
+  // Fetch drones for the selected map point: only vendors within their configured service radius (km)
   useEffect(() => {
+    if (!selectedLocation || selectedLocation.length < 2) return
+    const [lat, lng] = selectedLocation
+    if (typeof lat !== 'number' || typeof lng !== 'number' || Number.isNaN(lat) || Number.isNaN(lng)) return
+
     const fetchDrones = async () => {
       setLoadingDrones(true)
       try {
-        const response = await getAvailableDronesWithSpecifications()
+        const response = await getAvailableDronesWithSpecifications(lat, lng)
         if (response.success && response.data) {
           setAvailableDrones(response.data)
-          
-          // If drone was passed from navigation state, use it
-          if (location.state?.drone) {
-            setSelectedDrone(location.state.drone)
-          } else if (location.state?.droneId) {
-            // Find the drone by ID
-            const drone = response.data.find(d => d.droneId === location.state.droneId)
-            if (drone) {
-              setSelectedDrone(drone)
-            } 
-          }
+          // Drop selection if that drone is not in range for this map point (nav state sets initial pick in a separate effect)
+          setSelectedDrone((prev) => {
+            if (!prev) return prev
+            const still = response.data.find((d) => d.droneId === prev.droneId)
+            return still ?? null
+          })
         }
       } catch (err) {
         console.error('Error fetching drones:', err)
@@ -125,7 +124,7 @@ function LocationPage() {
       }
     }
     fetchDrones()
-  }, [location.state])
+  }, [selectedLocation])
 
   // Get user's current location
   useEffect(() => {

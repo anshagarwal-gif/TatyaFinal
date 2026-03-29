@@ -10,6 +10,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.tatya.util.GeoUtils;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
@@ -168,8 +171,15 @@ public class VendorOnboardingService {
         drone.setBaseLocation(request.getBaseLocation());
         drone.setCoordinates(request.getCoordinates());
         drone.setServiceAreas(request.getServiceAreas());
-        
-        return droneRepository.save(drone);
+
+        Drone saved = droneRepository.save(drone);
+        GeoUtils.parseLatLngCommaSeparated(saved.getCoordinates()).ifPresent(arr -> {
+            Vendor v = saved.getVendor();
+            v.setLatitude(BigDecimal.valueOf(arr[0]));
+            v.setLongitude(BigDecimal.valueOf(arr[1]));
+            vendorRepository.save(v);
+        });
+        return saved;
     }
     
     /**

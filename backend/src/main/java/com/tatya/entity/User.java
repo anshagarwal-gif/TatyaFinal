@@ -37,6 +37,12 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
+
+    /** One-time link token emailed after KYC approval; cleared after vendor sets a new password. */
+    @Column(unique = true, length = 64)
+    private String passwordSetupToken;
+
+    private LocalDateTime passwordSetupExpiresAt;
     
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

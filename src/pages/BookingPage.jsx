@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   FiMapPin,
@@ -29,6 +29,11 @@ import {
   getAvailableSlotsByDate,
   createBooking
 } from '../services/api'
+import {
+  computeBookingAcresAndDays,
+  vendorWorkingHoursPerDay,
+  ACRES_PER_HOUR,
+} from '../utils/bookingPricing'
 
 function BookingPage() {
   const { isMarathi } = useLanguage()
@@ -53,13 +58,15 @@ function BookingPage() {
   // Get droneId from URL params, navigation state, or localStorage
   const droneId = searchParams.get('droneId') || location.state?.droneId || location.state?.drone?.droneId || localStorage.getItem('selectedDroneId')
 
-  // Price calculation - will be updated from drone data
-  const pricePerUnit = selectedUnit === 'Acre' 
-    ? (drone?.pricePerAcre ? Number(drone.pricePerAcre) : 400)
-    : selectedUnit === 'Hour'
-    ? (drone?.pricePerHour ? Number(drone.pricePerHour) : 400)
-    : 400
-  const totalPrice = quantity * pricePerUnit
+  // Bill using price/acre: hours → acres at ACRES_PER_HOUR; days → vendor working hours/day × that rate × days
+  const pricePerAcre = drone?.pricePerAcre != null ? Number(drone.pricePerAcre) : 400
+  const workingHoursPerDay = useMemo(() => vendorWorkingHoursPerDay(drone), [drone])
+  const { farmAreaAcres, numberOfDays, equivalentTotalAcres } = useMemo(
+    () => computeBookingAcresAndDays(selectedUnit, quantity, workingHoursPerDay),
+    [selectedUnit, quantity, workingHoursPerDay]
+  )
+  const totalPrice =
+    Math.round(pricePerAcre * equivalentTotalAcres * 100) / 100
 
   // Get minimum date (today)
   const today = new Date().toISOString().split('T')[0]
@@ -268,19 +275,10 @@ function BookingPage() {
       // In production, this should come from authentication
       const customerId = localStorage.getItem('userId') || localStorage.getItem('customerId') || 1
 
-      // Calculate farm area in acres based on quantity and unit
-      let farmAreaAcres = null
-      if (selectedUnit === 'Acre') {
-        farmAreaAcres = quantity
-      } else if (selectedUnit === 'Hour') {
-        // Convert hours to approximate acres (assuming 1 hour = 2 acres for estimation)
-        farmAreaAcres = quantity * 2
-      } else if (selectedUnit === 'Day') {
-        // Convert days to approximate acres (assuming 1 day = 10 acres for estimation)
-        farmAreaAcres = quantity * 10
-      }
+      const { farmAreaAcres: acresForBooking, numberOfDays: daysForBooking } =
+        computeBookingAcresAndDays(selectedUnit, quantity, vendorWorkingHoursPerDay(drone))
 
-      // Prepare booking data
+      // Prepare booking data (server: totalCost = pricePerAcre × farmAreaAcres × numberOfDays)
       const bookingData = {
         customerId: Number(customerId),
         droneId: drone.droneId,
@@ -289,7 +287,8 @@ function BookingPage() {
         endTime: endTime,
         locationLat: Number(confirmedLocation[0]),
         locationLong: Number(confirmedLocation[1]),
-        farmAreaAcres: farmAreaAcres ? Number(farmAreaAcres) : null,
+        farmAreaAcres: acresForBooking != null ? Number(Number(acresForBooking).toFixed(2)) : null,
+        numberOfDays: daysForBooking,
         serviceType: 'SPRAYING', // Default service type
         totalCost: Number(totalPrice.toFixed(2)),
         quantity: quantity,
@@ -310,7 +309,7 @@ function BookingPage() {
             unit: selectedUnit,
             date: selectedDate,
             totalPrice,
-            pricePerUnit,
+            pricePerUnit: pricePerAcre,
             droneId: drone.droneId,
             bookingId: response.data?.bookingId || response.data?.booking_id
           }
@@ -446,10 +445,10 @@ function BookingPage() {
             )}
           </div>
           <div className="price-section">
-            <div className="price">₹{pricePerUnit}/-</div>
+            <div className="price">₹{pricePerAcre.toLocaleString('en-IN')}/-</div>
             <div className="price-unit">
               <span className="unit-label">{translate('Per', isMarathi)} </span>
-              <button className="unit-button active">{translate(selectedUnit, isMarathi)}</button>
+              <button type="button" className="unit-button active">{translate('Acre', isMarathi)}</button>
             </div>
           </div>
         </div>
@@ -495,6 +494,7 @@ function BookingPage() {
               </label>
               <div className="quantity-controls">
                 <button 
+                  type="button"
                   className="quantity-btn minus"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={quantity <= 1}
@@ -502,12 +502,30 @@ function BookingPage() {
                   −
                 </button>
                 <div className="quantity-display">
-                  <span className="quantity-value">{quantity}</span>
+                  <input
+                    type="number"
+                    className="quantity-input"
+                    min={1}
+                    max={999}
+                    step={1}
+                    inputMode="numeric"
+                    aria-label={translate('Quantity', isMarathi)}
+                    value={quantity}
+                    onChange={(e) => {
+                      const raw = e.target.value
+                      if (raw === '') return
+                      const n = Math.floor(Number(raw))
+                      if (!Number.isFinite(n)) return
+                      setQuantity(Math.min(999, Math.max(1, n)))
+                    }}
+                    onBlur={() => setQuantity((q) => Math.max(1, Math.min(999, Number(q) || 1)))}
+                  />
                   <span className="quantity-unit">{selectedUnit}</span>
                 </div>
                 <button 
+                  type="button"
                   className="quantity-btn plus"
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => setQuantity(Math.min(999, quantity + 1))}
                 >
                   +
                 </button>
@@ -550,6 +568,21 @@ function BookingPage() {
 
           {/* Select Date Section */}
           <div className="date-section">
+            {(selectedUnit === 'Day' || selectedUnit === 'Hour') && (
+              <p
+                style={{
+                  color: '#dc2626',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  margin: '0 0 10px 0',
+                  lineHeight: 1.4,
+                }}
+              >
+                {selectedUnit === 'Day'
+                  ? `${workingHoursPerDay}h × ${ACRES_PER_HOUR} ${translate('acres per hour', isMarathi)}`
+                  : `1h × ${ACRES_PER_HOUR} ${translate('acres per hour', isMarathi)}`}
+              </p>
+            )}
             <label className="date-label">
               {translate('Select Booking Date', isMarathi)}
             </label>
@@ -647,8 +680,18 @@ function BookingPage() {
         <div className="price-summary">
           <div className="summary-row">
             <span className="summary-label">{translate('Price per Acre', isMarathi)}</span>
-            <span className="summary-value">₹{pricePerUnit.toLocaleString('en-IN')}</span>
+            <span className="summary-value">₹{pricePerAcre.toLocaleString('en-IN')}</span>
           </div>
+          {(selectedUnit === 'Hour' || selectedUnit === 'Day') && (
+            <div className="summary-row">
+              <span className="summary-label">{translate('Estimated billable acres', isMarathi)}</span>
+              <span className="summary-value">
+                {equivalentTotalAcres % 1 === 0
+                  ? equivalentTotalAcres
+                  : equivalentTotalAcres.toFixed(2)}
+              </span>
+            </div>
+          )}
           <div className="summary-row">
             <span className="summary-label">{translate('Quantity', isMarathi)}</span>
             <span className="summary-value">{quantity} {translate(selectedUnit, isMarathi)}{quantity > 1 ? (isMarathi ? '' : 's') : ''}</span>

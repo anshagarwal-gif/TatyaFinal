@@ -218,7 +218,6 @@ export default function TatyaHomePage() {
                         >
                           <span className="tatya-book-icon">★</span>
                           <span>{translate('Book', isMarathi)}</span>
-                          <span className="tatya-book-close">×</span>
                         </button>
                       </div>
                     </div>

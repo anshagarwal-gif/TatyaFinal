@@ -4,18 +4,18 @@ import {
   FiChevronLeft,
   FiTruck,
   FiPercent,
-  FiChevronRight,
   FiPhoneCall,
   FiPhoneOff,
   FiShield,
   FiArrowRightCircle,
-  FiLoader
+  FiLoader,
+  FiMail
 } from 'react-icons/fi'
 import '../styles/CheckoutPage.css'
 import { translate } from '../utils/translations'
 import { useLanguage } from '../contexts/LanguageContext'
 import LanguageToggle from '../components/LanguageToggle'
-import { createPaymentOrder, verifyPayment, getRazorpayKey } from '../services/api'
+import { createPaymentOrder, verifyPayment, getRazorpayKey, confirmBookingCod } from '../services/api'
 
 function CheckoutPage() {
   const { isMarathi } = useLanguage()
@@ -34,6 +34,21 @@ function CheckoutPage() {
     bookingId: null
   })
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [couponInput, setCouponInput] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState(null)
+  const [couponError, setCouponError] = useState('')
+  const [codEmail, setCodEmail] = useState('')
+
+  const TEST_COUPON_CODE = 'test'
+  const isCodSelected = appliedCoupon === TEST_COUPON_CODE
+
+  const looksLikeEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || '').trim())
+
+  useEffect(() => {
+    if (!isCodSelected) {
+      setCodEmail('')
+    }
+  }, [isCodSelected])
 
   useEffect(() => {
     // Load Razorpay script
@@ -98,11 +113,57 @@ function CheckoutPage() {
   const gstAmount = itemTotal * gstRate
   const totalPayable = itemTotal + gstAmount
 
+  const codFormComplete = looksLikeEmail(codEmail)
+
+  const handleApplyCoupon = () => {
+    setCouponError('')
+    const code = couponInput.trim().toLowerCase()
+    if (!code) {
+      setCouponError(translate('Enter a coupon code', isMarathi))
+      return
+    }
+    if (code === TEST_COUPON_CODE) {
+      setAppliedCoupon(TEST_COUPON_CODE)
+      setCouponInput('')
+    } else {
+      setCouponError(translate('Invalid coupon code', isMarathi))
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponError('')
+    setCouponInput('')
+  }
+
   // Handle payment
   const handlePayment = async () => {
     if (!bookingData.bookingId) {
       alert('Booking ID is missing. Please go back and complete the booking first.')
       navigate('/booking')
+      return
+    }
+
+    if (isCodSelected) {
+      const emailTrim = codEmail.trim()
+      if (!looksLikeEmail(emailTrim)) {
+        alert(translate('Please enter a valid email for your booking confirmation.', isMarathi))
+        return
+      }
+      setIsProcessingPayment(true)
+      try {
+        const res = await confirmBookingCod(bookingData.bookingId, emailTrim)
+        if (!res.success) {
+          throw new Error(res.message || 'COD confirmation failed')
+        }
+        alert(translate('Your COD booking is confirmed. Pay when the service is completed.', isMarathi))
+        navigate('/home', { replace: true, state: { codBookingId: bookingData.bookingId } })
+      } catch (err) {
+        console.error('COD confirm error:', err)
+        alert(err.message || translate('Could not confirm COD booking. Please try again.', isMarathi))
+      } finally {
+        setIsProcessingPayment(false)
+      }
       return
     }
 
@@ -287,15 +348,72 @@ function CheckoutPage() {
         </div>
       </div>
 
-      {/* Offers Section */}
-      <div className="offers-section">
-        <div className="offers-icon">
-          <FiPercent />
+      {/* Coupon / offers */}
+      <div className="offers-section coupon-section">
+        <div className="coupon-section-top">
+          <div className="offers-icon">
+            <FiPercent />
+          </div>
+          <span className="offers-text">{translate('Avail Offers / Coupons', isMarathi)}</span>
         </div>
-        <span className="offers-text">{translate('Avail Offers / Coupons', isMarathi)}</span>
-        <div className="offers-arrow">
-          <FiChevronRight />
+        <div className="coupon-input-row">
+          <input
+            type="text"
+            className="coupon-input"
+            placeholder={translate('Coupon code', isMarathi)}
+            value={couponInput}
+            onChange={(e) => {
+              setCouponInput(e.target.value)
+              setCouponError('')
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                handleApplyCoupon()
+              }
+            }}
+            disabled={!!appliedCoupon}
+            autoComplete="off"
+          />
+          {appliedCoupon ? (
+            <button type="button" className="coupon-remove-btn" onClick={handleRemoveCoupon}>
+              {translate('Remove', isMarathi)}
+            </button>
+          ) : (
+            <button type="button" className="coupon-apply-btn" onClick={handleApplyCoupon}>
+              {translate('Apply', isMarathi)}
+            </button>
+          )}
         </div>
+        {couponError ? <p className="coupon-error-text">{couponError}</p> : null}
+        {isCodSelected ? (
+          <>
+            <div className="cod-selected-banner" role="status">
+              <span className="cod-selected-title">{translate('COD selected', isMarathi)}</span>
+              <span className="cod-selected-desc">
+                {translate('Cash on Delivery — pay when the service is completed.', isMarathi)}
+              </span>
+            </div>
+            <div className="cod-email-section">
+              <label className="cod-email-label" htmlFor="cod-confirmation-email">
+                <FiMail className="cod-email-label-icon" aria-hidden />
+                {translate('Email for booking confirmation', isMarathi)}
+              </label>
+              <input
+                id="cod-confirmation-email"
+                type="email"
+                className="cod-email-input"
+                autoComplete="email"
+                placeholder={translate('you@example.com', isMarathi)}
+                value={codEmail}
+                onChange={(e) => setCodEmail(e.target.value)}
+              />
+              <p className="cod-email-hint">
+                {translate('Your booking confirmation will be sent to this email.', isMarathi)}
+              </p>
+            </div>
+          </>
+        ) : null}
       </div>
 
       {/* Instructions for Pilots */}
@@ -351,7 +469,11 @@ function CheckoutPage() {
       <button 
         className="pay-button"
         onClick={handlePayment}
-        disabled={isProcessingPayment || !bookingData.bookingId}
+        disabled={
+          isProcessingPayment ||
+          !bookingData.bookingId ||
+          (isCodSelected && !codFormComplete)
+        }
       >
         {isProcessingPayment ? (
           <>
@@ -364,7 +486,10 @@ function CheckoutPage() {
               <FiArrowRightCircle />
             </span>
             <span>
-              {translate('Proceed to Payment', isMarathi)} ₹{Math.round(totalPayable).toLocaleString('en-IN')}
+              {isCodSelected
+                ? translate('Proceed with COD', isMarathi)
+                : translate('Proceed to Payment', isMarathi)}{' '}
+              ₹{Math.round(totalPayable).toLocaleString('en-IN')}
             </span>
           </>
         )}

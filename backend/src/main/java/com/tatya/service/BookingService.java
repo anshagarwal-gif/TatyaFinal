@@ -10,12 +10,14 @@ import com.tatya.repository.UserRepository;
 import com.tatya.repository.AvailabilityRepository;
 import com.tatya.repository.DroneSpecificationRepository;
 import com.tatya.repository.VendorRepository;
+import com.tatya.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.math.BigDecimal;
@@ -31,6 +33,8 @@ public class BookingService {
     private final AvailabilityRepository availabilityRepository;
     private final DroneSpecificationRepository droneSpecificationRepository;
     private final VendorRepository vendorRepository;
+    private final PaymentRepository paymentRepository;
+    private final EmailService emailService;
 
     @Transactional
     public Booking createBooking(BookingRequest request) {
@@ -235,5 +239,69 @@ public class BookingService {
                 .orElse(updatedBooking);
 
         return updatedBooking;
+    }
+
+    private static boolean isValidEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+        String e = email.trim();
+        return e.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    }
+
+    /**
+     * Cash on Delivery: accept booking, record pending COD payment, send confirmation to the given email
+     * (same SMTP as vendor mail). Does not require sign-in; does not overwrite the user's stored email.
+     */
+    @Transactional
+    public Booking confirmCashOnDelivery(Long bookingId, String confirmationEmail) {
+        if (confirmationEmail == null || confirmationEmail.isBlank()) {
+            throw new RuntimeException("Email is required to confirm Cash on Delivery");
+        }
+        String emailTrim = confirmationEmail.trim();
+        if (!isValidEmail(emailTrim)) {
+            throw new RuntimeException("Please enter a valid email address");
+        }
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
+
+        if (booking.getStatus() == Booking.BookingStatus.ACCEPTED) {
+            return booking;
+        }
+        if (booking.getStatus() != Booking.BookingStatus.PENDING) {
+            throw new RuntimeException("Booking cannot be confirmed for COD in its current state");
+        }
+
+        Optional<Payment> existingPay = paymentRepository.findByBooking_BookingId(bookingId);
+        if (existingPay.isPresent() && existingPay.get().getPaymentStatus() == Payment.PaymentStatus.PAID) {
+            throw new RuntimeException("This booking is already paid online");
+        }
+
+        BigDecimal amount = booking.getTotalCost() != null ? booking.getTotalCost() : BigDecimal.ZERO;
+
+        Payment payment;
+        if (existingPay.isEmpty()) {
+            payment = new Payment();
+            payment.setBooking(booking);
+            payment.setAmount(amount);
+            payment.setPaymentMethod(Payment.PaymentMethod.CASH);
+            payment.setPaymentStatus(Payment.PaymentStatus.PENDING);
+            payment.setTimestamp(LocalDateTime.now());
+            paymentRepository.save(payment);
+        } else {
+            payment = existingPay.get();
+            payment.setPaymentMethod(Payment.PaymentMethod.CASH);
+            payment.setAmount(amount);
+            paymentRepository.save(payment);
+        }
+
+        booking.setStatus(Booking.BookingStatus.ACCEPTED);
+        bookingRepository.save(booking);
+
+        User customer = booking.getCustomer();
+        emailService.sendBookingConfirmationEmail(customer, booking, true, emailTrim);
+
+        return bookingRepository.findById(bookingId).orElse(booking);
     }
 }

@@ -4,7 +4,9 @@ import com.tatya.dto.ApiResponse;
 import com.tatya.dto.UpdateVendorProfileRequest;
 import com.tatya.dto.VendorLoginRequest;
 import com.tatya.dto.VendorPasswordLoginRequest;
+import com.tatya.dto.VendorPasswordSetupStatusResponse;
 import com.tatya.dto.VendorProfileResponse;
+import com.tatya.dto.VendorSetInitialPasswordRequest;
 import com.tatya.dto.VendorRegistrationRequest;
 import com.tatya.dto.VendorResponse;
 import com.tatya.exception.VendorKycPendingException;
@@ -103,6 +105,39 @@ public class VendorController {
             log.error("Unexpected error during vendor password login", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Login failed. Please try again."));
+        }
+    }
+
+    /**
+     * Check if the emailed set-password link is still valid.
+     * GET /api/vendors/password-setup/status?token=
+     */
+    @GetMapping("/password-setup/status")
+    public ResponseEntity<ApiResponse<VendorPasswordSetupStatusResponse>> passwordSetupStatus(
+            @RequestParam String token) {
+        VendorPasswordSetupStatusResponse status = vendorService.getPasswordSetupStatus(token);
+        return ResponseEntity.ok(ApiResponse.success(
+                status.isValid() ? "Link is valid" : "Invalid or expired link",
+                status));
+    }
+
+    /**
+     * Confirm temporary password and set permanent 6-digit password.
+     * POST /api/vendors/set-initial-password
+     */
+    @PostMapping("/set-initial-password")
+    public ResponseEntity<ApiResponse<Void>> setInitialPassword(
+            @Valid @RequestBody VendorSetInitialPasswordRequest request) {
+        try {
+            vendorService.completeInitialPasswordSetup(
+                    request.getToken(),
+                    request.getTemporaryPassword(),
+                    request.getNewPassword());
+            return ResponseEntity.ok(ApiResponse.success("Password set successfully. You can log in now.", null));
+        } catch (RuntimeException e) {
+            log.warn("Set initial password failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
         }
     }
 

@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -67,6 +68,29 @@ public class BookingController {
         }
     }
     
+    /**
+     * Cash on Delivery: confirm booking and email customer (same SMTP as vendor mail).
+     */
+    @PostMapping("/{bookingId}/confirm-cod")
+    public ResponseEntity<ApiResponse<Booking>> confirmCashOnDelivery(
+            @PathVariable Long bookingId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            if (body == null) {
+                return ResponseEntity.status(400).body(ApiResponse.error("Request body is required"));
+            }
+            String confirmationEmail = body.get("confirmationEmail") != null
+                    ? body.get("confirmationEmail").toString()
+                    : "";
+            Booking booking = bookingService.confirmCashOnDelivery(bookingId, confirmationEmail);
+            return ResponseEntity.ok(ApiResponse.success("Booking confirmed (COD)", booking));
+        } catch (RuntimeException e) {
+            log.error("COD confirm failed for booking {}", bookingId, e);
+            return ResponseEntity.status(400)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
     @GetMapping("/{bookingId}")
     public ResponseEntity<ApiResponse<Booking>> getBookingById(@PathVariable Long bookingId) {
         try {

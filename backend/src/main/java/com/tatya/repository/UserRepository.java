@@ -19,6 +19,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Case-insensitive email lookup
     @Query("SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)")
     Optional<User> findByEmailIgnoreCase(@Param("email") String email);
+
+    Optional<User> findByPasswordSetupToken(String passwordSetupToken);
     
     boolean existsByPhone(String phone);
     

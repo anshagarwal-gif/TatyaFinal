@@ -26,7 +26,10 @@ function AdminLayout() {
   ]
 
   const handleLogout = () => {
-    navigate('/adminlogin/101')
+    localStorage.removeItem('adminToken')
+    localStorage.removeItem('adminId')
+    localStorage.removeItem('adminEmail')
+    navigate('/adminlogin/101', { replace: true })
   }
 
   const isActive = (path) => {

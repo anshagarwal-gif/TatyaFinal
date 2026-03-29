@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiMail, FiLock, FiAlertCircle } from 'react-icons/fi'
 import { adminLogin } from '../services/api'
@@ -10,6 +10,12 @@ function AdminLoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (localStorage.getItem('adminToken')) {
+      navigate('/admin/dashboard', { replace: true })
+    }
+  }, [navigate])
 
   const handleLogin = async (e) => {
     e.preventDefault()

@@ -627,6 +627,33 @@
   line-height: 1;
 }
 
+.quantity-input {
+  width: 100%;
+  max-width: 140px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #000;
+  line-height: 1;
+  border: none;
+  background: transparent;
+  padding: 4px 8px;
+  margin: 0;
+  -moz-appearance: textfield;
+}
+
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.quantity-input:focus {
+  outline: 2px solid #4caf50;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .quantity-unit {
   font-size: 12px;
   color: #666;
@@ -1034,6 +1061,11 @@
     font-size: 38px;
   }
 
+  .quantity-input {
+    font-size: 38px;
+    max-width: 160px;
+  }
+
   .quantity-unit {
     font-size: 13px;
   }
@@ -1174,6 +1206,11 @@
 
   .quantity-value {
     font-size: 28px;
+  }
+
+  .quantity-input {
+    font-size: 28px;
+    max-width: 120px;
   }
 
   .book-now-button {

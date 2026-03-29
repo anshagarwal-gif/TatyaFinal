@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import '../styles/LoginPage.css'
 import { translate } from '../utils/translations'
 import { useLanguage } from '../contexts/LanguageContext'
@@ -15,6 +15,12 @@ import otpBlackSubtext from '../assets/OTPBlackSubtext.png'
 import otpOrangeText from '../assets/OTPOrangeText.png'
 import { FiPhone, FiArrowRight, FiEdit2, FiCheckCircle, FiUser, FiBriefcase, FiLock, FiMail } from 'react-icons/fi'
 import { generateOtp, verifyOtp, vendorLoginWithPassword } from '../services/api'
+import {
+  CUSTOMER_PHONE_KEY,
+  clearCustomerSession,
+  clearVendorSession,
+  isAppUserAuthenticated,
+} from '../utils/authSession'
 import Snackbar from '../components/Snackbar'
 import BenefitsPage from './BenefitsPage'
 import tatyaTermsPdf from '../assets/TatyaTermsandConditions.pdf'
@@ -39,6 +45,7 @@ function LoginPage() {
   const [otpCode, setOtpCode] = useState('')
   const otpInputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)]
   const navigate = useNavigate()
+  const location = useLocation()
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [acceptedVendorTerms, setAcceptedVendorTerms] = useState(false)
 
@@ -50,6 +57,25 @@ function LoginPage() {
       return () => clearTimeout(focusTimer)
     }
   }, [showOTP])
+
+  useEffect(() => {
+    if (!isAppUserAuthenticated()) return
+    if (localStorage.getItem(CUSTOMER_PHONE_KEY)) {
+      navigate('/home', { replace: true })
+      return
+    }
+    if (localStorage.getItem('vendorId')) {
+      try {
+        const v = JSON.parse(localStorage.getItem('vendor') || '{}')
+        navigate(
+          v.verifiedStatus === 'VERIFIED' ? '/vendor-dashboard' : '/vendor-kyc-pending',
+          { replace: true }
+        )
+      } catch {
+        navigate('/vendor-kyc-pending', { replace: true })
+      }
+    }
+  }, [navigate])
 
 
   const handleGetOTP = async () => {
@@ -135,7 +161,8 @@ function LoginPage() {
     try {
       const response = await verifyOtp(phoneNumber, otpValue)
       if (response.success) {
-        // OTP verified successfully, navigate to benefits page (customer only)
+        clearVendorSession()
+        localStorage.setItem(CUSTOMER_PHONE_KEY, phoneNumber)
         navigate('/home')
       } else {
         // OTP verification failed - show clear error message
@@ -182,7 +209,8 @@ function LoginPage() {
 
     setIsVendorLoggingIn(true)
     setErrorMessage('')
-    
+    clearCustomerSession()
+
     try {
       const response = await vendorLoginWithPassword({
         email: vendorEmail.trim(),
@@ -218,6 +246,12 @@ function LoginPage() {
       setErrorMessage('')
     }
   }, [isVendorLogin])
+
+  useEffect(() => {
+    if (location.state?.vendorPasswordSet) {
+      setIsVendorLogin(true)
+    }
+  }, [location.state?.vendorPasswordSet])
 
 
   return (
@@ -287,6 +321,20 @@ function LoginPage() {
         <h1 className="login-title">
           {isVendorLogin ? translate('Vendor Login', isMarathi) : translate('Login', isMarathi)}
         </h1>
+
+        {location.state?.vendorPasswordSet && (
+          <p
+            style={{
+              color: '#16a34a',
+              fontSize: '0.875rem',
+              textAlign: 'center',
+              margin: '0 0 12px',
+              lineHeight: 1.4,
+            }}
+          >
+            Password set successfully. Sign in with your email and new 6-digit password.
+          </p>
+        )}
         
         {/* Login Type Toggle */}
         {!showOTP && (

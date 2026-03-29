@@ -39,7 +39,9 @@ function VendorKycPendingPage() {
         localStorage.setItem('vendor', JSON.stringify(vendor))
         setStatus(vendor.verifiedStatus || 'PENDING')
         if (vendor.verifiedStatus === 'VERIFIED') {
-          setMessage('Approved! Please login with email & password to access dashboard.')
+          setMessage(
+            'Approved! Check your email: open the link to set your 6-digit password, then log in with your email.'
+          )
           navigate('/', { replace: true })
           return
         }

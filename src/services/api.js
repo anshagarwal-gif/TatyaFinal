@@ -180,12 +180,22 @@ export const getAllDronesWithSpecifications = async () => {
 };
 
 /**
- * Get available drones with specifications
+ * Get available drones with specifications.
+ * When lat and lng are provided, only drones whose vendor base is within that drone's serviceRadiusKm are returned.
+ * @param {number} [lat] - Customer / job site latitude (WGS84)
+ * @param {number} [lng] - Customer / job site longitude (WGS84)
  * @returns {Promise<{success: boolean, message: string, data: Array}>}
  */
-export const getAvailableDronesWithSpecifications = async () => {
+export const getAvailableDronesWithSpecifications = async (lat, lng) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/drones/available/with-specifications`);
+    const params = new URLSearchParams();
+    if (lat != null && lng != null && !Number.isNaN(lat) && !Number.isNaN(lng)) {
+      params.set('lat', String(lat));
+      params.set('lng', String(lng));
+    }
+    const qs = params.toString();
+    const url = `${API_BASE_URL}/drones/available/with-specifications${qs ? `?${qs}` : ''}`;
+    const response = await fetch(url);
     const data = await response.json();
     return data;
   } catch (error) {
@@ -283,6 +293,33 @@ export const createBooking = async (bookingData) => {
     return data;
   } catch (error) {
     console.error('Error creating booking:', error);
+    throw error;
+  }
+};
+
+/**
+ * Confirm booking as Cash on Delivery — sends confirmation to confirmationEmail (same SMTP as vendor).
+ * @param {number} bookingId
+ * @param {string} confirmationEmail
+ */
+export const confirmBookingCod = async (bookingId, confirmationEmail) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/confirm-cod`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        confirmationEmail: String(confirmationEmail || '').trim(),
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to confirm COD booking');
+    }
+    return data;
+  } catch (error) {
+    console.error('Error confirming COD booking:', error);
     throw error;
   }
 };
@@ -742,6 +779,47 @@ export const verifyVendorAndLogin = async (phoneNumber, otpCode) => {
  * @param {Object} loginData - {email, password}
  * @returns {Promise<{success: boolean, message: string, data: Object}>}
  */
+/**
+ * Check vendor set-password link from approval email
+ * @param {string} token - query token from email link
+ */
+export const getVendorPasswordSetupStatus = async (token) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/vendors/password-setup/status?token=${encodeURIComponent(token)}`
+    )
+    const data = await response.json()
+    if (!response.ok) {
+      throw new Error(data.message || 'Invalid link')
+    }
+    return data
+  } catch (error) {
+    console.error('Error checking password setup link:', error)
+    throw error
+  }
+}
+
+/**
+ * Set permanent 6-digit password after KYC approval (temporary password from email)
+ */
+export const vendorSetInitialPassword = async ({ token, temporaryPassword, newPassword }) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/vendors/set-initial-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, temporaryPassword, newPassword }),
+    })
+    const data = await response.json()
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to set password')
+    }
+    return data
+  } catch (error) {
+    console.error('Error setting vendor password:', error)
+    throw error
+  }
+}
+
 export const vendorLoginWithPassword = async (loginData) => {
   try {
     const response = await fetch(`${API_BASE_URL}/vendors/login`, {

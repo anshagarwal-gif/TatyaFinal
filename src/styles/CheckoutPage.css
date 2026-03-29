@@ -296,6 +296,149 @@
   font-weight: bold;
 }
 
+.offers-section.coupon-section {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  cursor: default;
+}
+
+.offers-section.coupon-section:hover {
+  background: white;
+}
+
+.coupon-section-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.coupon-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.coupon-input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.coupon-input:focus {
+  outline: none;
+  border-color: #059669;
+}
+
+.coupon-input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.coupon-apply-btn,
+.coupon-remove-btn {
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.coupon-apply-btn {
+  background: #000;
+  color: #fff;
+}
+
+.coupon-apply-btn:hover {
+  background: #333;
+}
+
+.coupon-remove-btn {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.coupon-remove-btn:hover {
+  background: #e5e7eb;
+}
+
+.coupon-error-text {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #dc2626;
+}
+
+.cod-selected-banner {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cod-selected-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #047857;
+}
+
+.cod-selected-desc {
+  font-size: 13px;
+  color: #065f46;
+  line-height: 1.4;
+}
+
+.cod-email-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cod-email-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.cod-email-label-icon {
+  flex-shrink: 0;
+  color: #059669;
+}
+
+.cod-email-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.cod-email-input:focus {
+  outline: none;
+  border-color: #059669;
+}
+
+.cod-email-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
 /* Instructions Section */
 .instructions-section {
   margin: 16px 20px;

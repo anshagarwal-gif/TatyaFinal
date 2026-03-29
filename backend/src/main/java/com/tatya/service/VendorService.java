@@ -1,6 +1,7 @@
 package com.tatya.service;
 
 import com.tatya.dto.UpdateVendorProfileRequest;
+import com.tatya.dto.VendorPasswordSetupStatusResponse;
 import com.tatya.dto.VendorProfileResponse;
 import com.tatya.dto.VendorRegistrationRequest;
 import com.tatya.dto.VendorResponse;
@@ -16,12 +17,15 @@ import com.tatya.repository.DroneRepository;
 import com.tatya.repository.UserRepository;
 import com.tatya.repository.VendorBankAccountRepository;
 import com.tatya.repository.VendorRepository;
+import com.tatya.util.GeoUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -384,6 +388,12 @@ public class VendorService {
 
         drone = droneRepository.save(drone);
 
+        GeoUtils.parseLatLngCommaSeparated(drone.getCoordinates()).ifPresent(arr -> {
+            vendor.setLatitude(BigDecimal.valueOf(arr[0]));
+            vendor.setLongitude(BigDecimal.valueOf(arr[1]));
+            vendorRepository.save(vendor);
+        });
+
         // Update or create bank account
         if (request.getAccountHolderName() != null || request.getAccountNumber() != null) {
             VendorBankAccount bankAccount = bankAccountRepository
@@ -421,5 +431,79 @@ public class VendorService {
         }
 
         return VendorProfileResponse.fromVendor(vendor, drone, bankAccount, availabilities);
+    }
+
+    /**
+     * Validate token from approval email (for set-password page).
+     */
+    public VendorPasswordSetupStatusResponse getPasswordSetupStatus(String token) {
+        String t = token != null ? token.trim() : "";
+        if (t.isEmpty()) {
+            return VendorPasswordSetupStatusResponse.builder().valid(false).build();
+        }
+        Optional<User> opt = userRepository.findByPasswordSetupToken(t);
+        if (opt.isEmpty()) {
+            return VendorPasswordSetupStatusResponse.builder().valid(false).build();
+        }
+        User user = opt.get();
+        if (user.getRole() != User.UserRole.VENDOR) {
+            return VendorPasswordSetupStatusResponse.builder().valid(false).build();
+        }
+        if (user.getPasswordSetupExpiresAt() == null
+                || LocalDateTime.now().isAfter(user.getPasswordSetupExpiresAt())) {
+            return VendorPasswordSetupStatusResponse.builder().valid(false).build();
+        }
+        return VendorPasswordSetupStatusResponse.builder()
+                .valid(true)
+                .emailHint(maskEmail(user.getEmail()))
+                .build();
+    }
+
+    /**
+     * Confirm temporary password from email and set permanent 6-digit password.
+     */
+    @Transactional
+    public void completeInitialPasswordSetup(String token, String temporaryPassword, String newPassword) {
+        String t = token != null ? token.trim() : "";
+        if (t.isEmpty()) {
+            throw new RuntimeException("Invalid or expired link");
+        }
+        User user = userRepository.findByPasswordSetupToken(t)
+                .orElseThrow(() -> new RuntimeException("Invalid or expired link"));
+
+        if (user.getPasswordSetupExpiresAt() == null
+                || LocalDateTime.now().isAfter(user.getPasswordSetupExpiresAt())) {
+            throw new RuntimeException("This link has expired. Please contact support.");
+        }
+        if (user.getRole() != User.UserRole.VENDOR) {
+            throw new RuntimeException("Invalid link");
+        }
+
+        String tp = temporaryPassword != null ? temporaryPassword.trim() : "";
+        if (!passwordEncoder.matches(tp, user.getPasswordHash())) {
+            throw new RuntimeException("Temporary password does not match the one sent to your email");
+        }
+
+        String np = newPassword != null ? newPassword.trim() : "";
+        if (!np.matches("^\\d{6}$")) {
+            throw new RuntimeException("New password must be exactly 6 digits");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(np));
+        user.setPasswordSetupToken(null);
+        user.setPasswordSetupExpiresAt(null);
+        userRepository.save(user);
+        log.info("Vendor user {} completed initial password setup", user.getId());
+    }
+
+    private static String maskEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        int at = email.indexOf('@');
+        if (at <= 0) {
+            return "***";
+        }
+        return email.charAt(0) + "***" + email.substring(at);
     }
 }

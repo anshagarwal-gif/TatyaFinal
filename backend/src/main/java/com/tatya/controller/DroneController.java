@@ -57,9 +57,11 @@ public class DroneController {
     }
     
     @GetMapping("/available/with-specifications")
-    public ResponseEntity<ApiResponse<List<Drone>>> getAvailableDronesWithSpecifications() {
+    public ResponseEntity<ApiResponse<List<Drone>>> getAvailableDronesWithSpecifications(
+            @RequestParam(required = false) Double lat,
+            @RequestParam(required = false) Double lng) {
         try {
-            List<Drone> drones = droneService.getAvailableDronesWithSpecifications();
+            List<Drone> drones = droneService.getAvailableDronesWithSpecifications(lat, lng);
             return ResponseEntity.ok(ApiResponse.success("Available drones with specifications retrieved successfully", drones));
         } catch (Exception e) {
             log.error("Error fetching available drones with specifications", e);

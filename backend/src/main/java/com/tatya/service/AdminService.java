@@ -5,20 +5,32 @@ import com.tatya.entity.*;
 import com.tatya.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AdminService {
+
+    @Value("${app.frontend.base-url:http://localhost:5173}")
+    private String frontendBaseUrl;
+
+    @Value("${app.vendor.password-setup-path:/vendor/set-password}")
+    private String passwordSetupPath;
+
+    @Value("${app.vendor.password-setup-token-valid-hours:168}")
+    private long passwordSetupTokenValidHours;
 
     private final UserRepository userRepository;
     private final VendorRepository vendorRepository;
@@ -276,17 +288,26 @@ public class AdminService {
                 
                 String tempPassword = generateTemporaryPassword();
                 vendor.getUser().setPasswordHash(passwordEncoder.encode(tempPassword));
+                String setupToken = UUID.randomUUID().toString();
+                vendor.getUser().setPasswordSetupToken(setupToken);
+                vendor.getUser().setPasswordSetupExpiresAt(
+                        LocalDateTime.now().plusHours(passwordSetupTokenValidHours));
                 vendorRepository.save(vendor);
 
                 log.info("Vendor approved. Credentials generated for vendorId={} email={}", 
                         request.getVendorId(), vendorEmail);
+
+                String base = frontendBaseUrl.replaceAll("/+$", "");
+                String path = passwordSetupPath.startsWith("/") ? passwordSetupPath : "/" + passwordSetupPath;
+                String setupLink = base + path + "?token=" + setupToken;
 
                 log.info("About to call emailService.sendVendorApprovedCredentials() for email: {}", vendorEmail);
                 try {
                     emailService.sendVendorApprovedCredentials(
                             vendorEmail,
                             vendorName,
-                            tempPassword
+                            tempPassword,
+                            setupLink
                     );
                     log.info("Email service call completed successfully");
                 } catch (Exception e) {

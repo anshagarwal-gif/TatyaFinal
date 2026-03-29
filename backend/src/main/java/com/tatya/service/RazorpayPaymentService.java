@@ -23,6 +23,7 @@ public class RazorpayPaymentService {
     private final RazorpayClient razorpayClient;
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepository;
+    private final EmailService emailService;
 
     @Value("${razorpay.key.secret:placeholder_secret}")
     private String apiSecret;
@@ -69,12 +70,18 @@ public class RazorpayPaymentService {
             payment.setTransactionId(razorpayPaymentId);
             payment.setRazorpaySignature(signature);
 
-            // Update booking status
             Booking booking = payment.getBooking();
+            boolean wasPending = booking.getStatus() == Booking.BookingStatus.PENDING;
             booking.setStatus(Booking.BookingStatus.ACCEPTED);
             bookingRepository.save(booking);
 
-            return paymentRepository.save(payment);
+            Payment saved = paymentRepository.save(payment);
+
+            if (wasPending) {
+                emailService.sendBookingConfirmationEmail(booking.getCustomer(), booking, false);
+            }
+
+            return saved;
         } else {
             payment.setPaymentStatus(Payment.PaymentStatus.FAILED);
             paymentRepository.save(payment);
