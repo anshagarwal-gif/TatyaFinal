@@ -43,6 +43,9 @@ public class BookingService {
         // Fetch customer
         User customer = userRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + request.getCustomerId()));
+        if (customer.getRole() != User.UserRole.CUSTOMER) {
+            throw new RuntimeException("Invalid customer account for booking");
+        }
 
         // Fetch drone
         Drone drone = droneRepository.findById(request.getDroneId())

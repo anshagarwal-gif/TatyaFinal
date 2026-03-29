@@ -17,6 +17,7 @@ import { FiPhone, FiArrowRight, FiEdit2, FiCheckCircle, FiUser, FiBriefcase, FiL
 import { generateOtp, verifyOtp, vendorLoginWithPassword } from '../services/api'
 import {
   CUSTOMER_PHONE_KEY,
+  CUSTOMER_ID_KEY,
   clearCustomerSession,
   clearVendorSession,
   isAppUserAuthenticated,
@@ -60,9 +61,13 @@ function LoginPage() {
 
   useEffect(() => {
     if (!isAppUserAuthenticated()) return
-    if (localStorage.getItem(CUSTOMER_PHONE_KEY)) {
+    if (localStorage.getItem(CUSTOMER_PHONE_KEY) && localStorage.getItem(CUSTOMER_ID_KEY)) {
       navigate('/home', { replace: true })
       return
+    }
+    // Drop stale customer session (phone only, before customerId was returned from API)
+    if (localStorage.getItem(CUSTOMER_PHONE_KEY) && !localStorage.getItem(CUSTOMER_ID_KEY)) {
+      clearCustomerSession()
     }
     if (localStorage.getItem('vendorId')) {
       try {
@@ -163,6 +168,10 @@ function LoginPage() {
       if (response.success) {
         clearVendorSession()
         localStorage.setItem(CUSTOMER_PHONE_KEY, phoneNumber)
+        const cid = response.data?.customerId
+        if (cid != null) {
+          localStorage.setItem(CUSTOMER_ID_KEY, String(cid))
+        }
         navigate('/home')
       } else {
         // OTP verification failed - show clear error message

@@ -2,7 +2,9 @@ package com.tatya.controller;
 
 import com.tatya.dto.ApiResponse;
 import com.tatya.dto.OtpRequest;
+import com.tatya.dto.OtpVerifyCustomerResponse;
 import com.tatya.dto.OtpVerifyRequest;
+import com.tatya.service.CustomerUserService;
 import com.tatya.service.OtpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class OtpController {
     
     private final OtpService otpService;
+    private final CustomerUserService customerUserService;
     
     @PostMapping("/generate")
     public ResponseEntity<ApiResponse<String>> generateOtp(@Valid @RequestBody OtpRequest request) {
@@ -48,18 +51,26 @@ public class OtpController {
     }
     
     @PostMapping("/verify")
-    public ResponseEntity<ApiResponse<String>> verifyOtp(@Valid @RequestBody OtpVerifyRequest request) {
+    public ResponseEntity<ApiResponse<OtpVerifyCustomerResponse>> verifyOtp(
+            @Valid @RequestBody OtpVerifyRequest request) {
         try {
             log.info("Verifying OTP for phone number: {}", request.getPhoneNumber());
             
             boolean isValid = otpService.verifyOtp(request.getPhoneNumber(), request.getOtpCode());
             
             if (isValid) {
-                return ResponseEntity.ok(ApiResponse.success("OTP verified successfully"));
+                Long customerId = customerUserService.ensureCustomerIdForPhone(request.getPhoneNumber());
+                return ResponseEntity.ok(ApiResponse.success(
+                        "OTP verified successfully",
+                        new OtpVerifyCustomerResponse(customerId)));
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error("Invalid or expired OTP"));
             }
+        } catch (RuntimeException e) {
+            log.warn("OTP verify / customer user: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {
             log.error("Error verifying OTP", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

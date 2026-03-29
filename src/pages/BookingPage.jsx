@@ -271,9 +271,18 @@ function BookingPage() {
         console.warn('Could not fetch slots, using default times:', err)
       }
 
-      // Get customer ID from localStorage or use default (for testing)
-      // In production, this should come from authentication
-      const customerId = localStorage.getItem('userId') || localStorage.getItem('customerId') || 1
+      const customerIdRaw = localStorage.getItem('customerId')
+      if (!customerIdRaw) {
+        alert('Please log in with your mobile number (OTP) to book. Your account ID was not found.')
+        navigate('/', { replace: true })
+        return
+      }
+      const customerId = Number(customerIdRaw)
+      if (!Number.isFinite(customerId) || customerId < 1) {
+        alert('Invalid session. Please log in again.')
+        navigate('/', { replace: true })
+        return
+      }
 
       const { farmAreaAcres: acresForBooking, numberOfDays: daysForBooking } =
         computeBookingAcresAndDays(selectedUnit, quantity, vendorWorkingHoursPerDay(drone))
