@@ -311,6 +311,15 @@ function LocationPage() {
       setIsConfirmed(newConfirmedStatus);
       setError(null);
 
+      if (newConfirmedStatus) {
+        setTimeout(() => {
+          window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: 'smooth'
+          });
+        }, 100);
+      }
+
       // If user is ticking the box AND a drone was already selected earlier
       if (newConfirmedStatus && selectedDrone) {
         // Store location in localStorage
@@ -578,7 +587,7 @@ function LocationPage() {
           />
           <MapCenter center={mapCenter} zoom={mapZoom} />
           <MapClickHandler onMapClick={handleMapClick} />
-          {selectedLocation && (
+          {selectedLocation && isConfirmed && (
             <Marker 
               position={selectedLocation}
               icon={L.icon({
@@ -672,7 +681,7 @@ function LocationPage() {
             marginBottom: '16px',
             color: '#111827'
           }}>
-            {translate('Select Drone & Pilot', isMarathi)}
+            {translate('Choose Your Drone Partner', isMarathi)}
           </h3>
           
           {loadingDrones ? (
@@ -920,4 +929,3 @@ function LocationPage() {
 }
 
 export default LocationPage
-

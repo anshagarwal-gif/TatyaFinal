@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ClipboardCheck, Thermometer, Droplets, Wind, Send, Info, CloudRain } from 'lucide-react';
+import { X, Clipboard, Send, Info } from 'lucide-react';
 
 interface AdvisoryModalProps {
   isOpen: boolean;
@@ -10,107 +10,346 @@ interface AdvisoryModalProps {
 export const AdvisoryModal = ({ isOpen, onClose, onStartAdvisory }: AdvisoryModalProps) => {
   const [formData, setFormData] = useState({
     soilType: 'Black Soil',
-    waterSource: 'Well',
-    currentStage: 'Vegetative',
-    budget: '',
-    specificGoal: ''
+    waterSource: 'Bore Well',
+    currentStage: 'Seedling',
+    goal: ''
   });
 
   if (!isOpen) return null;
 
+  const labelStyle = {
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    color: '#9b8b61',
+    margin: '0',
+    lineHeight: '1.3'
+  };
+
+  const stackedLabelStyle = {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'flex-start' as const,
+    gap: '0.08rem',
+    margin: '0',
+    lineHeight: '1.15',
+    minHeight: '2rem',
+    justifyContent: 'flex-end' as const
+  };
+
+  const stackedEnglishStyle = {
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    color: '#b6a27d',
+    letterSpacing: '0.03em'
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-indigo-100">
-        <div className="p-8 border-b border-earth-100 flex items-center justify-between bg-indigo-600 text-white">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-xl">
-              <ClipboardCheck size={24} />
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+        {/* Purple Header */}
+        <div style={{ 
+          paddingTop: '1.25rem',
+          paddingBottom: '1.25rem',
+          paddingLeft: '1.5rem',
+          paddingRight: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: '#6366f1',
+          color: 'white',
+          borderRadius: '1.5rem 1.5rem 0 0',
+          borderBottom: '1px solid #6366f1'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ paddingTop: '0.5rem', paddingBottom: '0.5rem', paddingLeft: '0.5rem', paddingRight: '0.5rem', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }}>
+              <Clipboard size={20} />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-2xl">स्मार्ट सल्ला (Advisory)</h3>
-              <p className="text-indigo-100 text-xs font-medium uppercase tracking-widest">नियोजन मोड</p>
+              <h3 style={{ fontFamily: '"Cormorant Garamond", serif', fontWeight: 'bold', fontSize: '1.125rem', margin: '0', lineHeight: '1.2' }}>स्मार्ट सल्ला (Advisory)</h3>
+              <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.65rem', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.03em', margin: '0.25rem 0 0 0' }}>नियोजन मोड</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-            <X size={24} />
+          <button onClick={onClose} style={{ 
+            padding: '0.25rem',
+            background: 'none',
+            border: 'none',
+            color: 'white',
+            cursor: 'pointer',
+            transition: 'opacity 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }} onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'} onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}>
+            <X size={20} />
           </button>
         </div>
         
-        <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-          <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex gap-3 items-start">
-            <Info className="text-indigo-600 shrink-0 mt-0.5" size={18} />
-            <p className="text-sm text-indigo-800 leading-relaxed">
+        {/* Form Body */}
+        <div style={{
+          paddingTop: '1.25rem',
+          paddingBottom: '1.25rem',
+          paddingLeft: '1.25rem',
+          paddingRight: '1.25rem',
+          backgroundColor: 'white',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+          maxHeight: '55vh',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
+        }}>
+          <style>{`
+            div::-webkit-scrollbar { display: none; }
+          `}</style>
+
+          {/* Info Box */}
+          <div style={{
+            backgroundColor: '#e0e7ff',
+            paddingTop: '0.875rem',
+            paddingBottom: '0.875rem',
+            paddingLeft: '0.875rem',
+            paddingRight: '0.875rem',
+            borderRadius: '0.625rem',
+            border: '1px solid #c7d2fe',
+            display: 'flex',
+            gap: '0.75rem',
+            alignItems: 'flex-start'
+          }}>
+            <Info style={{ color: '#6366f1', flexShrink: 0, marginTop: '0.125rem' }} size={16} />
+            <p style={{ fontSize: '0.8rem', color: '#4f46e5', lineHeight: '1.4', margin: '0' }}>
               तुमच्या शेतीचं नियोजन तात्याकडून करून घ्या.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-earth-500 uppercase tracking-wider">जमिनीचा प्रकार (Soil Type)</label>
+          {/* Soil Type & Water Source - Two Column */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={stackedLabelStyle}>
+                <span style={labelStyle}>मातीचा प्रकार</span>
+                <span style={stackedEnglishStyle}>(SOIL TYPE)</span>
+              </label>
               <select 
                 value={formData.soilType}
                 onChange={(e) => setFormData({...formData, soilType: e.target.value})}
-                className="w-full p-4 bg-earth-50 border border-earth-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                style={{
+                  paddingTop: '0.875rem',
+                  paddingBottom: '0.875rem',
+                  paddingLeft: '0.875rem',
+                  paddingRight: '2.5rem',
+                  backgroundColor: '#fafaf8',
+                  border: '1px solid #e5e0d8',
+                  borderRadius: '0.625rem',
+                  fontSize: '0.9rem',
+                  color: '#2d2d2d',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  appearance: 'none',
+                  cursor: 'pointer',
+                  backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3E%3Cpath stroke=\'%239b8b61\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3E%3C/svg%3E")',
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  transition: 'all 0.2s'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#9b8b61';
+                  e.currentTarget.style.backgroundColor = '#fffbf7';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#e5e0d8';
+                  e.currentTarget.style.backgroundColor = '#fafaf8';
+                }}
               >
-                <option value="Black Soil">काळी माती (Black Soil)</option>
-                <option value="Red Soil">लाल माती (Red Soil)</option>
-                <option value="Sandy Soil">रेताड माती (Sandy Soil)</option>
-                <option value="Clay">चिकन माती (Clay)</option>
+                <option value="Black Soil">काळी माती (Black)</option>
+                <option value="Red Soil">लाल माती (Red)</option>
+                <option value="Loamy Soil">दोमट माती (Loamy)</option>
+                <option value="Sandy Soil">वाळूचीमाती (Sandy)</option>
               </select>
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-earth-500 uppercase tracking-wider">पाण्याचा स्रोत (Water Source)</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <label style={stackedLabelStyle}>
+                <span style={labelStyle}>पाण्याचा स्रोत</span>
+                <span style={stackedEnglishStyle}>(WATER SOURCE)</span>
+              </label>
               <select 
                 value={formData.waterSource}
                 onChange={(e) => setFormData({...formData, waterSource: e.target.value})}
-                className="w-full p-4 bg-earth-50 border border-earth-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                style={{
+                  paddingTop: '0.875rem',
+                  paddingBottom: '0.875rem',
+                  paddingLeft: '0.875rem',
+                  paddingRight: '2.5rem',
+                  backgroundColor: '#fafaf8',
+                  border: '1px solid #e5e0d8',
+                  borderRadius: '0.625rem',
+                  fontSize: '0.9rem',
+                  color: '#2d2d2d',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  appearance: 'none',
+                  cursor: 'pointer',
+                  backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3E%3Cpath stroke=\'%239b8b61\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3E%3C/svg%3E")',
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  transition: 'all 0.2s'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#9b8b61';
+                  e.currentTarget.style.backgroundColor = '#fffbf7';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#e5e0d8';
+                  e.currentTarget.style.backgroundColor = '#fafaf8';
+                }}
               >
-                <option value="Well">विहीर (Well)</option>
-                <option value="Borewell">बोअरवेल (Borewell)</option>
-                <option value="River/Canal">नदी/कालवा (River/Canal)</option>
-                <option value="Rainfed">पावसावर अवलंबून (Rainfed)</option>
+                <option value="Bore Well">बोरवेल (Bore Well)</option>
+                <option value="Canal">कालवा (Canal)</option>
+                <option value="Drip">ड्रिप (Drip)</option>
+                <option value="Rainfall">पाऊस (Rainfall)</option>
               </select>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-earth-500 uppercase tracking-wider">पिकाची सद्यस्थिती (Current Stage)</label>
+          {/* Current Stage */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label style={labelStyle}>सध्याचा टप्पा (CURRENT STAGE)</label>
             <select 
               value={formData.currentStage}
               onChange={(e) => setFormData({...formData, currentStage: e.target.value})}
-              className="w-full p-4 bg-earth-50 border border-earth-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
+              style={{
+                paddingTop: '0.875rem',
+                paddingBottom: '0.875rem',
+                paddingLeft: '0.875rem',
+                paddingRight: '2.5rem',
+                backgroundColor: '#fafaf8',
+                border: '1px solid #e5e0d8',
+                borderRadius: '0.625rem',
+                fontSize: '0.9rem',
+                color: '#2d2d2d',
+                fontFamily: 'inherit',
+                outline: 'none',
+                appearance: 'none',
+                cursor: 'pointer',
+                backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3E%3Cpath stroke=\'%239b8b61\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3E%3C/svg%3E")',
+                backgroundPosition: 'right 0.5rem center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: '1.5em 1.5em',
+                transition: 'all 0.2s'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#9b8b61';
+                e.currentTarget.style.backgroundColor = '#fffbf7';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#e5e0d8';
+                e.currentTarget.style.backgroundColor = '#fafaf8';
+              }}
             >
-              <option value="Sowing">पेरणी (Sowing)</option>
-              <option value="Vegetative">वाढीची अवस्था (Vegetative)</option>
-              <option value="Flowering">फुलोरा (Flowering)</option>
-              <option value="Fruiting">फळधारणा (Fruiting)</option>
-              <option value="Harvesting">काढणी (Harvesting)</option>
+              <option value="Seedling">बीज पडणे (Seedling)</option>
+              <option value="Vegetative">वनस्पती वृद्धी (Vegetative)</option>
+              <option value="Flowering">फूल येणे (Flowering)</option>
+              <option value="Fruiting">फळ येणे (Fruiting)</option>
+              <option value="Maturity">परिपक्कता (Maturity)</option>
             </select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-earth-500 uppercase tracking-wider">काय सल्ला हवा आहे? (Specific Goal)</label>
+          {/* Goal */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <label style={labelStyle}>लक्ष्य (GOAL)</label>
             <textarea 
-              value={formData.specificGoal}
-              onChange={(e) => setFormData({...formData, specificGoal: e.target.value})}
-              placeholder="उदा. खतांचे नियोजन, उत्पन्न वाढवण्यासाठी काय करावे..."
-              className="w-full p-4 bg-earth-50 border border-earth-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none min-h-[80px]"
+              value={formData.goal}
+              onChange={(e) => setFormData({...formData, goal: e.target.value})}
+              placeholder="तुमचे लक्ष्य हे काय आहे? उदा. उच्च उपजी, जैव पद्धत..."
+              style={{
+                paddingTop: '0.875rem',
+                paddingBottom: '0.875rem',
+                paddingLeft: '0.875rem',
+                paddingRight: '0.875rem',
+                backgroundColor: '#fafaf8',
+                border: '1px solid #e5e0d8',
+                borderRadius: '0.625rem',
+                fontSize: '0.9rem',
+                color: '#2d2d2d',
+                fontFamily: 'inherit',
+                outline: 'none',
+                minHeight: '3.5rem',
+                resize: 'vertical',
+                transition: 'all 0.2s'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#9b8b61';
+                e.currentTarget.style.backgroundColor = '#fffbf7';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#e5e0d8';
+                e.currentTarget.style.backgroundColor = '#fafaf8';
+              }}
             />
           </div>
         </div>
 
-        <div className="p-8 bg-earth-50 flex gap-4">
+        {/* Footer */}
+        <div style={{
+          paddingTop: '1.25rem',
+          paddingBottom: '1.25rem',
+          paddingLeft: '1.25rem',
+          paddingRight: '1.25rem',
+          borderTop: '1px solid #f0f0f0',
+          backgroundColor: 'white',
+          display: 'flex',
+          gap: '0.75rem',
+          borderRadius: '0 0 1.5rem 1.5rem'
+        }}>
           <button 
             onClick={onClose}
-            className="flex-1 py-4 border border-earth-200 text-earth-600 font-bold rounded-2xl hover:bg-white transition-all active:scale-95"
+            style={{
+              flex: 1,
+              paddingTop: '0.75rem',
+              paddingBottom: '0.75rem',
+              paddingLeft: '1rem',
+              paddingRight: '1rem',
+              fontWeight: '600',
+              borderRadius: '0.75rem',
+              cursor: 'pointer',
+              border: '1px solid #e5e0d8',
+              backgroundColor: 'white',
+              color: '#9b8b61',
+              fontSize: '0.95rem',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#fafaf8'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
           >
             रद्द करा (Cancel)
           </button>
           <button 
-            onClick={() => onStartAdvisory(formData)}
-            className="flex-[2] py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 active:scale-95"
+            onClick={() => { onStartAdvisory(formData); onClose(); }}
+            style={{
+              flex: 1,
+              paddingTop: '0.75rem',
+              paddingBottom: '0.75rem',
+              paddingLeft: '1rem',
+              paddingRight: '1rem',
+              fontWeight: '600',
+              borderRadius: '0.75rem',
+              cursor: 'pointer',
+              border: 'none',
+              backgroundColor: '#6366f1',
+              color: 'white',
+              fontSize: '0.95rem',
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#4f46e5'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#6366f1'; }}
           >
-            <Send size={20} /> सल्ला मिळवा (Get Advisory)
+            <Send size={18} /> सल्ला मिळवा (Get Advice)
           </button>
         </div>
       </div>

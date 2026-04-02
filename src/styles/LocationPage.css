@@ -1154,6 +1154,18 @@
 
   .drone-selection-section {
     margin-bottom: 20px;
+    animation: slideDown 0.5s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .camera-modal {
@@ -1192,4 +1204,3 @@
   }
 
 }
-

@@ -59,7 +59,7 @@ export const translations = {
   'Take Farm Photo': 'शेताचा फोटो घ्या',
   'No valid coordinates found in clipboard': 'क्लिपबोर्डमध्ये वैध समन्वय सापडले नाहीत',
   'Unable to access clipboard': 'क्लिपबोर्ड प्रवेश करू शकत नाही',
-  'Select Drone & Pilot': 'ड्रोन आणि पायलट निवडा',
+  'Choose Your Drone Partner': 'ड्रोन साथी निवडा',
   'No drones available at the moment': 'सध्या कोणतेही ड्रोन उपलब्ध नाहीत',
   'Selected': 'निवडले',
   'Select': 'निवडा',

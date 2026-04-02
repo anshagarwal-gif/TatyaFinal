@@ -198,40 +198,33 @@ export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWi
   };
 
   return (
-    <div 
-      className="flex flex-col h-[750px] rounded-[2.5rem] overflow-hidden relative"
-      style={{ 
-        backgroundColor: '#FCFCFB', // The beautiful Earth Cream Background
-        border: '1px solid #EDEDE7',
-        boxShadow: '0 20px 80px -15px rgba(0, 0, 0, 0.15)'
-      }}
-    >
+    <div className="chatbot-container">
       {showCamera && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 100, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '24px', width: '100%', maxWidth: '360px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
-            <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#111' }}>शेत स्थान कॅप्चर करा</h3>
-              <button onClick={stopCamera} style={{ color: '#999', background: 'none', border: 'none', cursor: 'pointer' }}><FiX size={24} /></button>
+        <div className="camera-overlay">
+          <div className="camera-modal">
+            <div className="camera-modal-header">
+              <h3 className="camera-modal-title">शेत स्थान कॅप्चर करा</h3>
+              <button onClick={stopCamera} className="camera-modal-close"><FiX size={24} /></button>
             </div>
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', backgroundColor: '#000' }}>
+            <div className="camera-video-container">
               {capturedImage ? (
                 <div style={{ width: '100%', height: '100%' }}>
-                  <img src={capturedImage} alt="Captured" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', bottom: 15, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '10px' }}>
-                    <button onClick={() => setCapturedImage(null)} style={{ padding: '8px 16px', backgroundColor: '#333', color: 'white', borderRadius: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', border: 'none' }}>
+                  <img src={capturedImage} alt="Captured" className="camera-video" />
+                  <div className="camera-button-group">
+                    <button onClick={() => setCapturedImage(null)} className="camera-retake-button">
                       <FiRefreshCw /> Retake
                     </button>
-                    <button onClick={usePhoto} style={{ padding: '8px 16px', backgroundColor: '#546c43', color: 'white', borderRadius: '20px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', border: 'none' }}>
+                    <button onClick={usePhoto} className="camera-use-button">
                       <FiCheck /> Use Photo
                     </button>
                   </div>
                 </div>
               ) : (
                 <>
-                  <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', bottom: 15, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
-                    <button onClick={capturePhoto} style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'white', border: '1px solid #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                       <div style={{ width: '46px', height: '46px', borderRadius: '50%', border: '2px solid #546c43', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <video ref={videoRef} autoPlay playsInline className="camera-video" />
+                  <div className="camera-button-group">
+                    <button onClick={capturePhoto} className="camera-capture-button">
+                       <div className="camera-capture-inner">
                           <FiCamera style={{ color: '#546c43' }} size={24} />
                        </div>
                     </button>
@@ -244,57 +237,51 @@ export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWi
       )}
 
       {/* Header */}
-      <div 
-        className="p-5 border-b flex items-center justify-between z-10" 
-        style={{ backgroundColor: '#FCFCFB', borderBottom: '1px solid #EDEDE7' }}
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white" style={{ backgroundColor: '#546c43' }}>
+      <div className="chatbot-header">
+        <div className="chatbot-header-left">
+          <div className="chatbot-avatar">
             <Bot size={24} />
           </div>
-          <div>
-            <h3 className="font-serif font-bold text-lg" style={{ color: '#546c43' }}>तात्या (Tatya)</h3>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#546c43' }}></span>
-              <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#546c43' }}>शेती तज्ज्ञ</span>
-            </div>
+          <div className="chatbot-header-text">
+            <h3 className="chatbot-header-title">तात्या (Tatya)</h3>
+            <span className="chatbot-header-subtitle">शेती तज्ज्ञ</span>
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <button onClick={onNavigateToUserData} className="p-3 hover:bg-leaf-100 rounded-2xl transition-all" style={{ color: '#546c43' }}><Database size={22} /></button>
-          <button onClick={() => setIsSettingsOpen(true)} className="p-3 hover:bg-earth-100 rounded-2xl transition-all" style={{ color: '#826554' }}><Settings size={22} /></button>
-          <button onClick={onClose} className="p-3 hover:bg-red-50 rounded-2xl transition-all" style={{ color: '#D1D1CB' }}><X size={22} /></button>
+        <div className="chatbot-header-actions">
+          <button onClick={onNavigateToUserData} className="chatbot-header-icon-button database" aria-label="Open saved data">
+            <Database size={22} />
+          </button>
+          <button onClick={() => setIsSettingsOpen(true)} className="chatbot-header-icon-button settings" aria-label="Open settings">
+            <Settings size={22} />
+          </button>
+          <button onClick={onClose} className="chatbot-header-icon-button close" aria-label="Close chatbot">
+            <X size={22} strokeWidth={2.1} />
+          </button>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth" style={{ backgroundColor: '#FCFCFB' }}>
+      <div ref={scrollRef} className="chatbot-messages">
         {messages.map((msg, i) => (
-          <div key={i} className={cn("flex gap-4 max-w-[90%] md:max-w-[80%] animate-in fade-in slide-in-from-bottom-2 duration-300", msg.role === 'user' ? "ml-auto flex-row-reverse" : "mr-auto")}>
-            <div className={cn("w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 shadow-sm")} style={{ backgroundColor: msg.role === 'user' ? '#546c43' : '#F1F1E8', color: msg.role === 'user' ? 'white' : '#546c43' }}>
+          <div key={i} className={cn("message-row", msg.role === 'user' && "user")}>
+            <div className={cn("message-avatar", msg.role === 'user' ? "user" : "assistant")}>
               {msg.role === 'user' ? <User size={18} /> : <Bot size={18} />}
             </div>
-            <div className={cn("p-5 rounded-[1.5rem] shadow-sm leading-relaxed border")} style={{
-                backgroundColor: msg.role === 'user' ? '#F9FAF6' : '#FFFFFF',
-                border: `1px solid ${msg.role === 'user' ? '#F1F1E8' : '#EDEDE7'}`,
-                borderRadius: msg.role === 'user' ? '1.5rem 0 1.5rem 1.5rem' : '0 1.5rem 1.5rem 1.5rem',
-                color: '#1f2937',
-                boxShadow: '0 2px 5px -1px rgba(0, 0, 0, 0.05)'
-            }}>
-              {msg.image && <img src={msg.image} alt="User upload" className="max-w-full rounded-xl mb-4 border shadow-sm" style={{ borderColor: '#EDEDE7' }} />}
+            <div className={cn("message-bubble", msg.role === 'user' ? "user" : "assistant")}>
+              {msg.image && <img src={msg.image} alt="User upload" className="message-image" />}
               <div className="markdown-body"><Markdown>{msg.content}</Markdown></div>
             </div>
           </div>
         ))}
         {loading && (
           <div className="flex gap-4 mr-auto animate-pulse">
-            <div className="w-9 h-9 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#F1F1E8', color: '#546c43' }}><Bot size={18} /></div>
-            <div className="bg-white border p-5 rounded-[1.5rem] rounded-tl-none shadow-sm" style={{ border: '1px solid #EDEDE7' }}>
-              <div className="flex gap-1">
-                <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#546c43' }}></div>
-                <div className="w-2 h-2 rounded-full animate-bounce [animation-delay:-0.15s]" style={{ backgroundColor: '#546c43' }}></div>
-                <div className="w-2 h-2 rounded-full animate-bounce [animation-delay:-0.3s]" style={{ backgroundColor: '#546c43' }}></div>
+            <div className="message-avatar assistant"><Bot size={18} /></div>
+            <div style={{ paddingTop: '0.5rem' }}>
+              <div className="loading-dots">
+                <div className="loading-dot"></div>
+                <div className="loading-dot"></div>
+                <div className="loading-dot"></div>
               </div>
             </div>
           </div>
@@ -302,51 +289,50 @@ export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWi
       </div>
 
       {/* Input Area */}
-      <div className="p-6 border-t" style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #F9FAF6' }}>
+      <div className="chatbot-input-section">
         <div className="max-w-3xl mx-auto space-y-4">
-          <div className="relative flex items-end gap-3 p-2 rounded-[2rem] border transition-all" style={{ backgroundColor: '#F9FAF6', border: '1px solid #F1F1E8' }}>
+          <div className="chatbot-input-wrapper relative">
             <div className="relative">
-              <button onClick={() => setIsPlusMenuOpen(!isPlusMenuOpen)} className={cn("p-3 rounded-full transition-all duration-300", isPlusMenuOpen ? "text-white rotate-45" : "text-gray-400")} style={isPlusMenuOpen ? {backgroundColor: '#546c43'} : {}}>
+              <button onClick={() => setIsPlusMenuOpen(!isPlusMenuOpen)} className={cn("chatbot-plus-button", isPlusMenuOpen && "active")}>
                 <Plus size={24} />
               </button>
               
               <AnimatePresence>
                 {isPlusMenuOpen && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} 
-                    className="absolute bottom-16 left-0 bg-white border p-3 min-w-[210px] space-y-1 z-50 shadow-[0_15px_50px_-12px_rgba(0,0,0,0.25)] rounded-[1.5rem]"
-                    style={{ borderColor: '#EDEDE7' }}>
-                    <button onClick={() => handleAttachmentClick('camera')} className="w-full flex items-center gap-4 p-3 hover:bg-earth-50 rounded-2xl transition-colors">
-                      <Camera size={20} className="shrink-0" style={{ color: '#546c43' }} /> {/* Earthy Brown Bronze */}
-                      <span className="text-sm font-semibold whitespace-nowrap" style={{ color: '#826554' }}>कॅमेरा उघडा</span>
+                    className="plus-menu-modal">
+                    <button onClick={() => handleAttachmentClick('camera')} className="menu-action-item">
+                      <Camera size={20} className="menu-action-item-icon" />
+                      <span className="menu-action-item-text">कॅमेरा उघडा</span>
                     </button>
-                    <button onClick={() => handleAttachmentClick('gallery')} className="w-full flex items-center gap-4 p-3 hover:bg-earth-50 rounded-2xl transition-colors">
-                      <ImageIconBronze size={20} className="shrink-0" /> {/* Earthy Brown Bronze */}
-                      <span className="text-sm font-semibold whitespace-nowrap" style={{ color: '#826554' }}>फोटो अपलोड करा</span>
+                    <button onClick={() => handleAttachmentClick('gallery')} className="menu-action-item">
+                      <ImageIconBronze size={20} className="menu-action-item-icon" />
+                      <span className="menu-action-item-text">फोटो अपलोड करा</span>
                     </button>
-                    <button onClick={() => genericFileInputRef.current?.click()} className="w-full flex items-center gap-4 p-3 hover:bg-earth-50 rounded-2xl transition-colors">
-                      <FileText size={20} className="shrink-0" style={{ color: '#546c43' }} /> {/* Earthy Brown Bronze */}
-                      <span className="text-sm font-semibold whitespace-nowrap" style={{ color: '#826554' }}>फाईल्स जोडा</span>
+                    <button onClick={() => genericFileInputRef.current?.click()} className="menu-action-item">
+                      <FileText size={20} className="menu-action-item-icon" />
+                      <span className="menu-action-item-text">फाईल्स जोडा</span>
                     </button>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
-            <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder="तात्याला काहीतरी गंभीर विचारा..." className="flex-1 bg-transparent border-none outline-none p-3 resize-none max-h-32 min-h-[48px] font-medium" style={{ color: '#1f2937' }} rows={1} />
+            <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder="तात्याला काहीतरी गंभीर विचारा..." className="chatbot-textarea" rows={1} />
             
-            <button onClick={() => handleSend()} disabled={(!input.trim() && !selectedImage) || loading} className="p-3 text-white rounded-full transition-all disabled:opacity-30" style={{ backgroundColor: '#546c43' }}>
+            <button onClick={() => handleSend()} disabled={(!input.trim() && !selectedImage) || loading} className="chatbot-send-button">
               <Send size={24} />
             </button>
           </div>
 
-          <div className="flex items-center justify-start gap-2 overflow-x-auto pb-4 px-4 no-scrollbar">
-            <button onClick={() => setIsDiagnosisOpen(true)} className="whitespace-nowrap flex items-center shrink-0 gap-2 px-3 py-2 border rounded-full text-[11px] font-bold text-white shadow-md" style={{ backgroundColor: '#546c43', borderColor: '#435637' }}>
+          <div className="buttons-horizontal-scroll">
+            <button onClick={() => setIsDiagnosisOpen(true)} className="quick-action-button quick-action-diagnosis">
               <Sparkles size={16} /> निदान मोड (Diagnosis)
             </button>
-            <button onClick={() => setIsAdvisoryOpen(true)} className="whitespace-nowrap flex items-center shrink-0 gap-2 px-3 py-2 border rounded-full text-[11px] font-bold text-white shadow-md" style={{ backgroundColor: '#4F46E5', borderColor: '#4338ca' }}>
+            <button onClick={() => setIsAdvisoryOpen(true)} className="quick-action-button quick-action-advisory">
               <ClipboardCheck size={16} /> सल्लागार मोड (Advisory)
             </button>
-            <button onClick={() => setIsSettingsOpen(true)} className="whitespace-nowrap flex items-center shrink-0 gap-2 px-3 py-2 bg-white border rounded-full text-[11px] font-bold shadow-sm" style={{ borderColor: '#F1F1E8', color: '#6B7280' }}>
+            <button onClick={() => setIsSettingsOpen(true)} className="quick-action-button quick-action-settings">
               <MapPin size={18} style={{ color: '#546c43' }} /> क्षेत्र माहिती
             </button>
           </div>
@@ -357,8 +343,8 @@ export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWi
       <DiagnosisModal isOpen={isDiagnosisOpen} onClose={() => setIsDiagnosisOpen(false)} onStartDiagnosis={startDiagnosis} />
       <AdvisoryModal isOpen={isAdvisoryOpen} onClose={() => setIsAdvisoryOpen(false)} onStartAdvisory={startAdvisory} />
       
-      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-      <input type="file" ref={genericFileInputRef} onChange={() => setIsPlusMenuOpen(false)} className="hidden" />
+      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" style={{ display: 'none' }} />
+      <input type="file" ref={genericFileInputRef} onChange={() => setIsPlusMenuOpen(false)} style={{ display: 'none' }} />
     </div>
   );
 };
