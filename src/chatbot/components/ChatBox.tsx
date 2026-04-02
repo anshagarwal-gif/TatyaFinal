@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Loader2, Camera, X, Plus, Settings, MapPin, ClipboardCheck, Sparkles, FileText, Database } from 'lucide-react';
+import { Send, User, Bot, Camera, X, Plus, Settings, MapPin, ClipboardCheck, Sparkles, FileText, Database, Mic, Volume2, Square } from 'lucide-react';
 import { chatWithAssistant } from '../services/geminiService';
+import { useSpeechToText } from '../hooks/useSpeechToText';
+import { useTextToSpeech, type SupportedLanguage } from '../hooks/useTextToSpeech';
 import { FieldSettingsModal } from './FieldSettingsModal';
 import { DiagnosisModal } from './DiagnosisModal';
 import { AdvisoryModal } from './AdvisoryModal';
@@ -8,8 +10,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Markdown from 'react-markdown';
 import { cn } from '../lib/utils';
 import { FiCamera, FiX, FiRefreshCw, FiCheck } from 'react-icons/fi';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface Message {
+  id: string;
   role: 'user' | 'assistant';
   content: string;
   image?: string;
@@ -19,12 +23,16 @@ interface ChatBoxProps {
   onNavigateToUserData: () => void;
   onClose?: () => void;
   initialMessage?: string; // Ensure this is inside the interface
+  initialMessageId?: string;
   startWithCamera?: boolean;
 } 
 
-export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWithCamera }: ChatBoxProps) => {
+const processedInitialMessageIds = new Set<string>();
+
+export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, initialMessageId, startWithCamera }: ChatBoxProps) => {
+  const { isMarathi } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'नमस्कार 🙏\nतात्या बोलतोय. काय मदत करू?' }
+    { id: 'assistant-welcome', role: 'assistant', content: 'नमस्कार 🙏\nतात्या बोलतोय. काय मदत करू?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -34,11 +42,25 @@ export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWi
   const [isDiagnosisOpen, setIsDiagnosisOpen] = useState(false);
   const [isAdvisoryOpen, setIsAdvisoryOpen] = useState(false);
   
+  const { isListening, toggleListening, stopListening, clearTranscript, error } = useSpeechToText((text) => {
+    setInput(text);
+  });
+  const {
+    isSupported: isTtsSupported,
+    isSpeaking,
+    activeMessageId,
+    lastError,
+    errorMessageId,
+    speak,
+    stop,
+  } = useTextToSpeech(isMarathi ? 'mr-IN' : 'en-US');
+  
   const [showCamera, setShowCamera] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hasSentInitial = useRef(false);
+  const lastSpokenMessageIdRef = useRef<string | null>('assistant-welcome');
 
   const [fieldSettings, setFieldSettings] = useState({
     location: '',
@@ -50,11 +72,33 @@ export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWi
   const fileInputRef = useRef<HTMLInputElement>(null);
   const genericFileInputRef = useRef<HTMLInputElement>(null);
 
+  const getSpeechLanguage = (): SupportedLanguage => {
+    const savedLanguage = typeof window !== 'undefined' ? window.localStorage.getItem('chatbotSpeechLanguage') : null;
+    if (savedLanguage === 'hi-IN' || savedLanguage === 'mr-IN' || savedLanguage === 'en-US') {
+      return savedLanguage;
+    }
+    return isMarathi ? 'mr-IN' : 'en-US';
+  };
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    const latestAssistantMessage = [...messages].reverse().find((msg) => msg.role === 'assistant');
+    if (!latestAssistantMessage) return;
+    if (lastSpokenMessageIdRef.current === latestAssistantMessage.id) return;
+
+    speak(latestAssistantMessage.content, {
+      lang: getSpeechLanguage(),
+      messageId: latestAssistantMessage.id,
+    });
+    lastSpokenMessageIdRef.current = latestAssistantMessage.id;
+  }, [isMarathi, messages, speak]);
+
+  useEffect(() => () => stop(), [stop]);
 
   useEffect(() => {
     const isEmpty = !fieldSettings.location || !fieldSettings.crop || !fieldSettings.plantingDate;
@@ -65,12 +109,19 @@ export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWi
   }, [fieldSettings, isDiagnosisOpen, isAdvisoryOpen]);
 
   useEffect(() => {
-  // Only run if there is a message AND we haven't sent it yet
-    if (initialMessage && initialMessage.trim() !== "" && !hasSentInitial.current) {
-      handleSend(initialMessage);
-      hasSentInitial.current = true; 
+    const normalizedMessage = initialMessage?.trim();
+    if (!normalizedMessage) return;
+
+    if (initialMessageId) {
+      if (processedInitialMessageIds.has(initialMessageId)) return;
+      processedInitialMessageIds.add(initialMessageId);
+    } else if (hasSentInitial.current) {
+      return;
     }
-  }, [initialMessage]);
+
+    handleSend(normalizedMessage);
+    hasSentInitial.current = true;
+  }, [initialMessage, initialMessageId]);
 
   useEffect(() => {
     if (startWithCamera) {
@@ -158,9 +209,12 @@ export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWi
     if ((!input.trim() && !selectedImage && !overrideMessage) || loading) return;
     const userMessage = overrideMessage || input.trim();
     const currentImage = selectedImage;
-    setInput('');
+    stopListening();
+    clearTranscript();
+    stop();
     setSelectedImage(null);
     setMessages(prev => [...prev, { 
+      id: `user-${Date.now()}`,
       role: 'user', 
       content: userMessage || (currentImage ? "Analyze this image." : ""), 
       image: currentImage || undefined 
@@ -176,13 +230,21 @@ export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWi
       }
       const combinedContext = { ...fieldSettings, ...(additionalContext || {}) };
       const response = await chatWithAssistant(userMessage || "Analyze this image.", imagePayload, combinedContext);
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      setMessages(prev => [...prev, { id: `assistant-${Date.now()}`, role: 'assistant', content: response }]);
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'assistant', content: 'काय तरी चुकलंय. पुन्हा प्रयत्न कर.' }]);
+      setMessages(prev => [...prev, { id: `assistant-${Date.now()}`, role: 'assistant', content: 'काय तरी चुकलंय. पुन्हा प्रयत्न कर.' }]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleReplaySpeech = (message: Message) => {
+    speak(message.content, {
+      lang: getSpeechLanguage(),
+      messageId: message.id,
+    });
+    lastSpokenMessageIdRef.current = message.id;
   };
 
   const startDiagnosis = (data: any) => {
@@ -264,13 +326,42 @@ export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWi
       {/* Messages Area */}
       <div ref={scrollRef} className="chatbot-messages">
         {messages.map((msg, i) => (
-          <div key={i} className={cn("message-row", msg.role === 'user' && "user")}>
+          <div key={msg.id} className={cn("message-row", msg.role === 'user' && "user")}>
             <div className={cn("message-avatar", msg.role === 'user' ? "user" : "assistant")}>
               {msg.role === 'user' ? <User size={18} /> : <Bot size={18} />}
             </div>
             <div className={cn("message-bubble", msg.role === 'user' ? "user" : "assistant")}>
               {msg.image && <img src={msg.image} alt="User upload" className="message-image" />}
               <div className="markdown-body"><Markdown>{msg.content}</Markdown></div>
+              {msg.role === 'assistant' && isTtsSupported && (
+                <div className="message-audio-actions">
+                  <button
+                    type="button"
+                    className={cn("message-audio-button", activeMessageId === msg.id && "active")}
+                    onClick={() => handleReplaySpeech(msg)}
+                    aria-label="Replay assistant message audio"
+                    title="Replay audio"
+                  >
+                    <Volume2 size={16} />
+                    <span>{activeMessageId === msg.id && isSpeaking ? 'Speaking' : 'Listen'}</span>
+                  </button>
+                  {activeMessageId === msg.id && isSpeaking && (
+                    <button
+                      type="button"
+                      className="message-audio-button stop"
+                      onClick={stop}
+                      aria-label="Stop assistant audio"
+                      title="Stop audio"
+                    >
+                      <Square size={14} />
+                      <span>Stop</span>
+                    </button>
+                  )}
+                </div>
+              )}
+              {msg.role === 'assistant' && isTtsSupported && lastError && errorMessageId === msg.id && (
+                <div className="message-audio-error">Audio could not play on this browser/device.</div>
+              )}
             </div>
           </div>
         ))}
@@ -319,6 +410,16 @@ export const ChatBox = ({ onNavigateToUserData, onClose, initialMessage, startWi
             </div>
 
             <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder="तात्याला काहीतरी गंभीर विचारा..." className="chatbot-textarea" rows={1} />
+            
+            <button 
+              type="button"
+              onClick={toggleListening}
+              className={cn("chatbot-mic-button", isListening && "active")}
+              aria-label="Toggle speech to text"
+            >
+              <Mic size={24} color={isListening ? "#546c43" : "#666"} />
+              {isListening && <span className="chatbot-mic-pulse"></span>}
+            </button>
             
             <button onClick={() => handleSend()} disabled={(!input.trim() && !selectedImage) || loading} className="chatbot-send-button">
               <Send size={24} />

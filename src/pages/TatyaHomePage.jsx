@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Star, Camera, Bell, Search } from 'lucide-react'
+import { Star,Mic, Camera, Bell, Search } from 'lucide-react'
 import LanguageToggle from '../components/LanguageToggle'
 import { useLanguage } from '../contexts/LanguageContext'
 import { translate } from '../utils/translations'
@@ -17,6 +17,7 @@ import offerImage1 from '../assets/OfferImage1.png'
 import offerImage2 from '../assets/OfferImage2.png'
 import offerImage3 from '../assets/OfferImage3.png'
 import ChatbotWrapper from '../chatbot/ChatbotWrapper';
+import { useSpeechToText } from '../chatbot/hooks/useSpeechToText'
 import '../styles/TatyaHomePage.css'
 
 export default function TatyaHomePage() {
@@ -25,8 +26,13 @@ export default function TatyaHomePage() {
   const [selectedService, setSelectedService] = useState('spraying')
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [initialChatMsg, setInitialChatMsg] = useState('');
+  const [initialChatRequestId, setInitialChatRequestId] = useState('');
   const [shouldCameraOpen, setShouldCameraOpen] = useState(false);
   const navigate = useNavigate()
+
+  const { isListening, toggleListening, stopListening, error } = useSpeechToText((text) => {
+    setMessage(text);
+  });
 
   const services = [
     { id: 'spraying', label: 'Spraying', emoji: '💦', image: sprayingHomeImage },
@@ -73,7 +79,9 @@ export default function TatyaHomePage() {
 
   const handleOpenChat = () => {
     if (message.trim() !== '') {
+      stopListening()
       setInitialChatMsg(message)
+      setInitialChatRequestId(`home-chat-${Date.now()}`)
       setIsChatOpen(true)
       setMessage('') // Clears the input on the home screen
     }
@@ -131,31 +139,49 @@ export default function TatyaHomePage() {
               तुमच्या शेताबद्दल <br/> काहीही विचारा
             </h2>
             <div className="tatya-chat-input-row">
-              <input
-                className="tatya-chat-input"
-                placeholder="इथे संदेश लिहा..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleOpenChat()}
-              />
-              {message.length === 0 ? (
-                  <button 
-                    type="button" 
-                    onClick={handleCameraIconClick} 
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                  >
-                    <Camera className="tatya-chat-input-icon" /> 
-                  </button>
-                ) : (
-                <button 
-                  type="button" 
-                  className="tatya-chat-send-btn"
-                  onClick={handleOpenChat}
-                >
-                  पाठवा
-                </button>
-              )}
-            </div>
+  <input
+    className="tatya-chat-input"
+    placeholder="इथे संदेश लिहा..."
+    value={message}
+    onChange={(e) => setMessage(e.target.value)}
+    onKeyDown={(e) => e.key === 'Enter' && handleOpenChat()}
+  />
+
+  {/* Only the icons live here. This stays stable in the middle-right. */}
+  <div className="tatya-input-actions">
+    <button 
+      type="button" 
+      onClick={toggleListening}
+      className={`tatya-icon-btn ${isListening ? 'is-active' : ''}`}
+    >
+      <Mic size={20} color={isListening ? "#16a34a" : "#666"} />
+      {isListening && <span className="mic-pulse-dot"></span>}
+    </button>
+
+    <div className="tatya-divider-v"></div>
+
+    <button 
+      type="button" 
+      onClick={handleCameraIconClick}
+      className="tatya-icon-btn"
+    >
+      <Camera size={20} color="#666" />
+    </button>
+  </div>
+
+  {/* The Send Button is now OUTSIDE the actions div. 
+      It will always appear at the very end (far right).
+  */}
+  {message.trim().length > 0 && (
+    <button 
+      type="button" 
+      className={isListening ? "tatya-voice-confirm-btn" : "tatya-chat-send-btn"}
+      onClick={handleOpenChat}
+    >
+      पाठवा
+    </button>
+  )}
+</div>
           </div>
 
           {/* Service selection */}
@@ -262,6 +288,7 @@ export default function TatyaHomePage() {
                 {/* Ensure ChatbotWrapper is imported at the top of the file */}
                 <ChatbotWrapper 
                   initialMessage={initialChatMsg} 
+                  initialMessageId={initialChatRequestId}
                   onClose={handleCloseChat} 
                   onNavigateToUserData={() => navigate('/userdata')} 
                   startWithCamera={shouldCameraOpen}

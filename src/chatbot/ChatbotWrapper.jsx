@@ -3,7 +3,7 @@ import root from 'react-shadow';
 import ChatBox from './components/ChatBox'; 
 import chatbotStyles from './chatbot.css?inline'; 
 
-const ChatbotWrapper = ({ onClose, onNavigateToUserData, initialMessage, startWithCamera }) => { 
+const ChatbotWrapper = ({ onClose, onNavigateToUserData, initialMessage, initialMessageId, startWithCamera }) => { 
   return (
     <root.div>
       <style>{chatbotStyles}</style>
@@ -14,6 +14,7 @@ const ChatbotWrapper = ({ onClose, onNavigateToUserData, initialMessage, startWi
               onNavigateToUserData={onNavigateToUserData} 
               onClose={onClose} 
               initialMessage={initialMessage} // Pass it down to ChatBox
+              initialMessageId={initialMessageId}
               startWithCamera={startWithCamera}
             />
           </div>

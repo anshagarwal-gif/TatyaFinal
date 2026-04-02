@@ -131,16 +131,13 @@
   margin-top: 22px;
   display: flex;
   align-items: center;
-  background: #f9fafb;
-  border-radius: 999px;
-  padding: 14px 18px 14px 20px;
-  color: #111827;
+  background: #ffffff;
+  border-radius: 999px; /* Pill shape */
+  padding: 8px 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   min-height: 48px;
-}
-
-.tatya-chat-input-row .tatya-chat-input {
-  align-self: center;
+  overflow: visible; 
+  position: relative;
 }
 
 .tatya-chat-input {
@@ -148,33 +145,94 @@
   border: none;
   outline: none;
   font-size: 14px;
-  line-height: 1.4;
   background: transparent;
   min-width: 0;
+  color: #111827;
 }
 
-.tatya-chat-input::placeholder {
-  color: #9ca3af;
-}
-
-.tatya-chat-input-icon {
-  width: 22px;
-  height: 22px;
-  color: #6b7280;
+/* Container for Mic, Divider, and Camera */
+.tatya-input-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
   flex-shrink: 0;
-  margin-left: 8px;
+  z-index: 5;
+}
+
+.tatya-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.tatya-icon-btn.is-active {
+  background: #ecfdf3;
+}
+
+.tatya-icon-btn:active {
+  transform: scale(0.9);
+}
+
+/* The vertical line from your image */
+.tatya-divider-v {
+  width: 1px;
+  height: 18px;
+  background-color: #e5e7eb; /* Light gray divider */
+}
+
+/* Green Pulse Animation for Recording */
+.mic-pulse-dot {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border: 2px solid #16a34a;
+  border-radius: 50%;
+  animation: mic-ripple 1.5s infinite;
+}
+
+@keyframes mic-ripple {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.tatya-voice-confirm-btn {
+  margin-left: 6px;
+  background: #1f2937;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  display: inline-block;
 }
 
 .tatya-chat-send-btn {
-  margin-left: 10px;
-  padding: 6px 14px;
-  border-radius: 12px;
+  margin-left: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
   border: none;
-  background: #f97316;
+  background: #1f2937; /* Darker to match your header theme */
   color: #ffffff;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .tatya-header {

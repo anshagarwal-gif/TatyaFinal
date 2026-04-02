@@ -242,6 +242,51 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
   }
 
+  .message-audio-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.55rem !important;
+    margin-top: 0.85rem !important;
+  }
+
+  .message-audio-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    padding: 0.42rem 0.72rem !important;
+    border-radius: 9999px !important;
+    border: 1px solid #dbe6d0 !important;
+    background-color: #f8fbf5 !important;
+    color: #546c43 !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .message-audio-button:hover {
+    background-color: #eef5e8 !important;
+  }
+
+  .message-audio-button.active {
+    background-color: #546c43 !important;
+    border-color: #546c43 !important;
+    color: #ffffff !important;
+  }
+
+  .message-audio-button.stop {
+    background-color: #fff7f2 !important;
+    border-color: #efd7c7 !important;
+    color: #9c6644 !important;
+  }
+
+  .message-audio-error {
+    margin-top: 0.55rem !important;
+    font-size: 0.76rem !important;
+    font-weight: 600 !important;
+    color: #b45309 !important;
+  }
+
   /* Input Area */
   .chatbot-input-section {
     padding: 1.25rem 1.5rem 1.5rem 1.5rem !important;
@@ -339,6 +384,54 @@
   .chatbot-send-button:disabled {
     opacity: 1 !important;
     cursor: not-allowed !important;
+  }
+
+  .chatbot-mic-button {
+    padding: 0.625rem !important;
+    color: #666 !important;
+    background-color: transparent !important;
+    border-radius: 100% !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    min-width: 2.5rem !important;
+    min-height: 2.5rem !important;
+    position: relative !important;
+  }
+
+  .chatbot-mic-button:hover {
+    background-color: #f0f0f0 !important;
+  }
+
+  .chatbot-mic-button.active {
+    color: #10b981 !important;
+    background-color: #ecfdf5 !important;
+  }
+
+  .chatbot-mic-pulse {
+    position: absolute !important;
+    width: 6px !important;
+    height: 6px !important;
+    background-color: #10b981 !important;
+    border-radius: 50% !important;
+    bottom: 2px !important;
+    right: 2px !important;
+    animation: mic-pulse-animation 1s infinite !important;
+  }
+
+  @keyframes mic-pulse-animation {
+    0%, 100% {
+      opacity: 1 !important;
+      transform: scale(1) !important;
+    }
+    50% {
+      opacity: 0.6 !important;
+      transform: scale(1.2) !important;
+    }
   }
 
   /* Fixed Plus Menu Alignment & Shadow */

@@ -4,6 +4,55 @@ const ai = new GoogleGenAI({
   apiKey: import.meta.env.VITE_GEMINI_API_KEY
 });
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const getErrorCode = (error: unknown): number | null => {
+  if (typeof error !== 'object' || error === null) return null;
+
+  const maybeError = error as { status?: number; message?: string };
+  if (typeof maybeError.status === 'number') {
+    return maybeError.status;
+  }
+
+  if (typeof maybeError.message === 'string') {
+    const match = maybeError.message.match(/"code"\s*:\s*(\d+)/);
+    if (match) {
+      return Number(match[1]);
+    }
+  }
+
+  return null;
+};
+
+const isRetryableGeminiError = (error: unknown) => {
+  const code = getErrorCode(error);
+  return code === 429 || code === 503;
+};
+
+const generateContentWithRetry = async (
+  request: Parameters<typeof ai.models.generateContent>[0],
+  retries = 2
+) => {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await ai.models.generateContent(request);
+    } catch (error) {
+      lastError = error;
+
+      if (!isRetryableGeminiError(error) || attempt === retries) {
+        throw error;
+      }
+
+      const backoffMs = 1000 * Math.pow(2, attempt);
+      await sleep(backoffMs);
+    }
+  }
+
+  throw lastError;
+};
+
 export interface SoilData {
   ph: string;
   nitrogen: string;
@@ -34,7 +83,7 @@ export const analyzeCropIssue = async (imageBase64: string, mimeType: string): P
   
   Format your response in clear Markdown with headings.`;
 
-  const response = await ai.models.generateContent({
+  const response = await generateContentWithRetry({
     model,
     contents: [ // Added [] brackets here to fix SDK requirement
       {
@@ -77,7 +126,7 @@ export const getAgriRecommendations = async (soil: SoilData, weather: WeatherDat
   Context: Focus on Indian agricultural practices, seasons (Kharif/Rabi/Zaid), and locally available resources.
   Format your response in clear Markdown.`;
 
-  const response = await ai.models.generateContent({
+  const response = await generateContentWithRetry({
     model,
     contents: [{ parts: [{ text: prompt }] }]
   });
@@ -131,14 +180,24 @@ End with a Marathi punch line like: “काम करा, वेळ घाल�
     });
   }
 
-  const response = await ai.models.generateContent({
-    model,
-    contents: [{ parts }],
-    config: {
-      systemInstruction,
-      // tools: [{ googleSearch: {} }], // Commented out to save quota and prevent 429
-    }
-  });
+  try {
+    const response = await generateContentWithRetry({
+      model,
+      contents: [{ parts }],
+      config: {
+        systemInstruction,
+        // tools: [{ googleSearch: {} }], // Commented out to save quota and prevent 429
+      }
+    });
 
-  return response.text || "I'm not sure how to respond to that.";
+    return response.text || "I'm not sure how to respond to that.";
+  } catch (error) {
+    const code = getErrorCode(error);
+
+    if (code === 429 || code === 503) {
+      return "सध्या सर्व्हरवर जास्त ताण आहे. थोड्या वेळाने पुन्हा प्रयत्न करा. काम थांबवू नका.";
+    }
+
+    throw error;
+  }
 };
