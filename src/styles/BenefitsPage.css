@@ -2,10 +2,11 @@
   min-height: 100vh;
   background: #ffffff;
   padding: 20px;
+  padding-top: 40px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding-top: 40px;
 }
 
 .benefits-container {
@@ -287,6 +288,11 @@
   margin: 0;
   text-align: center;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.benefits-container > .dev-credits {
+  margin-top: 24px;
+  border-radius: 8px;
 }
 
 /* Language Toggle */

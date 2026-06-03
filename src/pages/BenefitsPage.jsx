@@ -8,6 +8,7 @@ import calendarImage from '../assets/Calender.jpg'
 import moneyImage from '../assets/Image2.jpg'
 import droneImage from '../assets/Image3.jpg'
 import benefitsPageBottomImage from '../assets/BenefitsPageBottom.jpg'
+import DevCredits from '../components/DevCredits'
 
 function BenefitsPage() {
   const { isMarathi } = useLanguage()
@@ -202,6 +203,8 @@ function BenefitsPage() {
             getting, Find experienced pilots, and select wisely.
           </p>
         </div>
+
+        <DevCredits variant="light" />
 
         {/* Language Toggle */}
         {/* <LanguageToggle /> */}

@@ -18,6 +18,7 @@ import offerImage2 from '../assets/OfferImage2.png'
 import offerImage3 from '../assets/OfferImage3.png'
 import ChatbotWrapper from '../chatbot/ChatbotWrapper';
 import { useSpeechToText } from '../chatbot/hooks/useSpeechToText'
+import DevCredits from '../components/DevCredits'
 import '../styles/TatyaHomePage.css'
 
 export default function TatyaHomePage() {
@@ -275,9 +276,7 @@ export default function TatyaHomePage() {
           </section>
         </div>
 
-        <footer className="tatya-dev-credits">
-          Developed by Ansh Agarwal, Dev Sagani and Krishnaraj Bhosale
-        </footer>
+        <DevCredits variant="light" />
 
         {/* Chatbot Popup Overlay */}
           {isChatOpen && (

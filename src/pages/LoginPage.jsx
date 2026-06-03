@@ -23,6 +23,7 @@ import {
   isAppUserAuthenticated,
 } from '../utils/authSession'
 import Snackbar from '../components/Snackbar'
+import DevCredits from '../components/DevCredits'
 import BenefitsPage from './BenefitsPage'
 import tatyaTermsPdf from '../assets/TatyaTermsandConditions.pdf'
 
@@ -644,9 +645,7 @@ function LoginPage() {
         )}
         </div>
 
-        <footer className="login-dev-credits">
-          Developed by Ansh Agarwal, Dev Sagani and Krishnaraj Bhosale
-        </footer>
+        <DevCredits variant="light" />
       </div>
       <BenefitsPage />
 

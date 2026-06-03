@@ -642,23 +642,6 @@
   text-align: center;
 }
 
-.login-page > .login-dev-credits {
-  position: relative;
-  z-index: 2;
-  flex-shrink: 0;
-  width: 100%;
-  max-width: 500px;
-  margin-top: 0;
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-  font-size: 10px;
-  color: #9ca3af;
-  text-align: center;
-  line-height: 1.5;
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
-}
-
 .login-terms-link {
   color: #10b981;
   font-weight: 500;
@@ -792,7 +775,7 @@
     background: #ffffff;
   }
 
-  .login-page > .login-dev-credits {
+  .login-page > .dev-credits {
     max-width: 520px;
     margin: 0;
     border-radius: 0 0 32px 32px;
@@ -904,10 +887,8 @@
     min-height: 100dvh;
   }
 
-  .login-page > .login-dev-credits {
+  .login-page > .dev-credits {
     max-width: 100%;
-    font-size: 9px;
-    padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
   }
 
   .login-panel {
