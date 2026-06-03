@@ -640,6 +640,14 @@
   text-align: center;
 }
 
+.login-dev-credits {
+  margin-top: 16px;
+  font-size: 10px;
+  color: #9ca3af;
+  text-align: center;
+  line-height: 1.5;
+}
+
 .login-terms-link {
   color: #10b981;
   font-weight: 500;
