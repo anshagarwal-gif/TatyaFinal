@@ -273,6 +273,10 @@ export default function TatyaHomePage() {
               ))}
             </div>
           </section>
+
+          <footer className="tatya-dev-credits">
+            Developed by Ansh Agarwal, Dev Sagani and Krishnaraj Bhosale
+          </footer>
         </div>
 
         {/* Chatbot Popup Overlay */}

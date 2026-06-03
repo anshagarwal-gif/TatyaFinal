@@ -560,6 +560,14 @@
   object-fit: cover;
 }
 
+.tatya-dev-credits {
+  text-align: center;
+  font-size: 11px;
+  color: #9ca3af;
+  padding: 4px 8px 8px;
+  line-height: 1.5;
+}
+
 .tatya-bottom-nav {
   border-top: 1px solid #e5e7eb;
   background: #ffffff;
