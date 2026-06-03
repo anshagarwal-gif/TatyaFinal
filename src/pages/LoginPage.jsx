@@ -642,11 +642,11 @@ function LoginPage() {
             )}
           </div>
         )}
+        </div>
 
         <footer className="login-dev-credits">
           Developed by Ansh Agarwal, Dev Sagani and Krishnaraj Bhosale
         </footer>
-        </div>
       </div>
       <BenefitsPage />
 

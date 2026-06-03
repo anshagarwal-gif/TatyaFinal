@@ -560,12 +560,15 @@
   object-fit: cover;
 }
 
-.tatya-dev-credits {
+.tatya-phone-shell > .tatya-dev-credits {
+  flex-shrink: 0;
   text-align: center;
   font-size: 11px;
   color: #9ca3af;
-  padding: 4px 8px 8px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
   line-height: 1.5;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
 }
 
 .tatya-bottom-nav {
@@ -594,14 +597,25 @@
 }
 
 @media (max-width: 480px) {
+  .tatya-home-page {
+    padding: 0;
+  }
+
   .tatya-phone-shell {
     max-width: 100%;
-    height: calc(100vh);
-    border-radius: 24px;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .tatya-phone-content {
-    padding: 18px 14px 22px;
+    padding: 18px 14px 16px;
+  }
+
+  .tatya-phone-shell > .tatya-dev-credits {
+    font-size: 10px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
   }
 }
 
